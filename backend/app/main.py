@@ -1,6 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from alembic.config import Config
 from alembic import command
 from sqlalchemy import select
@@ -15,6 +19,8 @@ from app.models.admin import Admin
 from app.core.security import hash_password
 import os
 
+limiter = Limiter(key_func=get_remote_address)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,13 +31,16 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as db:
         existing = db.execute(select(Admin).where(Admin.username == "admin")).scalar_one_or_none()
         if not existing:
-            db.add(Admin(username="admin", password_hash=hash_password("admin123")))
+            initial_pw = os.getenv("ADMIN_INITIAL_PASSWORD", "admin123")
+            db.add(Admin(username="admin", password_hash=hash_password(initial_pw)))
             db.commit()
 
     yield
 
 
 app = FastAPI(title="Conference Manager API", version="1.0.0", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

@@ -27,6 +27,7 @@ export const api = {
   register: (body) => request("POST", "/auth/register", body),
   login: (body) => request("POST", "/auth/login", body),
   adminLogin: (body) => request("POST", "/auth/admin/login", body),
+  refreshToken: (token) => request("POST", "/auth/refresh", null, token),
   getMe: (token) => request("GET", "/auth/me", null, token),
   getAdminMe: (token) => request("GET", "/auth/admin/me", null, token),
 

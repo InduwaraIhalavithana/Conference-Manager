@@ -7,7 +7,7 @@ from app.core.security import hash_password, verify_password
 from app.models.organizer import Organizer
 from app.models.activity import ActivityLog
 from app.schemas.auth import OrganizerOut
-from app.schemas.organizer import ProfileUpdate, PasswordChange
+from app.schemas.organizer import ProfileUpdate, PasswordChange, DeleteAccountRequest
 
 router = APIRouter(prefix="/api/organizers", tags=["organizers"])
 
@@ -29,4 +29,12 @@ def change_password(body: PasswordChange, org: Organizer = Depends(get_current_o
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     org.password_hash = hash_password(body.new_password)
     db.add(ActivityLog(organizer_id=org.id, action="change_password", target=org.email))
+    db.commit()
+
+
+@router.delete("/me", status_code=204)
+def delete_account(body: DeleteAccountRequest, org: Organizer = Depends(get_current_organizer), db: Session = Depends(get_db)):
+    if not verify_password(body.password, org.password_hash):
+        raise HTTPException(status_code=400, detail="Password is incorrect")
+    db.delete(org)
     db.commit()

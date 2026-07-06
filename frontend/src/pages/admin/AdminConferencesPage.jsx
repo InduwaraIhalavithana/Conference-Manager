@@ -1,18 +1,45 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
+import Pagination from "../../components/Pagination";
 import "./AdminPages.css";
 
 export default function AdminConferencesPage() {
   const { t, token } = useApp();
   const [confs, setConfs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => {
-    api.adminConferences(token).then(setConfs).finally(() => setLoading(false));
-  }, [token]);
+  const load = (p = 1) => {
+    setLoading(true);
+    api.adminConferences(token, p)
+      .then((res) => {
+        setConfs(res.items);
+        setPage(res.page);
+        setPages(res.pages);
+        setTotal(res.total);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(1); }, [token]);
+
+  const handleDelete = async (conf) => {
+    if (!window.confirm(`Delete "${conf.title}"? This cannot be undone.`)) return;
+    setDeleting(conf.id);
+    try {
+      await api.adminDeleteConference(conf.id, token);
+      load(page);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const filtered = confs.filter((c) =>
     c.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -31,42 +58,61 @@ export default function AdminConferencesPage() {
               <i className="fas fa-search" />
               <input className="form-input conf-search-input" type="search" placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            {!loading && <span className="tag">{filtered.length} of {confs.length}</span>}
+            {!loading && <span className="tag">{total} total</span>}
           </div>
         </div>
         {loading ? (
           <div className="center-spinner"><span className="spinner" /></div>
         ) : (
-          <div className="admin-table-wrap card">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>{t("organizer")}</th>
-                  <th>{t("date")}</th>
-                  <th>Location</th>
-                  <th>{t("attendees")}</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c) => (
-                  <tr key={c.id}>
-                    <td className="td-name">{c.title}</td>
-                    <td>{c.organizer_name}</td>
-                    <td className="td-date">{new Date(c.date).toLocaleDateString()}</td>
-                    <td>{c.location || "—"}</td>
-                    <td>{c.attendee_count}</td>
-                    <td>
-                      <span className={`badge badge-${c.date >= today ? "info" : "warning"}`}>
-                        {c.date >= today ? t("upcoming_confs") : "Past"}
-                      </span>
-                    </td>
+          <>
+            <div className="admin-table-wrap card">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>{t("organizer")}</th>
+                    <th>{t("date")}</th>
+                    <th>Location</th>
+                    <th>{t("attendees")}</th>
+                    <th>Status</th>
+                    <th>{t("actions")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map((c) => (
+                    <tr key={c.id}>
+                      <td className="td-name">
+                        <Link to={`/conferences/${c.id}`} style={{ color: "var(--accent)" }} target="_blank" rel="noopener">
+                          {c.title}
+                        </Link>
+                        {c.status === "draft" && <span className="badge badge-warning" style={{ marginLeft: 6 }}>Draft</span>}
+                        {c.category && <span className="tag" style={{ marginLeft: 4, fontSize: "0.7rem" }}>{c.category}</span>}
+                      </td>
+                      <td>{c.organizer_name}</td>
+                      <td className="td-date">{new Date(c.date).toLocaleDateString()}</td>
+                      <td>{c.location || "—"}</td>
+                      <td>{c.attendee_count}{c.max_attendees ? ` / ${c.max_attendees}` : ""}</td>
+                      <td>
+                        <span className={`badge badge-${c.date >= today ? "info" : "warning"}`}>
+                          {c.date >= today ? t("upcoming_confs") : "Past"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(c)}
+                          disabled={deleting === c.id}
+                        >
+                          {deleting === c.id ? <span className="spinner" /> : <i className="fas fa-trash" />}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} pages={pages} onPage={load} />
+          </>
         )}
       </div>
     </AdminLayout>

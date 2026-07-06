@@ -32,9 +32,15 @@ export const api = {
   getAdminMe: (token) => request("GET", "/auth/admin/me", null, token),
 
   // Conferences
-  upcomingConferences: () => request("GET", "/api/conferences/upcoming"),
+  upcomingConferences: (page = 1, category = null) => {
+    const params = new URLSearchParams({ page, per_page: 20 });
+    if (category) params.set("category", category);
+    return request("GET", `/api/conferences/upcoming?${params}`);
+  },
   getConference: (id) => request("GET", `/api/conferences/${id}`),
-  myConferences: (token) => request("GET", "/api/conferences/", null, token),
+  myConferences: (token, page = 1) =>
+    request("GET", `/api/conferences/?page=${page}&per_page=20`, null, token),
+  pastConferences: (token) => request("GET", "/api/conferences/past", null, token),
   createConference: (body, token) => request("POST", "/api/conferences/", body, token),
   updateConference: (id, body, token) => request("PUT", `/api/conferences/${id}`, body, token),
   deleteConference: (id, token) => request("DELETE", `/api/conferences/${id}`, null, token),
@@ -42,10 +48,14 @@ export const api = {
   // Attendees
   registerAttendee: (confId, body) => request("POST", `/api/attendees/${confId}`, body),
   listAttendees: (confId, token) => request("GET", `/api/attendees/${confId}`, null, token),
+  cancelAttendee: (confId, attendeeId, token) =>
+    request("DELETE", `/api/attendees/${confId}/${attendeeId}`, null, token),
+  exportAttendeesUrl: (confId) => `/api/attendees/${confId}/export`,
 
   // Organizer profile
   updateProfile: (body, token) => request("PUT", "/api/organizers/me", body, token),
   changePassword: (body, token) => request("PUT", "/api/organizers/me/password", body, token),
+  deleteAccount: (body, token) => request("DELETE", "/api/organizers/me", body, token),
 
   // Feedback
   submitFeedback: (body, token) => request("POST", "/api/feedback/", body, token),
@@ -53,13 +63,17 @@ export const api = {
 
   // Admin
   adminStats: (token) => request("GET", "/api/admin/stats", null, token),
-  adminOrganizers: (token) => request("GET", "/api/admin/organizers", null, token),
+  adminOrganizers: (token, page = 1) =>
+    request("GET", `/api/admin/organizers?page=${page}&per_page=20`, null, token),
   suspendOrganizer: (id, token) => request("PUT", `/api/admin/organizers/${id}/suspend`, null, token),
   unsuspendOrganizer: (id, token) => request("PUT", `/api/admin/organizers/${id}/unsuspend`, null, token),
   deleteOrganizer: (id, token) => request("DELETE", `/api/admin/organizers/${id}`, null, token),
-  adminConferences: (token) => request("GET", "/api/admin/conferences", null, token),
+  adminConferences: (token, page = 1) =>
+    request("GET", `/api/admin/conferences?page=${page}&per_page=20`, null, token),
+  adminDeleteConference: (id, token) => request("DELETE", `/api/admin/conferences/${id}`, null, token),
   adminFeedback: (token) => request("GET", "/api/admin/feedback", null, token),
   replyFeedback: (id, body, token) => request("PUT", `/api/admin/feedback/${id}/reply`, body, token),
   resolveFeedback: (id, token) => request("PUT", `/api/admin/feedback/${id}/resolve`, null, token),
-  activityLog: (token) => request("GET", "/api/admin/activity", null, token),
+  activityLog: (token, page = 1) =>
+    request("GET", `/api/admin/activity?page=${page}&per_page=50`, null, token),
 };

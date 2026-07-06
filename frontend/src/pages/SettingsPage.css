@@ -48,6 +48,10 @@
   background: var(--accent);
 }
 .settings-tab i { width: 16px; text-align: center; font-size: 0.9rem; }
+.settings-tab-danger { color: var(--error); margin-top: 8px; }
+.settings-tab-danger:hover { background: rgba(239, 68, 68, 0.08); color: var(--error); }
+.settings-tab-danger.active { background: rgba(239, 68, 68, 0.12); color: var(--error); }
+.settings-tab-danger.active::before { background: var(--error); }
 
 /* ── Main content ─────────────────────────────────────── */
 .settings-main h3 {

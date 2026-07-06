@@ -1,17 +1,36 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
-  const { t, token, user, lang, setLang, theme, toggleTheme, updateUser } = useApp();
+  const { t, token, user, lang, setLang, theme, toggleTheme, updateUser, logout } = useApp();
+  const navigate = useNavigate();
   const [tab, setTab] = useState("profile");
   const [profile, setProfile] = useState({ first_name: user?.first_name || "", last_name: user?.last_name || "", phone: user?.phone || "" });
   const [pwd, setPwd] = useState({ current_password: "", new_password: "", confirm: "" });
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [saving, setSaving] = useState(false);
 
   const showMsg = (type, text) => { setMsg({ type, text }); setTimeout(() => setMsg({ type: "", text: "" }), 3000); };
+
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault();
+    if (!window.confirm("Permanently delete your account and all conferences? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await api.deleteAccount({ password: deletePassword }, token);
+      logout();
+      navigate("/");
+    } catch (err) {
+      showMsg("error", err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const saveProfile = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -41,10 +60,14 @@ export default function SettingsPage() {
         <aside className="settings-sidebar card">
           <h2><i className="fas fa-cog" /> {t("settings")}</h2>
           <nav className="settings-nav">
-            {["profile", "password", "appearance"].map((tab_) => (
-              <button key={tab_} className={`settings-tab ${tab === tab_ ? "active" : ""}`} onClick={() => setTab(tab_)}>
-                <i className={`fas fa-${tab_ === "profile" ? "user" : tab_ === "password" ? "lock" : "palette"}`} />
-                {t(tab_ === "password" ? "change_password" : tab_ === "appearance" ? "appearance" : "profile")}
+            {["profile", "password", "appearance", "danger"].map((tab_) => (
+              <button
+                key={tab_}
+                className={`settings-tab ${tab === tab_ ? "active" : ""} ${tab_ === "danger" ? "settings-tab-danger" : ""}`}
+                onClick={() => setTab(tab_)}
+              >
+                <i className={`fas fa-${tab_ === "profile" ? "user" : tab_ === "password" ? "lock" : tab_ === "appearance" ? "palette" : "exclamation-triangle"}`} />
+                {tab_ === "password" ? t("change_password") : tab_ === "appearance" ? t("appearance") : tab_ === "danger" ? "Danger Zone" : t("profile")}
               </button>
             ))}
           </nav>
@@ -100,6 +123,31 @@ export default function SettingsPage() {
                 </div>
                 <button className="btn btn-primary" type="submit" disabled={saving}>
                   {saving ? <span className="spinner" /> : <><i className="fas fa-key" /> {t("save_changes")}</>}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {tab === "danger" && (
+            <div className="card fade-up" style={{ borderColor: "var(--error)", borderWidth: 1, borderStyle: "solid" }}>
+              <h3 style={{ color: "var(--error)" }}><i className="fas fa-exclamation-triangle" /> Delete Account</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: 16 }}>
+                Permanently deletes your account and all associated conferences, attendees, and data. This action cannot be undone.
+              </p>
+              <form onSubmit={handleDeleteAccount} className="settings-form">
+                <div className="form-group">
+                  <label className="form-label">Confirm your password</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    required
+                    placeholder="Enter your password to confirm"
+                  />
+                </div>
+                <button className="btn btn-danger" type="submit" disabled={deleting}>
+                  {deleting ? <span className="spinner" /> : <><i className="fas fa-trash" /> Delete My Account</>}
                 </button>
               </form>
             </div>

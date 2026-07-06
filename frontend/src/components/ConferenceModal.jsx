@@ -2,6 +2,8 @@ import { useState } from "react";
 import { api } from "../services/api";
 import "./ConferenceModal.css";
 
+const CATEGORIES = ["Tech", "Health", "Education", "Business", "Other"];
+
 export default function ConferenceModal({ conference, token, onSaved, onClose, t }) {
   const isEdit = !!conference;
   const [form, setForm] = useState({
@@ -10,6 +12,9 @@ export default function ConferenceModal({ conference, token, onSaved, onClose, t
     date: conference?.date || "",
     time: conference?.time?.slice(0, 5) || "",
     location: conference?.location || "",
+    max_attendees: conference?.max_attendees || "",
+    status: conference?.status || "published",
+    category: conference?.category || "",
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -20,7 +25,12 @@ export default function ConferenceModal({ conference, token, onSaved, onClose, t
     e.preventDefault();
     setError(""); setSaving(true);
     try {
-      const payload = { ...form, time: form.time || null };
+      const payload = {
+        ...form,
+        time: form.time || null,
+        max_attendees: form.max_attendees ? parseInt(form.max_attendees, 10) : null,
+        category: form.category || null,
+      };
       const saved = isEdit
         ? await api.updateConference(conference.id, payload, token)
         : await api.createConference(payload, token);
@@ -62,6 +72,30 @@ export default function ConferenceModal({ conference, token, onSaved, onClose, t
           <div className="form-group">
             <label className="form-label">{t("conference_location")}</label>
             <input className="form-input" type="text" value={form.location} onChange={set("location")} placeholder="City, Venue, Online…" />
+          </div>
+          <div className="modal-row">
+            <div className="form-group">
+              <label className="form-label">Max Attendees</label>
+              <input className="form-input" type="number" min="1" value={form.max_attendees} onChange={set("max_attendees")} placeholder="Unlimited" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-input" value={form.category} onChange={set("category")}>
+                <option value="">— None —</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Status</label>
+            <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+              {["published", "draft"].map((s) => (
+                <label key={s} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                  <input type="radio" value={s} checked={form.status === s} onChange={set("status")} />
+                  <span style={{ textTransform: "capitalize" }}>{s}</span>
+                </label>
+              ))}
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-ghost" onClick={onClose}>{t("cancel")}</button>

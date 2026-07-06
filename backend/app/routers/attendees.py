@@ -1,21 +1,24 @@
 import csv
 import io
-from fastapi import APIRouter, Depends, HTTPException
+import asyncio
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_, func
 from datetime import date
 from app.db.database import get_db
 from app.core.deps import get_current_organizer
+from app.core.email import send_email
 from app.models.attendee import Attendee
 from app.models.conference import Conference
+from app.models.organizer import Organizer
 from app.schemas.attendee import AttendeeRegister, AttendeeOut
 
 router = APIRouter(prefix="/api/attendees", tags=["attendees"])
 
 
 @router.post("/{conf_id}", status_code=201)
-def register_attendee(conf_id: int, body: AttendeeRegister, db: Session = Depends(get_db)):
+def register_attendee(conf_id: int, body: AttendeeRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     conf = db.get(Conference, conf_id)
     if not conf:
         raise HTTPException(status_code=404, detail="Conference not found")
@@ -34,6 +37,30 @@ def register_attendee(conf_id: int, body: AttendeeRegister, db: Session = Depend
     db.add(attendee)
     db.commit()
     db.refresh(attendee)
+
+    total = db.execute(select(func.count()).where(Attendee.conference_id == conf_id)).scalar()
+    org = db.get(Organizer, conf.organizer_id)
+    conf_ctx = {
+        "conference_title": conf.title,
+        "conference_date": str(conf.date),
+        "conference_time": conf.time.strftime("%H:%M") if conf.time else None,
+        "conference_location": conf.location,
+    }
+    background_tasks.add_task(
+        asyncio.run,
+        send_email(body.email, f"Registration Confirmed — {conf.title}", "registration_confirmation.html", {"attendee_name": body.name, **conf_ctx}),
+    )
+    if org:
+        background_tasks.add_task(
+            asyncio.run,
+            send_email(org.email, f"New registration for {conf.title}", "new_registration.html", {
+                "organizer_name": f"{org.first_name} {org.last_name}",
+                "conference_title": conf.title,
+                "attendee_name": body.name,
+                "attendee_email": body.email,
+                "attendee_count": total,
+            }),
+        )
     return attendee
 
 

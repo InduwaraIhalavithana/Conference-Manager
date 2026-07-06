@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>New Attendee Registration</title></head>
+<body style="font-family:sans-serif;background:#f4f4f4;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+  <div style="background:#6366f1;padding:32px;text-align:center">
+    <h1 style="color:#fff;margin:0">New Registration!</h1>
+  </div>
+  <div style="padding:32px">
+    <p>Hello <strong>{{ organizer_name }}</strong>,</p>
+    <p>A new attendee has registered for your conference:</p>
+    <div style="background:#f0f0ff;border-left:4px solid #6366f1;padding:16px;border-radius:4px;margin:16px 0">
+      <h2 style="margin:0 0 8px;color:#1e1b4b">{{ conference_title }}</h2>
+      <p style="margin:4px 0;color:#555"><strong>Attendee:</strong> {{ attendee_name }}</p>
+      <p style="margin:4px 0;color:#555"><strong>Email:</strong> {{ attendee_email }}</p>
+      <p style="margin:4px 0;color:#555"><strong>Total registered:</strong> {{ attendee_count }}</p>
+    </div>
+    <p style="color:#888;font-size:0.875rem;margin-top:32px">— The ConferenceHub Team</p>
+  </div>
+</div>
+</body>
+</html>

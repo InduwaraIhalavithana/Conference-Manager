@@ -1,0 +1,172 @@
+/* ── Page header ──────────────────────────────────────── */
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.admin-page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-page-header h1 i { color: var(--accent); }
+
+/* ── Stat grid ────────────────────────────────────────── */
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+@media (max-width: 1200px) { .admin-stat-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px)  { .admin-stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.admin-stat-card {
+  text-align: center;
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.admin-stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.admin-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.color-accent  .admin-stat-card::before,
+.color-accent::before  { background: linear-gradient(90deg, var(--accent), #818cf8); }
+.color-success .admin-stat-card::before,
+.color-success::before { background: linear-gradient(90deg, var(--success), #34d399); }
+.color-danger  .admin-stat-card::before,
+.color-danger::before  { background: linear-gradient(90deg, var(--danger), #f87171); }
+.color-warning .admin-stat-card::before,
+.color-warning::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+.color-info    .admin-stat-card::before,
+.color-info::before    { background: linear-gradient(90deg, #818cf8, #a78bfa); }
+
+.admin-stat-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 14px;
+}
+.admin-stat-val { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+.admin-stat-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.03em; }
+
+.color-accent  .admin-stat-icon { background: var(--accent-light); color: var(--accent); }
+.color-accent  .admin-stat-val  { color: var(--accent); }
+.color-success .admin-stat-icon { background: rgba(16,185,129,0.15); color: var(--success); }
+.color-success .admin-stat-val  { color: var(--success); }
+.color-danger  .admin-stat-icon { background: rgba(239,68,68,0.15);  color: var(--danger);  }
+.color-danger  .admin-stat-val  { color: var(--danger);  }
+.color-warning .admin-stat-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
+.color-warning .admin-stat-val  { color: var(--warning); }
+.color-info    .admin-stat-icon { background: rgba(99,102,241,0.15); color: #818cf8; }
+.color-info    .admin-stat-val  { color: #818cf8; }
+
+/* ── Tables ───────────────────────────────────────────── */
+.admin-table-wrap { padding: 0; overflow-x: auto; }
+
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th {
+  padding: 12px 18px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  background: var(--bg-secondary);
+  white-space: nowrap;
+}
+.admin-table th:first-child { border-radius: var(--radius-lg) 0 0 0; }
+.admin-table th:last-child  { border-radius: 0 var(--radius-lg) 0 0; }
+.admin-table td {
+  padding: 13px 18px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: var(--bg-hover); }
+
+.td-name    { font-weight: 700; }
+.td-email   { color: var(--text-secondary); }
+.td-date    { color: var(--text-muted); white-space: nowrap; font-size: 0.8rem; }
+.td-num     { color: var(--text-muted); }
+.td-actions { display: flex; gap: 6px; align-items: center; }
+
+/* ── Attendees table ──────────────────────────────────── */
+.attendees-table { width: 100%; border-collapse: collapse; }
+.attendees-table th,
+.attendees-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  text-align: left;
+}
+.attendees-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  font-weight: 700;
+}
+.attendees-table tr:hover td { background: var(--bg-hover); }
+
+/* ── Feedback ─────────────────────────────────────────── */
+.feedback-list  { display: flex; flex-direction: column; gap: 16px; }
+.feedback-item  { display: flex; flex-direction: column; gap: 12px; }
+.fb-admin-head  { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fb-subject     { font-weight: 700; font-size: 1rem; display: block; margin-bottom: 3px; }
+.fb-from        { font-size: 0.8rem; color: var(--text-muted); }
+.fb-msg         { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.65; }
+.fb-admin-actions { border-top: 1px solid var(--border); padding-top: 14px; }
+.fb-reply {
+  padding: 12px 14px;
+  background: var(--accent-light);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+}
+.fb-reply-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.fb-reply p { font-size: 0.875rem; }
+
+/* ── Empty / loading ──────────────────────────────────── */
+.center-spinner { display: flex; justify-content: center; padding: 80px; }
+.empty-state {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.empty-state i { font-size: 3rem; }
+.empty-state p { font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+  .admin-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}

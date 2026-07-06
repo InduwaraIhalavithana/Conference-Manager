@@ -1,0 +1,86 @@
+/* ── Layout ───────────────────────────────────────────── */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.settings-sidebar { position: sticky; top: 88px; }
+.settings-sidebar h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-sidebar h2 i { color: var(--accent); }
+
+.settings-nav { display: flex; flex-direction: column; gap: 4px; }
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s var(--ease-out);
+  position: relative;
+}
+.settings-tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+.settings-tab.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+}
+.settings-tab.active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.settings-tab i { width: 16px; text-align: center; font-size: 0.9rem; }
+
+/* ── Main content ─────────────────────────────────────── */
+.settings-main h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-main h3 i { color: var(--accent); }
+
+.settings-form { display: flex; flex-direction: column; gap: 18px; max-width: 480px; }
+
+/* ── Appearance tab ───────────────────────────────────── */
+.appearance-opts { display: flex; flex-direction: column; }
+.appear-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.appear-row:last-child { border-bottom: none; }
+.appear-label { font-weight: 600; font-size: 0.9rem; }
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-layout { grid-template-columns: 1fr; }
+  .settings-sidebar { position: static; }
+  .settings-nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .settings-tab.active::before { display: none; }
+}

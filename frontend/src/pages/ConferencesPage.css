@@ -1,0 +1,318 @@
+/* ── Conferences page banner ──────────────────────────── */
+.conf-page-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(0,168,255,0.08), rgba(99,102,241,0.08));
+  border: 1px solid rgba(0,168,255,0.15);
+  margin-bottom: 24px;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+.conf-page-banner-orb {
+  position: absolute;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(0,168,255,0.07), transparent 70%);
+  right: -60px; top: -80px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.conf-page-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.conf-page-banner-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.conf-page-banner-content h1 { font-size: 1.5rem; font-weight: 800; }
+.conf-page-banner-content p  { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+.conf-page-banner-count {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Search bar ───────────────────────────────────────── */
+.conf-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.conf-search-input-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 680px;
+}
+.conf-search-input-wrap i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.conf-search-input {
+  padding-left: 38px !important;
+  width: 100%;
+}
+
+/* ── Page header ──────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header h1 i { color: var(--accent); }
+.search-input { max-width: 280px; }
+
+/* ── Conference cards ─────────────────────────────────── */
+.conf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media (max-width: 1100px) { .conf-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .conf-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .conf-grid { grid-template-columns: 1fr; } }
+
+.conf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  overflow: hidden;
+  padding-top: 0;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.conf-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.conf-card-accent {
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  margin: -24px -24px 14px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.conf-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.conf-title { font-size: 1rem; font-weight: 700; }
+.conf-desc  { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; }
+.conf-location, .conf-organizer {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.conf-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Empty / loading states ───────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.empty-state i { font-size: 3.5rem; }
+.empty-state p { font-size: 0.95rem; }
+.empty-state a { color: var(--accent); font-weight: 600; }
+
+.center-spinner { display: flex; justify-content: center; padding: 80px; }
+
+/* ── Rich empty state (no conferences at all) ─────────── */
+.conf-empty-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 52px 24px 40px;
+  gap: 16px;
+}
+.conf-empty-icon-wrap {
+  width: 80px; height: 80px;
+  border-radius: var(--radius-xl);
+  background: var(--accent-light);
+  border: 1px solid rgba(0,168,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.conf-empty-full h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.conf-empty-full > p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  max-width: 460px;
+  line-height: 1.75;
+}
+.conf-empty-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Skeleton placeholder cards */
+.conf-placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  margin-top: 40px;
+  pointer-events: none;
+  opacity: 0.45;
+}
+@media (max-width: 900px)  { .conf-placeholder-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .conf-placeholder-grid { grid-template-columns: 1fr; } }
+
+.conf-placeholder-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.conf-placeholder-accent {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  margin: -24px -24px 10px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.conf-placeholder-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+}
+.conf-placeholder-bar.full   { width: 100%; }
+.conf-placeholder-bar.wide   { width: 75%; }
+.conf-placeholder-bar.medium { width: 55%; }
+.conf-placeholder-bar.short  { width: 40%; }
+.conf-placeholder-bar.tall   { height: 16px; width: 80%; }
+
+.conf-placeholder-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.conf-placeholder-footer .conf-placeholder-bar { margin: 0; }
+
+/* ── Conference detail ────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 24px;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--accent); }
+
+.conf-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+.conf-detail-title { font-size: 1.9rem; font-weight: 800; margin-bottom: 24px; }
+
+.conf-meta-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.conf-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+.conf-meta-item i {
+  color: var(--accent);
+  width: 20px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.conf-description { margin-top: 4px; }
+.conf-description h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; color: var(--text-secondary); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; }
+.conf-description p  { color: var(--text-secondary); line-height: 1.75; font-size: 0.95rem; }
+
+.register-card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.register-card h2 i { color: var(--accent); }
+
+.success-msg {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--success);
+}
+.success-msg i      { font-size: 3.5rem; display: block; margin-bottom: 14px; }
+.success-msg p      { font-size: 1rem; font-weight: 600; }
+
+@media (max-width: 768px) {
+  .conf-detail-grid { grid-template-columns: 1fr; }
+  .search-input { max-width: 100%; }
+  .page-header  { flex-direction: column; align-items: flex-start; }
+}

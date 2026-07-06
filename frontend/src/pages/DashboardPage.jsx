@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
+import { SkeletonCard } from "../components/Skeleton";
 import "./DashboardPage.css";
 
 export default function DashboardPage() {
@@ -10,7 +11,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.myConferences(token).then(setConferences).finally(() => setLoading(false));
+    api.myConferences(token, 1).then((res) => setConferences(res.items)).finally(() => setLoading(false));
   }, [token]);
 
   const today    = new Date().toISOString().slice(0, 10);
@@ -46,7 +47,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h1>Welcome back, {user?.first_name || "Organizer"} 👋</h1>
-                <p className="dash-welcome-sub">Here's your conference overview for today.</p>
+                <p className="dash-welcome-sub">Here&apos;s your conference overview for today.</p>
               </div>
             </div>
           </div>
@@ -57,7 +58,13 @@ export default function DashboardPage() {
 
         {/* Stat cards */}
         <div className="stat-cards">
-          {stats.map((s) => (
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="stat-card card">
+                <div style={{ height: 40, borderRadius: 8, background: "var(--bg-hover)", animation: "pulse 1.4s ease-in-out infinite" }} />
+              </div>
+            ))
+          ) : stats.map((s) => (
             <div key={s.label} className={`stat-card card dash-stat-${s.color}`}>
               <div className="stat-icon-wrap"><i className={`fas fa-${s.icon}`} /></div>
               <div className="stat-val">{s.val}</div>
@@ -87,7 +94,9 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <div className="center-spinner"><span className="spinner" /></div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
           ) : upcoming.length === 0 ? (
             <div className="dash-empty-state card">
               <div className="dash-empty-icon"><i className="fas fa-calendar-plus" /></div>
@@ -127,7 +136,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Past conferences summary (if any) */}
-        {past.length > 0 && (
+        {!loading && past.length > 0 && (
           <div className="dashboard-recent" style={{ marginTop: 0 }}>
             <div className="dash-section-header">
               <h2 className="dash-section-title">Past Events</h2>

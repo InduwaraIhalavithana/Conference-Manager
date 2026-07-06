@@ -15,6 +15,8 @@ export default function UpcomingConferencesPage() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = (p = 1, cat = category) => {
@@ -36,10 +38,14 @@ export default function UpcomingConferencesPage() {
     load(1, cat);
   };
 
-  const filtered = conferences.filter((c) =>
-    c.title.toLowerCase().includes(search.toLowerCase()) ||
-    (c.location || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = conferences.filter((c) => {
+    const matchesSearch =
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      (c.location || "").toLowerCase().includes(search.toLowerCase());
+    const matchesFrom = !dateFrom || c.date >= dateFrom;
+    const matchesTo = !dateTo || c.date <= dateTo;
+    return matchesSearch && matchesFrom && matchesTo;
+  });
 
   return (
     <div className="page-wrapper">
@@ -85,9 +91,9 @@ export default function UpcomingConferencesPage() {
           ))}
         </div>
 
-        {/* Search bar */}
-        <div className="conf-search-bar">
-          <div className="conf-search-input-wrap">
+        {/* Search + date range bar */}
+        <div className="conf-search-bar" style={{ flexWrap: "wrap", gap: 12 }}>
+          <div className="conf-search-input-wrap" style={{ flex: "1 1 220px" }}>
             <i className="fas fa-search" />
             <input
               className="form-input conf-search-input"
@@ -97,11 +103,17 @@ export default function UpcomingConferencesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          {search && (
-            <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-              {filtered.length} result{filtered.length !== 1 ? "s" : ""} for &ldquo;{search}&rdquo;
-            </span>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>From</label>
+            <input className="form-input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ width: 140 }} />
+            <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>To</label>
+            <input className="form-input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ width: 140 }} />
+            {(dateFrom || dateTo) && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+                <i className="fas fa-times" />
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (

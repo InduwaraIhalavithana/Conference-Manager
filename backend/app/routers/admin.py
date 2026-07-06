@@ -68,17 +68,20 @@ def delete_organizer(org_id: int, db: Session = Depends(get_db), _=Depends(get_c
 @router.get("/conferences")
 def all_conferences(db: Session = Depends(get_db), _=Depends(get_current_admin)):
     rows = db.execute(
-        select(Conference, Organizer).join(Organizer).order_by(Conference.date.desc())
+        select(Conference, Organizer, func.count(Attendee.id).label("attendee_count"))
+        .join(Organizer, Conference.organizer_id == Organizer.id)
+        .outerjoin(Attendee, Attendee.conference_id == Conference.id)
+        .group_by(Conference.id, Organizer.id)
+        .order_by(Conference.date.desc())
     ).all()
-    out = []
-    for conf, org in rows:
-        count = db.execute(select(func.count()).where(Attendee.conference_id == conf.id)).scalar()
-        out.append({
+    return [
+        {
             **{c.key: getattr(conf, c.key) for c in conf.__table__.columns},
             "organizer_name": f"{org.first_name} {org.last_name}",
             "attendee_count": count,
-        })
-    return out
+        }
+        for conf, org, count in rows
+    ]
 
 
 @router.get("/feedback")

@@ -8,7 +8,7 @@ from app.models.conference import Conference
 from app.models.attendee import Attendee
 from app.models.organizer import Organizer
 from app.models.activity import ActivityLog
-from app.schemas.conference import ConferenceCreate, ConferenceUpdate
+from app.schemas.conference import ConferenceCreate, ConferenceUpdate, ConferencePatch
 
 router = APIRouter(prefix="/api/conferences", tags=["conferences"])
 
@@ -20,6 +20,16 @@ def _enrich(conf: Conference, db: Session, organizer_name: str | None = None) ->
         "attendee_count": count,
         "organizer_name": organizer_name,
     }
+
+
+@router.get("/past")
+def past_conferences(org=Depends(get_current_organizer), db: Session = Depends(get_db)):
+    confs = db.execute(
+        select(Conference)
+        .where(Conference.organizer_id == org.id, Conference.date < date.today())
+        .order_by(Conference.date.desc())
+    ).scalars().all()
+    return [_enrich(c, db) for c in confs]
 
 
 @router.get("/upcoming")
@@ -77,6 +87,21 @@ def update_conference(conf_id: int, body: ConferenceUpdate, org=Depends(get_curr
     for k, v in body.model_dump().items():
         setattr(conf, k, v)
     db.add(ActivityLog(organizer_id=org.id, action="update_conference", target=body.title))
+    db.commit()
+    db.refresh(conf)
+    return _enrich(conf, db)
+
+
+@router.patch("/{conf_id}")
+def patch_conference(conf_id: int, body: ConferencePatch, org=Depends(get_current_organizer), db: Session = Depends(get_db)):
+    conf = db.execute(
+        select(Conference).where(and_(Conference.id == conf_id, Conference.organizer_id == org.id))
+    ).scalar_one_or_none()
+    if not conf:
+        raise HTTPException(status_code=404, detail="Conference not found")
+    for k, v in body.model_dump(exclude_unset=True).items():
+        setattr(conf, k, v)
+    db.add(ActivityLog(organizer_id=org.id, action="update_conference", target=conf.title))
     db.commit()
     db.refresh(conf)
     return _enrich(conf, db)

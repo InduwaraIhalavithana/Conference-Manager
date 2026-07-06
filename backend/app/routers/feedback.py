@@ -1,17 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from pydantic import BaseModel
 from app.db.database import get_db
 from app.core.deps import get_current_organizer
 from app.models.feedback import Feedback
+from app.schemas.feedback import FeedbackCreate
 
 router = APIRouter(prefix="/api/feedback", tags=["feedback"])
-
-
-class FeedbackCreate(BaseModel):
-    subject: str
-    message: str
 
 
 @router.post("/", status_code=201)

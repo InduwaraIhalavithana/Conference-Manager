@@ -12,6 +12,7 @@ from app.schemas.auth import (
 )
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from app.models.activity import ActivityLog
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -44,6 +45,8 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if org.is_suspended:
         raise HTTPException(status_code=403, detail="Account suspended")
+    db.add(ActivityLog(organizer_id=org.id, action="login", target=org.email))
+    db.commit()
     token = create_access_token({"sub": org.id, "type": "organizer"})
     return TokenResponse(access_token=token)
 

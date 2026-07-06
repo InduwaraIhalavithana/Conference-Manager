@@ -1,0 +1,84 @@
+:root {
+  /* Brand */
+  --accent: #00a8ff;
+  --accent-dark: #0077cc;
+  --accent-light: rgba(0, 168, 255, 0.14);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Easing */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Dark mode (default / primary mode) ───────────────── */
+[data-theme="dark"] {
+  --bg-primary:   #010820;
+  --bg-secondary: #0d1428;
+  --bg-card:      rgba(13, 20, 40, 0.8);
+  --bg-input:     rgba(255, 255, 255, 0.06);
+  --bg-hover:     rgba(255, 255, 255, 0.05);
+  --text-primary:   #f0f4ff;
+  --text-secondary: rgba(240, 244, 255, 0.6);
+  --text-muted:     rgba(240, 244, 255, 0.35);
+  --border:         rgba(255, 255, 255, 0.08);
+  --border-focus:   rgba(0, 168, 255, 0.5);
+  --navbar-bg:      rgba(1, 8, 32, 0.92);
+  --scrollbar-thumb: rgba(255,255,255,0.12);
+
+  /* Glassmorphism — dark */
+  --glass-bg:     rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-blur:   blur(12px);
+  --glass-hover:  rgba(255, 255, 255, 0.08);
+
+  /* Shadows — dark (stronger) */
+  --shadow-sm:     0 2px 8px rgba(0,0,0,0.25);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.30);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.35);
+  --shadow-xl:     0 16px 48px rgba(0,0,0,0.45);
+  --shadow-accent: 0 4px 20px rgba(0,168,255,0.30);
+}
+
+/* ── Light mode — warm soft blue (like SmartAgri cream, blue-tinted) ── */
+[data-theme="light"] {
+  --bg-primary:   #E2EAF6;
+  --bg-secondary: #D2DCEE;
+  --bg-card:      #EBF0FB;
+  --bg-input:     #DDE5F3;
+  --bg-hover:     rgba(0, 50, 120, 0.06);
+  --text-primary:   #0B1829;
+  --text-secondary: rgba(11, 24, 41, 0.65);
+  --text-muted:     rgba(11, 24, 41, 0.40);
+  --border:         #B4C6E2;
+  --border-focus:   rgba(0, 110, 200, 0.55);
+  --navbar-bg:      rgba(226, 234, 246, 0.96);
+  --scrollbar-thumb: rgba(0, 60, 140, 0.22);
+
+  /* Glassmorphism — light */
+  --glass-bg:     rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-blur:   blur(10px);
+  --glass-hover:  rgba(255, 255, 255, 0.75);
+
+  /* Shadows — light (softer) */
+  --shadow-sm:     0 1px 4px rgba(0,30,80,0.08), 0 1px 2px rgba(0,30,80,0.05);
+  --shadow-md:     0 4px 16px rgba(0,30,80,0.10), 0 2px 6px rgba(0,30,80,0.06);
+  --shadow-lg:     0 8px 28px rgba(0,30,80,0.12), 0 4px 12px rgba(0,30,80,0.07);
+  --shadow-xl:     0 16px 48px rgba(0,30,80,0.15), 0 8px 20px rgba(0,30,80,0.08);
+  --shadow-accent: 0 4px 20px rgba(0,168,255,0.20);
+
+  /* Light mode: override accent-light to be more visible */
+  --accent-light: rgba(0, 168, 255, 0.12);
+}

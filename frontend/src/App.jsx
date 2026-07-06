@@ -1,0 +1,71 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AppProvider, useApp } from "./context/AppContext";
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import UpcomingConferencesPage from "./pages/UpcomingConferencesPage";
+import ConferenceDetailPage from "./pages/ConferenceDetailPage";
+import DashboardPage from "./pages/DashboardPage";
+import ManageConferencesPage from "./pages/ManageConferencesPage";
+import AttendeesPage from "./pages/AttendeesPage";
+import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminOrganizersPage from "./pages/admin/AdminOrganizersPage";
+import AdminConferencesPage from "./pages/admin/AdminConferencesPage";
+import AdminFeedbackPage from "./pages/admin/AdminFeedbackPage";
+import AdminActivityPage from "./pages/admin/AdminActivityPage";
+
+function OrganizerRoute({ children }) {
+  const { token, role } = useApp();
+  if (!token || role !== "organizer") return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const { token, role } = useApp();
+  if (!token || role !== "admin") return <Navigate to="/admin/login" replace />;
+  return children;
+}
+
+function AppRoutes() {
+  return (
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/conferences" element={<UpcomingConferencesPage />} />
+        <Route path="/conferences/:id" element={<ConferenceDetailPage />} />
+
+        <Route path="/dashboard" element={<OrganizerRoute><DashboardPage /></OrganizerRoute>} />
+        <Route path="/my-conferences" element={<OrganizerRoute><ManageConferencesPage /></OrganizerRoute>} />
+        <Route path="/attendees/:confId" element={<OrganizerRoute><AttendeesPage /></OrganizerRoute>} />
+        <Route path="/settings" element={<OrganizerRoute><SettingsPage /></OrganizerRoute>} />
+        <Route path="/help" element={<OrganizerRoute><HelpPage /></OrganizerRoute>} />
+
+        <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+        <Route path="/admin/organizers" element={<AdminRoute><AdminOrganizersPage /></AdminRoute>} />
+        <Route path="/admin/conferences" element={<AdminRoute><AdminConferencesPage /></AdminRoute>} />
+        <Route path="/admin/feedback" element={<AdminRoute><AdminFeedbackPage /></AdminRoute>} />
+        <Route path="/admin/activity" element={<AdminRoute><AdminActivityPage /></AdminRoute>} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AppRoutes />
+      </BrowserRouter>
+    </AppProvider>
+  );
+}

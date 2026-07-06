@@ -1,0 +1,63 @@
+/* ── Conference list rows ─────────────────────────────── */
+.manage-list { display: flex; flex-direction: column; gap: 12px; }
+
+.manage-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px 0 0;
+  overflow: hidden;
+  flex-wrap: wrap;
+  transition: box-shadow 0.2s var(--ease-out);
+}
+.manage-row:hover { box-shadow: var(--shadow-lg); }
+
+.manage-color-bar {
+  width: 4px;
+  align-self: stretch;
+  background: linear-gradient(180deg, var(--accent), #818cf8);
+  flex-shrink: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  margin: -1px 16px -1px -1px;
+}
+.manage-color-bar.past { background: linear-gradient(180deg, var(--text-muted), #6b7280); }
+
+.manage-info {
+  flex: 1;
+  min-width: 200px;
+  padding: 16px 0;
+}
+.manage-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.manage-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.manage-meta i { color: var(--accent); margin-right: 3px; }
+.manage-meta .tag { font-size: 0.75rem; }
+
+.manage-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+
+/* ── Empty / loading ──────────────────────────────────── */
+.center-spinner { display: flex; justify-content: center; padding: 80px; }
+
+.empty-state {
+  text-align: center;
+  padding: 72px 24px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.empty-state i    { font-size: 3.5rem; }
+.empty-state p    { font-size: 0.95rem; }

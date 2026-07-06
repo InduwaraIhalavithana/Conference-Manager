@@ -4,7 +4,7 @@ import { api } from "../services/api";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
-  const { t, token, user, lang, setLang, theme, toggleTheme } = useApp();
+  const { t, token, user, lang, setLang, theme, toggleTheme, updateUser } = useApp();
   const [tab, setTab] = useState("profile");
   const [profile, setProfile] = useState({ first_name: user?.first_name || "", last_name: user?.last_name || "", phone: user?.phone || "" });
   const [pwd, setPwd] = useState({ current_password: "", new_password: "", confirm: "" });
@@ -16,7 +16,8 @@ export default function SettingsPage() {
   const saveProfile = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
-      await api.updateProfile({ first_name: profile.first_name, last_name: profile.last_name, phone: profile.phone }, token);
+      const updated = await api.updateProfile({ first_name: profile.first_name, last_name: profile.last_name, phone: profile.phone }, token);
+      updateUser(updated);
       showMsg("success", "Profile updated successfully.");
     } catch (err) { showMsg("error", err.message); }
     finally { setSaving(false); }

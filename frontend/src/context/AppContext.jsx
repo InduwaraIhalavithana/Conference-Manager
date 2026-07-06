@@ -44,12 +44,20 @@ export function AppProvider({ children }) {
     localStorage.removeItem("cm_role");
   }, []);
 
+  const updateUser = useCallback((data) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...data };
+      localStorage.setItem("cm_user", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);
 
   return (
-    <AppContext.Provider value={{ token, user, role, lang, setLang, theme, toggleTheme, t, login, logout }}>
+    <AppContext.Provider value={{ token, user, role, lang, setLang, theme, toggleTheme, t, login, logout, updateUser }}>
       {children}
     </AppContext.Provider>
   );

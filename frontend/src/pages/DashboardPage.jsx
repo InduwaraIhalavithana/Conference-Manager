@@ -13,8 +13,9 @@ export default function DashboardPage() {
     api.myConferences(token).then(setConferences).finally(() => setLoading(false));
   }, [token]);
 
-  const upcoming = conferences.filter((c) => new Date(c.date) >= new Date());
-  const past     = conferences.filter((c) => new Date(c.date) < new Date());
+  const today    = new Date().toISOString().slice(0, 10);
+  const upcoming = conferences.filter((c) => c.date >= today);
+  const past     = conferences.filter((c) => c.date <  today);
   const totalAttendees = conferences.reduce((s, c) => s + (c.attendee_count || 0), 0);
 
   const stats = [

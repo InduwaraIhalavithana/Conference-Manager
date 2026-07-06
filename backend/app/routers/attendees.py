@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
+from datetime import date
 from app.db.database import get_db
 from app.core.deps import get_current_organizer
 from app.models.attendee import Attendee
@@ -15,6 +16,8 @@ def register_attendee(conf_id: int, body: AttendeeRegister, db: Session = Depend
     conf = db.get(Conference, conf_id)
     if not conf:
         raise HTTPException(status_code=404, detail="Conference not found")
+    if conf.date < date.today():
+        raise HTTPException(status_code=400, detail="Registration closed — conference has already passed")
     dup = db.execute(
         select(Attendee).where(and_(Attendee.conference_id == conf_id, Attendee.email == body.email))
     ).scalar_one_or_none()

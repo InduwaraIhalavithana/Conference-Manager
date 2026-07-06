@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.db.database import get_db
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.security import hash_password, verify_password, create_access_token, decode_token
 from app.core.deps import get_current_organizer, get_current_admin
 from app.models.organizer import Organizer
 from app.models.admin import Admin
@@ -10,7 +10,10 @@ from app.schemas.auth import (
     RegisterRequest, LoginRequest, AdminLoginRequest,
     TokenResponse, OrganizerOut,
 )
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -34,7 +37,8 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     org = db.execute(select(Organizer).where(Organizer.email == body.email)).scalar_one_or_none()
     if not org or not verify_password(body.password, org.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -45,11 +49,18 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/admin/login", response_model=TokenResponse)
-def admin_login(body: AdminLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def admin_login(request: Request, body: AdminLoginRequest, db: Session = Depends(get_db)):
     admin = db.execute(select(Admin).where(Admin.username == body.username)).scalar_one_or_none()
     if not admin or not verify_password(body.password, admin.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_access_token({"sub": admin.id, "type": "admin"})
+    return TokenResponse(access_token=token)
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(request: Request, org: Organizer = Depends(get_current_organizer)):
+    token = create_access_token({"sub": org.id, "type": "organizer"})
     return TokenResponse(access_token=token)
 
 

@@ -1,11 +1,14 @@
+import os
 import secrets
+import asyncio
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.db.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, decode_token
 from app.core.deps import get_current_organizer, get_current_admin
+from app.core.email import send_email
 from app.models.organizer import Organizer
 from app.models.admin import Admin
 from app.models.password_reset import PasswordResetToken
@@ -17,6 +20,8 @@ from pydantic import BaseModel, EmailStr, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.models.activity import ActivityLog
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5174")
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -91,7 +96,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 @router.post("/forgot-password", status_code=200)
-def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(body: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     org = db.execute(select(Organizer).where(Organizer.email == body.email)).scalar_one_or_none()
     if not org:
         return {"message": "If that email is registered, a reset link has been sent."}
@@ -99,6 +104,11 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     expires = datetime.now(timezone.utc) + timedelta(hours=2)
     db.add(PasswordResetToken(organizer_id=org.id, token=reset_token, expires_at=expires))
     db.commit()
+    reset_url = f"{FRONTEND_URL}/reset-password?token={reset_token}"
+    background_tasks.add_task(
+        asyncio.run,
+        send_email(org.email, "Reset Your ConferenceHub Password", "password_reset.html", {"reset_url": reset_url}),
+    )
     return {"message": "If that email is registered, a reset link has been sent.", "reset_token": reset_token}
 
 

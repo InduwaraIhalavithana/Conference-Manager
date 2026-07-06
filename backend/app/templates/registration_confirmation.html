@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Registration Confirmed</title></head>
+<body style="font-family:sans-serif;background:#f4f4f4;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+  <div style="background:#6366f1;padding:32px;text-align:center">
+    <h1 style="color:#fff;margin:0">Registration Confirmed!</h1>
+  </div>
+  <div style="padding:32px">
+    <p>Hello <strong>{{ attendee_name }}</strong>,</p>
+    <p>You have successfully registered for:</p>
+    <div style="background:#f0f0ff;border-left:4px solid #6366f1;padding:16px;border-radius:4px;margin:16px 0">
+      <h2 style="margin:0 0 8px;color:#1e1b4b">{{ conference_title }}</h2>
+      <p style="margin:4px 0;color:#555"><strong>Date:</strong> {{ conference_date }}</p>
+      {% if conference_time %}<p style="margin:4px 0;color:#555"><strong>Time:</strong> {{ conference_time }}</p>{% endif %}
+      {% if conference_location %}<p style="margin:4px 0;color:#555"><strong>Location:</strong> {{ conference_location }}</p>{% endif %}
+    </div>
+    <p>We look forward to seeing you there!</p>
+    <p style="color:#888;font-size:0.875rem;margin-top:32px">— The ConferenceHub Team</p>
+  </div>
+</div>
+</body>
+</html>

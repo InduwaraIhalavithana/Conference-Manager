@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+import asyncio
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from datetime import date
 from app.db.database import get_db
 from app.core.deps import get_current_admin
 from app.core.pagination import paginate
+from app.core.email import send_email
 from app.models.organizer import Organizer
 from app.models.conference import Conference
 from app.models.attendee import Attendee
@@ -128,12 +130,22 @@ def all_feedback(db: Session = Depends(get_db), _=Depends(get_current_admin)):
 
 
 @router.put("/feedback/{fb_id}/reply", status_code=204)
-def reply_feedback(fb_id: int, body: FeedbackReply, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+def reply_feedback(fb_id: int, body: FeedbackReply, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _=Depends(get_current_admin)):
     fb = db.get(Feedback, fb_id)
     if not fb:
         raise HTTPException(404)
     fb.reply = body.reply
     db.commit()
+    org = db.get(Organizer, fb.organizer_id)
+    if org:
+        background_tasks.add_task(
+            asyncio.run,
+            send_email(org.email, "Admin replied to your feedback", "feedback_reply.html", {
+                "organizer_name": f"{org.first_name} {org.last_name}",
+                "feedback_subject": fb.subject,
+                "reply": body.reply,
+            }),
+        )
 
 
 @router.put("/feedback/{fb_id}/resolve", status_code=204)

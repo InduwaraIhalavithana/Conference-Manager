@@ -1,3 +1,5 @@
+import secrets
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -6,10 +8,12 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.deps import get_current_organizer, get_current_admin
 from app.models.organizer import Organizer
 from app.models.admin import Admin
+from app.models.password_reset import PasswordResetToken
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, AdminLoginRequest,
     TokenResponse, OrganizerOut,
 )
+from pydantic import BaseModel, EmailStr, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.models.activity import ActivityLog
@@ -75,3 +79,44 @@ def me(org: Organizer = Depends(get_current_organizer)):
 @router.get("/admin/me")
 def admin_me(admin: Admin = Depends(get_current_admin)):
     return {"id": admin.id, "username": admin.username}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+
+@router.post("/forgot-password", status_code=200)
+def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    org = db.execute(select(Organizer).where(Organizer.email == body.email)).scalar_one_or_none()
+    if not org:
+        return {"message": "If that email is registered, a reset link has been sent."}
+    reset_token = secrets.token_urlsafe(48)
+    expires = datetime.now(timezone.utc) + timedelta(hours=2)
+    db.add(PasswordResetToken(organizer_id=org.id, token=reset_token, expires_at=expires))
+    db.commit()
+    return {"message": "If that email is registered, a reset link has been sent.", "reset_token": reset_token}
+
+
+@router.post("/reset-password", status_code=200)
+def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    record = db.execute(
+        select(PasswordResetToken).where(PasswordResetToken.token == body.token)
+    ).scalar_one_or_none()
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    if record.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        db.delete(record)
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    org = db.get(Organizer, record.organizer_id)
+    if not org:
+        raise HTTPException(status_code=400, detail="Invalid reset token")
+    org.password_hash = hash_password(body.new_password)
+    db.delete(record)
+    db.commit()
+    return {"message": "Password reset successfully"}

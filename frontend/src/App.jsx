@@ -5,6 +5,8 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpcomingConferencesPage from "./pages/UpcomingConferencesPage";
 import ConferenceDetailPage from "./pages/ConferenceDetailPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -38,6 +40,8 @@ function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/conferences" element={<UpcomingConferencesPage />} />
         <Route path="/conferences/:id" element={<ConferenceDetailPage />} />

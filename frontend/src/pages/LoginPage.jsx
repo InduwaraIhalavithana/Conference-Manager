@@ -97,6 +97,9 @@ export default function LoginPage() {
             {t("no_account")} <Link to="/register">{t("register")}</Link>
           </p>
           <p className="auth-switch">
+            <Link to="/forgot-password">Forgot your password?</Link>
+          </p>
+          <p className="auth-switch">
             <Link to="/admin/login">{t("admin_login")}</Link>
           </p>
         </div>

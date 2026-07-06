@@ -30,6 +30,8 @@ export const api = {
   refreshToken: (token) => request("POST", "/auth/refresh", null, token),
   getMe: (token) => request("GET", "/auth/me", null, token),
   getAdminMe: (token) => request("GET", "/auth/admin/me", null, token),
+  forgotPassword: (body) => request("POST", "/auth/forgot-password", body),
+  resetPassword: (body) => request("POST", "/auth/reset-password", body),
 
   // Conferences
   upcomingConferences: (page = 1, category = null) => {

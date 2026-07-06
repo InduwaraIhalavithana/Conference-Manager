@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
@@ -19,16 +20,22 @@ export default function AdminFeedbackPage() {
     const reply = replyForm[id];
     if (!reply?.trim()) return;
     setActing(id);
-    await api.replyFeedback(id, { reply }, token);
-    setFeedback((prev) => prev.map((f) => f.id === id ? { ...f, reply } : f));
-    setActing(null);
+    try {
+      await api.replyFeedback(id, { reply }, token);
+      setFeedback((prev) => prev.map((f) => f.id === id ? { ...f, reply } : f));
+      toast.success("Reply sent.");
+    } catch (err) { toast.error(err.message); }
+    finally { setActing(null); }
   };
 
   const resolve = async (id) => {
     setActing(id);
-    await api.resolveFeedback(id, token);
-    setFeedback((prev) => prev.map((f) => f.id === id ? { ...f, status: "resolved" } : f));
-    setActing(null);
+    try {
+      await api.resolveFeedback(id, token);
+      setFeedback((prev) => prev.map((f) => f.id === id ? { ...f, status: "resolved" } : f));
+      toast.success("Marked as resolved.");
+    } catch (err) { toast.error(err.message); }
+    finally { setActing(null); }
   };
 
   return (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import "./SettingsPage.css";
@@ -12,10 +13,7 @@ export default function SettingsPage() {
   const [pwd, setPwd] = useState({ current_password: "", new_password: "", confirm: "" });
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [msg, setMsg] = useState({ type: "", text: "" });
   const [saving, setSaving] = useState(false);
-
-  const showMsg = (type, text) => { setMsg({ type, text }); setTimeout(() => setMsg({ type: "", text: "" }), 3000); };
 
   const handleDeleteAccount = async (e) => {
     e.preventDefault();
@@ -26,7 +24,7 @@ export default function SettingsPage() {
       logout();
       navigate("/");
     } catch (err) {
-      showMsg("error", err.message);
+      toast.error(err.message);
     } finally {
       setDeleting(false);
     }
@@ -37,20 +35,20 @@ export default function SettingsPage() {
     try {
       const updated = await api.updateProfile({ first_name: profile.first_name, last_name: profile.last_name, phone: profile.phone }, token);
       updateUser(updated);
-      showMsg("success", "Profile updated successfully.");
-    } catch (err) { showMsg("error", err.message); }
+      toast.success("Profile updated successfully.");
+    } catch (err) { toast.error(err.message); }
     finally { setSaving(false); }
   };
 
   const savePassword = async (e) => {
     e.preventDefault();
-    if (pwd.new_password !== pwd.confirm) { showMsg("error", "Passwords do not match."); return; }
+    if (pwd.new_password !== pwd.confirm) { toast.error("Passwords do not match."); return; }
     setSaving(true);
     try {
       await api.changePassword({ current_password: pwd.current_password, new_password: pwd.new_password }, token);
-      showMsg("success", "Password changed successfully.");
+      toast.success("Password changed successfully.");
       setPwd({ current_password: "", new_password: "", confirm: "" });
-    } catch (err) { showMsg("error", err.message); }
+    } catch (err) { toast.error(err.message); }
     finally { setSaving(false); }
   };
 
@@ -74,8 +72,6 @@ export default function SettingsPage() {
         </aside>
 
         <main className="settings-main">
-          {msg.text && <div className={`alert alert-${msg.type}`}>{msg.text}</div>}
-
           {tab === "profile" && (
             <div className="card fade-up">
               <h3><i className="fas fa-user" /> {t("profile")}</h3>

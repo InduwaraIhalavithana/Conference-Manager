@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import "./ConferencesPage.css";
@@ -24,6 +25,8 @@ export default function ConferenceDetailPage() {
     try {
       await api.registerAttendee(id, form);
       setSuccess(true);
+      setConf((prev) => ({ ...prev, attendee_count: (prev.attendee_count || 0) + 1 }));
+      toast.success("You are registered!");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,6 +37,8 @@ export default function ConferenceDetailPage() {
   if (loading) return <div className="page-wrapper center-spinner"><span className="spinner" /></div>;
   if (!conf) return <div className="page-wrapper"><p>Conference not found.</p></div>;
 
+  const spotsLeft = conf.max_attendees ? conf.max_attendees - (conf.attendee_count || 0) : null;
+
   return (
     <div className="page-wrapper">
       <div className="container conf-detail">
@@ -41,7 +46,11 @@ export default function ConferenceDetailPage() {
 
         <div className="conf-detail-grid">
           <div className="conf-info card">
-            <h1 className="conf-detail-title">{conf.title}</h1>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <h1 className="conf-detail-title" style={{ margin: 0 }}>{conf.title}</h1>
+              {conf.category && <span className="tag" style={{ marginTop: 4 }}>{conf.category}</span>}
+              {conf.status === "draft" && <span className="badge badge-warning" style={{ marginTop: 4 }}>Draft</span>}
+            </div>
             <div className="conf-meta-list">
               <div className="conf-meta-item">
                 <i className="fas fa-calendar" />
@@ -63,7 +72,14 @@ export default function ConferenceDetailPage() {
               </div>
               <div className="conf-meta-item">
                 <i className="fas fa-users" />
-                <span>{conf.attendee_count} {t("attendees")}</span>
+                <span>
+                  {conf.attendee_count} {t("attendees")}
+                  {spotsLeft !== null && (
+                    <span style={{ color: spotsLeft <= 5 ? "var(--error)" : "var(--text-muted)", marginLeft: 8 }}>
+                      ({spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"})
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
             {conf.description && (
@@ -81,6 +97,8 @@ export default function ConferenceDetailPage() {
                 <i className="fas fa-check-circle" />
                 <p>{t("registration_success")}</p>
               </div>
+            ) : spotsLeft === 0 ? (
+              <div className="alert alert-error">This conference is full.</div>
             ) : (
               <form onSubmit={handleRegister} className="auth-form">
                 {error && <div className="alert alert-error">{error}</div>}

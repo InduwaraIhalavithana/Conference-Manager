@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import "./HelpPage.css";
@@ -15,7 +16,6 @@ export default function HelpPage() {
   const [tab, setTab] = useState("faq");
   const [form, setForm] = useState({ subject: "", message: "" });
   const [history, setHistory] = useState([]);
-  const [msg, setMsg] = useState({ type: "", text: "" });
   const [sending, setSending] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -29,13 +29,12 @@ export default function HelpPage() {
     e.preventDefault(); setSending(true);
     try {
       await api.submitFeedback(form, token);
-      setMsg({ type: "success", text: "Feedback sent successfully!" });
+      toast.success("Feedback sent successfully!");
       setForm({ subject: "", message: "" });
     } catch (err) {
-      setMsg({ type: "error", text: err.message });
+      toast.error(err.message);
     } finally {
       setSending(false);
-      setTimeout(() => setMsg({ type: "", text: "" }), 3000);
     }
   };
 
@@ -75,7 +74,6 @@ export default function HelpPage() {
           {tab === "feedback" && (
             <div className="card fade-up">
               <h3><i className="fas fa-paper-plane" /> {t("submit_feedback")}</h3>
-              {msg.text && <div className={`alert alert-${msg.type}`}>{msg.text}</div>}
               <form onSubmit={sendFeedback} className="settings-form">
                 <div className="form-group">
                   <label className="form-label">{t("subject")}</label>

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, and_
 from datetime import date
 from app.db.database import get_db
 from app.core.deps import get_current_organizer
+from app.core.pagination import paginate
 from app.models.conference import Conference
 from app.models.attendee import Attendee
 from app.models.organizer import Organizer
@@ -33,17 +34,23 @@ def past_conferences(org=Depends(get_current_organizer), db: Session = Depends(g
 
 
 @router.get("/upcoming")
-def upcoming_conferences(db: Session = Depends(get_db)):
-    rows = db.execute(
+def upcoming_conferences(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    category: str | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    q = (
         select(Conference, Organizer)
         .join(Organizer, Conference.organizer_id == Organizer.id)
-        .where(Conference.date >= date.today())
+        .where(Conference.date >= date.today(), Conference.status == "published")
         .order_by(Conference.date, Conference.time)
-    ).all()
-    return [
-        _enrich(conf, db, f"{org.first_name} {org.last_name}")
-        for conf, org in rows
-    ]
+    )
+    if category:
+        q = q.where(Conference.category == category)
+    rows = db.execute(q).all()
+    items = [_enrich(conf, db, f"{org.first_name} {org.last_name}") for conf, org in rows]
+    return paginate(items, page, per_page)
 
 
 @router.get("/{conf_id}")
@@ -58,13 +65,19 @@ def get_conference(conf_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/")
-def my_conferences(org=Depends(get_current_organizer), db: Session = Depends(get_db)):
+def my_conferences(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    org=Depends(get_current_organizer),
+    db: Session = Depends(get_db),
+):
     confs = db.execute(
         select(Conference)
         .where(Conference.organizer_id == org.id)
         .order_by(Conference.date.desc())
     ).scalars().all()
-    return [_enrich(c, db) for c in confs]
+    items = [_enrich(c, db) for c in confs]
+    return paginate(items, page, per_page)
 
 
 @router.post("/", status_code=201)

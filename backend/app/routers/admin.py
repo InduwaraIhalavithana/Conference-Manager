@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from datetime import date
 from app.db.database import get_db
 from app.core.deps import get_current_admin
+from app.core.pagination import paginate
 from app.models.organizer import Organizer
 from app.models.conference import Conference
 from app.models.attendee import Attendee
@@ -34,8 +35,22 @@ def stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
 
 
 @router.get("/organizers")
-def list_organizers(db: Session = Depends(get_db), _=Depends(get_current_admin)):
-    return db.execute(select(Organizer).order_by(Organizer.created_at.desc())).scalars().all()
+def list_organizers(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _=Depends(get_current_admin),
+):
+    items = db.execute(select(Organizer).order_by(Organizer.created_at.desc())).scalars().all()
+    result = paginate(
+        [
+            {c.key: getattr(o, c.key) for c in o.__table__.columns}
+            for o in items
+        ],
+        page,
+        per_page,
+    )
+    return result
 
 
 @router.put("/organizers/{org_id}/suspend", status_code=204)
@@ -65,8 +80,22 @@ def delete_organizer(org_id: int, db: Session = Depends(get_db), _=Depends(get_c
     db.commit()
 
 
+@router.delete("/conferences/{conf_id}", status_code=204)
+def delete_conference(conf_id: int, db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    conf = db.get(Conference, conf_id)
+    if not conf:
+        raise HTTPException(404, "Conference not found")
+    db.delete(conf)
+    db.commit()
+
+
 @router.get("/conferences")
-def all_conferences(db: Session = Depends(get_db), _=Depends(get_current_admin)):
+def all_conferences(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _=Depends(get_current_admin),
+):
     rows = db.execute(
         select(Conference, Organizer, func.count(Attendee.id).label("attendee_count"))
         .join(Organizer, Conference.organizer_id == Organizer.id)
@@ -74,7 +103,7 @@ def all_conferences(db: Session = Depends(get_db), _=Depends(get_current_admin))
         .group_by(Conference.id, Organizer.id)
         .order_by(Conference.date.desc())
     ).all()
-    return [
+    items = [
         {
             **{c.key: getattr(conf, c.key) for c in conf.__table__.columns},
             "organizer_name": f"{org.first_name} {org.last_name}",
@@ -82,6 +111,7 @@ def all_conferences(db: Session = Depends(get_db), _=Depends(get_current_admin))
         }
         for conf, org, count in rows
     ]
+    return paginate(items, page, per_page)
 
 
 @router.get("/feedback")
@@ -116,17 +146,22 @@ def resolve_feedback(fb_id: int, db: Session = Depends(get_db), _=Depends(get_cu
 
 
 @router.get("/activity")
-def activity_log(db: Session = Depends(get_db), _=Depends(get_current_admin)):
+def activity_log(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _=Depends(get_current_admin),
+):
     rows = db.execute(
         select(ActivityLog, Organizer)
         .outerjoin(Organizer, ActivityLog.organizer_id == Organizer.id)
         .order_by(ActivityLog.created_at.desc())
-        .limit(200)
     ).all()
-    return [
+    items = [
         {
             **{c.key: getattr(log, c.key) for c in log.__table__.columns},
             "organizer_name": f"{org.first_name} {org.last_name}" if org else None,
         }
         for log, org in rows
     ]
+    return paginate(items, page, per_page)

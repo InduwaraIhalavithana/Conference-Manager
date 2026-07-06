@@ -2,19 +2,39 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
+import Pagination from "../components/Pagination";
 import "./ConferencesPage.css";
+
+const CATEGORIES = ["Tech", "Health", "Education", "Business", "Other"];
 
 export default function UpcomingConferencesPage() {
   const { t } = useApp();
   const [conferences, setConferences] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api.upcomingConferences()
-      .then(setConferences)
+  const load = (p = 1, cat = category) => {
+    setLoading(true);
+    api.upcomingConferences(p, cat || null)
+      .then((res) => {
+        setConferences(res.items);
+        setPage(res.page);
+        setPages(res.pages);
+        setTotal(res.total);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(1, ""); }, []);
+
+  const handleCategory = (cat) => {
+    setCategory(cat);
+    load(1, cat);
+  };
 
   const filtered = conferences.filter((c) =>
     c.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -40,10 +60,29 @@ export default function UpcomingConferencesPage() {
           <div className="conf-page-banner-count">
             {!loading && (
               <span className="tag">
-                <i className="fas fa-list" /> {conferences.length} conference{conferences.length !== 1 ? "s" : ""}
+                <i className="fas fa-list" /> {total} conference{total !== 1 ? "s" : ""}
               </span>
             )}
           </div>
+        </div>
+
+        {/* Category filter chips */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <button
+            className={`btn btn-sm ${category === "" ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => handleCategory("")}
+          >
+            All
+          </button>
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              className={`btn btn-sm ${category === c ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => handleCategory(c)}
+            >
+              {c}
+            </button>
+          ))}
         </div>
 
         {/* Search bar */}
@@ -60,14 +99,14 @@ export default function UpcomingConferencesPage() {
           </div>
           {search && (
             <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-              {filtered.length} result{filtered.length !== 1 ? "s" : ""} for "{search}"
+              {filtered.length} result{filtered.length !== 1 ? "s" : ""} for &ldquo;{search}&rdquo;
             </span>
           )}
         </div>
 
         {loading ? (
           <div className="center-spinner"><span className="spinner" /></div>
-        ) : conferences.length === 0 ? (
+        ) : total === 0 ? (
           <div className="conf-empty-full">
             <div className="conf-empty-icon-wrap">
               <i className="fas fa-calendar-check" />
@@ -82,26 +121,6 @@ export default function UpcomingConferencesPage() {
                 <i className="fas fa-home" /> Back to Home
               </Link>
             </div>
-            <div className="conf-placeholder-grid">
-              {[
-                { wide: "65%", lines: ["full","wide","medium"] },
-                { wide: "75%", lines: ["full","wide","short"] },
-                { wide: "55%", lines: ["full","medium","wide"] },
-              ].map((card, i) => (
-                <div key={i} className="conf-placeholder-card">
-                  <div className="conf-placeholder-accent" />
-                  <div className="conf-placeholder-bar short" />
-                  <div className="conf-placeholder-bar tall" />
-                  {card.lines.map((w, j) => (
-                    <div key={j} className={`conf-placeholder-bar ${w}`} />
-                  ))}
-                  <div className="conf-placeholder-footer">
-                    <div className="conf-placeholder-bar short" />
-                    <div className="conf-placeholder-bar medium" />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
@@ -112,29 +131,38 @@ export default function UpcomingConferencesPage() {
             </button>
           </div>
         ) : (
-          <div className="conf-grid">
-            {filtered.map((c) => (
-              <Link to={`/conferences/${c.id}`} key={c.id} className="conf-card card">
-                <div className="conf-card-accent" />
-                <div className="conf-date-badge">
-                  <i className="fas fa-calendar" />
-                  {new Date(c.date).toLocaleDateString()} {c.time && `· ${c.time.slice(0, 5)}`}
-                </div>
-                <h3 className="conf-title">{c.title}</h3>
-                {c.description && (
-                  <p className="conf-desc">
-                    {c.description.slice(0, 100)}{c.description.length > 100 ? "…" : ""}
-                  </p>
-                )}
-                <p className="conf-location"><i className="fas fa-map-marker-alt" /> {c.location || "TBA"}</p>
-                <p className="conf-organizer"><i className="fas fa-user-tie" /> {c.organizer_name}</p>
-                <div className="conf-footer">
-                  <span className="tag"><i className="fas fa-users" /> {c.attendee_count} {t("attendees")}</span>
-                  <span className="btn btn-primary btn-sm">{t("register_attend")} →</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="conf-grid">
+              {filtered.map((c) => (
+                <Link to={`/conferences/${c.id}`} key={c.id} className="conf-card card">
+                  <div className="conf-card-accent" />
+                  <div className="conf-date-badge">
+                    <i className="fas fa-calendar" />
+                    {new Date(c.date).toLocaleDateString()} {c.time && `· ${c.time.slice(0, 5)}`}
+                  </div>
+                  {c.category && (
+                    <span className="tag" style={{ fontSize: "0.7rem", marginBottom: 4 }}>{c.category}</span>
+                  )}
+                  <h3 className="conf-title">{c.title}</h3>
+                  {c.description && (
+                    <p className="conf-desc">
+                      {c.description.slice(0, 100)}{c.description.length > 100 ? "…" : ""}
+                    </p>
+                  )}
+                  <p className="conf-location"><i className="fas fa-map-marker-alt" /> {c.location || "TBA"}</p>
+                  <p className="conf-organizer"><i className="fas fa-user-tie" /> {c.organizer_name}</p>
+                  <div className="conf-footer">
+                    <span className="tag">
+                      <i className="fas fa-users" /> {c.attendee_count}
+                      {c.max_attendees ? ` / ${c.max_attendees}` : ""} {t("attendees")}
+                    </span>
+                    <span className="btn btn-primary btn-sm">{t("register_attend")} →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <Pagination page={page} pages={pages} onPage={(p) => load(p)} />
+          </>
         )}
       </div>
     </div>

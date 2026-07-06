@@ -10,6 +10,9 @@ class ConferenceCreate(BaseModel):
     date: date
     time: Optional[TimeType] = None
     location: Optional[str] = None
+    max_attendees: Optional[int] = None
+    status: str = "published"
+    category: Optional[str] = None
 
 
 class ConferenceUpdate(ConferenceCreate):
@@ -22,5 +25,8 @@ class ConferencePatch(BaseModel):
     date: Optional[date] = None
     time: Optional[TimeType] = None
     location: Optional[str] = None
+    max_attendees: Optional[int] = None
+    status: Optional[str] = None
+    category: Optional[str] = None
 
 

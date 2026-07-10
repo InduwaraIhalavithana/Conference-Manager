@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../services/api";
+import CustomSelect from "./CustomSelect";
 import "./ConferenceModal.css";
 
 const CATEGORIES = ["Tech", "Health", "Education", "Business", "Other"];
@@ -80,20 +81,25 @@ export default function ConferenceModal({ conference, token, onSaved, onClose, t
             </div>
             <div className="form-group">
               <label className="form-label">Category</label>
-              <select className="form-input" value={form.category} onChange={set("category")}>
+              <CustomSelect value={form.category} onChange={set("category")}>
                 <option value="">— None —</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+              </CustomSelect>
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Status</label>
-            <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+            <div className="seg-toggle" style={{ marginTop: 4 }}>
               {["published", "draft"].map((s) => (
-                <label key={s} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                  <input type="radio" value={s} checked={form.status === s} onChange={set("status")} />
-                  <span style={{ textTransform: "capitalize" }}>{s}</span>
-                </label>
+                <button
+                  key={s}
+                  type="button"
+                  className={`seg-toggle__opt${form.status === s ? " seg-toggle__opt--active" : ""}${s === "draft" ? " seg-toggle__opt--warn" : ""}`}
+                  onClick={() => setForm({ ...form, status: s })}
+                  style={{ textTransform: "capitalize" }}
+                >
+                  {s}
+                </button>
               ))}
             </div>
           </div>

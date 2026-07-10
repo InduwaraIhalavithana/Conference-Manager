@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import CustomSelect from "./CustomSelect";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -59,15 +60,16 @@ export default function Navbar() {
           </div>
 
           <div className="navbar-controls">
-            <select
-              className="lang-select"
+            <CustomSelect
+              compact
+              className="lang-csel"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
             >
               <option value="en">EN</option>
               <option value="si">සි</option>
               <option value="ta">த</option>
-            </select>
+            </CustomSelect>
 
             <button className="theme-btn" onClick={toggleTheme} title={t(theme === "dark" ? "light_mode" : "dark_mode")}>
               <i className={`fas fa-${theme === "dark" ? "sun" : "moon"}`} />

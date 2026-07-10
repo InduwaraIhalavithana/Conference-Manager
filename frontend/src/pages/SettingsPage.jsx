@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
+import CustomSelect from "../components/CustomSelect";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
@@ -168,11 +169,11 @@ export default function SettingsPage() {
                     <div className="appear-label">{t("language")}</div>
                     <div className="appear-desc" style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>Choose your preferred language</div>
                   </div>
-                  <select className="form-input" style={{ width: "auto" }} value={lang} onChange={(e) => setLang(e.target.value)}>
+                  <CustomSelect style={{ width: 160 }} value={lang} onChange={(e) => setLang(e.target.value)}>
                     <option value="en">English</option>
                     <option value="si">සිංහල</option>
                     <option value="ta">தமிழ்</option>
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
             </div>

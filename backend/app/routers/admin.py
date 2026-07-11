@@ -2,7 +2,7 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from app.db.database import get_db
 from app.core.deps import get_current_admin
 from app.core.pagination import paginate
@@ -34,6 +34,33 @@ def stats(db: Session = Depends(get_db), _=Depends(get_current_admin)):
         total_attendees=count(Attendee),
         open_feedback=count(Feedback, Feedback.status == "open"),
     )
+
+
+@router.get("/trends")
+def trends(db: Session = Depends(get_db), _=Depends(get_current_admin)):
+    """14-day registration + organizer-signup counts for the admin dashboard charts."""
+    since = datetime.now(timezone.utc) - timedelta(days=13)
+
+    reg_rows = db.execute(
+        select(func.date(Attendee.registered_at), func.count(Attendee.id))
+        .where(Attendee.registered_at >= since)
+        .group_by(func.date(Attendee.registered_at))
+    ).all()
+    reg_by_day = {str(d): c for d, c in reg_rows}
+
+    org_rows = db.execute(
+        select(func.date(Organizer.created_at), func.count(Organizer.id))
+        .where(Organizer.created_at >= since)
+        .group_by(func.date(Organizer.created_at))
+    ).all()
+    org_by_day = {str(d): c for d, c in org_rows}
+
+    today = date.today()
+    days = [str(today - timedelta(days=i)) for i in range(13, -1, -1)]
+    return {
+        "registrations": [{"date": d, "count": reg_by_day.get(d, 0)} for d in days],
+        "organizers": [{"date": d, "count": org_by_day.get(d, 0)} for d in days],
+    }
 
 
 @router.get("/organizers")

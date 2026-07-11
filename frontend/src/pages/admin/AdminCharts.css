@@ -1,0 +1,124 @@
+/* ── Admin dashboard mini bar charts ──────────────────── */
+.admin-chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+@media (max-width: 800px) {
+  .admin-chart-row { grid-template-columns: 1fr; }
+}
+
+.admin-chart { padding: 18px 22px 12px; }
+.admin-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.admin-chart-title { font-size: 0.88rem; font-weight: 700; color: var(--text-secondary); }
+.admin-chart-total { font-size: 1.6rem; font-weight: 800; }
+
+.admin-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 70px;
+}
+.admin-chart-col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.admin-chart-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  transform-origin: bottom;
+  animation: chartBarGrow 0.5s var(--ease-out) backwards;
+}
+@keyframes chartBarGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-chart-bar { animation: none; }
+}
+.admin-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* ── Activity feed (shared look with organizer dashboard) ── */
+.admin-activity-list { display: flex; flex-direction: column; }
+.admin-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  animation: fadeUpIn 0.35s var(--ease-out) forwards;
+}
+.admin-activity-row:last-child { border-bottom: none; }
+@keyframes fadeUpIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-activity-row { animation: none; opacity: 1; }
+}
+.admin-act-icon {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.admin-act-icon.act-blue   { background: var(--accent-light);   color: var(--accent);  }
+.admin-act-icon.act-green  { background: rgba(16,185,129,0.15); color: var(--success); }
+.admin-act-icon.act-red    { background: rgba(239,68,68,0.15);  color: var(--danger);  }
+.admin-act-icon.act-orange { background: rgba(245,158,11,0.15); color: var(--warning); }
+.admin-act-icon.act-purple { background: rgba(99,102,241,0.15); color: #818cf8;        }
+.admin-act-text {
+  flex: 1;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-act-who { color: var(--text-muted); text-transform: none; }
+.admin-act-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+
+/* ── Feedback cards polish ─────────────────────────────── */
+.feedback-item { position: relative; overflow: hidden; }
+.feedback-item.fb-unread::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3px;
+  background: var(--warning);
+}
+.fb-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.fb-admin-head-left { display: flex; align-items: flex-start; gap: 12px; }
+.fb-reply {
+  animation: fbReplyIn 0.3s var(--ease-out);
+}
+@keyframes fbReplyIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fb-reply { animation: none; }
+}

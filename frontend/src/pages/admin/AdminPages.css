@@ -155,17 +155,6 @@
 
 /* ── Empty / loading ──────────────────────────────────── */
 .center-spinner { display: flex; justify-content: center; padding: 80px; }
-.empty-state {
-  text-align: center;
-  padding: 72px 24px;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-.empty-state i { font-size: 3rem; }
-.empty-state p { font-size: 0.95rem; }
 
 @media (max-width: 768px) {
   .admin-stat-grid { grid-template-columns: repeat(2, 1fr); }

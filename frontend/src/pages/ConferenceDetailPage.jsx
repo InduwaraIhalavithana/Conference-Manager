@@ -3,7 +3,57 @@ import { useParams, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
+import { catMeta, countdownLabel } from "../utils/categories";
+import { avatarColor, initials } from "../utils/avatars";
 import "./ConferencesPage.css";
+import "./ConferenceDetailPage.css";
+
+/* Animated spots-left ring */
+function SpotsRing({ taken, max, color }) {
+  const R = 26, C = 2 * Math.PI * R;
+  const pct = Math.min(1, taken / max);
+  return (
+    <div className="spots-ring-wrap">
+      <svg viewBox="0 0 64 64" className="spots-ring">
+        <circle cx="32" cy="32" r={R} fill="none" stroke="var(--bg-hover)" strokeWidth="6" />
+        <circle
+          cx="32" cy="32" r={R} fill="none"
+          stroke={color} strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={C}
+          strokeDashoffset={C * (1 - pct)}
+          transform="rotate(-90 32 32)"
+          className="spots-ring-fill"
+        />
+      </svg>
+      <div className="spots-ring-label">
+        <span className="spots-ring-num">{max - taken}</span>
+        <span className="spots-ring-sub">left</span>
+      </div>
+    </div>
+  );
+}
+
+/* CSS confetti burst */
+function Confetti() {
+  const pieces = Array.from({ length: 24 });
+  const colors = ["#00a8ff", "#10b981", "#a855f7", "#f59e0b", "#ef4444", "#06b6d4"];
+  return (
+    <div className="confetti-wrap" aria-hidden="true">
+      {pieces.map((_, i) => (
+        <span
+          key={i}
+          className="confetti-piece"
+          style={{
+            left: `${(i / 24) * 100}%`,
+            background: colors[i % colors.length],
+            animationDelay: `${(i % 8) * 60}ms`,
+            animationDuration: `${900 + (i % 5) * 150}ms`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function ConferenceDetailPage() {
   const { id } = useParams();
@@ -37,20 +87,28 @@ export default function ConferenceDetailPage() {
   if (loading) return <div className="page-wrapper center-spinner"><span className="spinner" /></div>;
   if (!conf) return <div className="page-wrapper"><p>Conference not found.</p></div>;
 
+  const m = catMeta(conf.category);
+  const countdown = countdownLabel(conf.date);
   const spotsLeft = conf.max_attendees ? conf.max_attendees - (conf.attendee_count || 0) : null;
 
   return (
     <div className="page-wrapper">
-      <div className="container conf-detail">
+      <div className="container conf-detail" style={{ "--cat": m.color, "--cat-soft": m.soft }}>
         <Link to="/conferences" className="back-link"><i className="fas fa-arrow-left" /> {t("back")}</Link>
 
         <div className="conf-detail-grid">
-          <div className="conf-info card">
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <h1 className="conf-detail-title" style={{ margin: 0 }}>{conf.title}</h1>
-              {conf.category && <span className="tag" style={{ marginTop: 4 }}>{conf.category}</span>}
-              {conf.status === "draft" && <span className="badge badge-warning" style={{ marginTop: 4 }}>Draft</span>}
+          <div className="conf-info card detail-hero">
+            <div className="detail-hero-accent" />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              {conf.category && (
+                <span className="conf-cat-tag" style={{ background: m.soft, color: m.color }}>
+                  <i className={`fas fa-${m.icon}`} /> {conf.category}
+                </span>
+              )}
+              {countdown && <span className="conf-countdown-chip">{countdown}</span>}
+              {conf.status === "draft" && <span className="badge badge-warning">Draft</span>}
             </div>
+            <h1 className="conf-detail-title">{conf.title}</h1>
             <div className="conf-meta-list">
               <div className="conf-meta-item">
                 <i className="fas fa-calendar" />
@@ -66,16 +124,18 @@ export default function ConferenceDetailPage() {
                 <i className="fas fa-map-marker-alt" />
                 <span>{conf.location || "To be announced"}</span>
               </div>
-              <div className="conf-meta-item">
-                <i className="fas fa-user-tie" />
-                <span>{t("organizer")}: {conf.organizer_name}</span>
+              <div className="conf-meta-item detail-organizer">
+                <span className="att-avatar detail-org-avatar" style={{ background: avatarColor(conf.organizer_name || "?") }}>
+                  {initials(conf.organizer_name || "?")}
+                </span>
+                <span>{t("organizer")}: <strong>{conf.organizer_name}</strong></span>
               </div>
               <div className="conf-meta-item">
                 <i className="fas fa-users" />
                 <span>
                   {conf.attendee_count} {t("attendees")}
                   {spotsLeft !== null && (
-                    <span style={{ color: spotsLeft <= 5 ? "var(--error)" : "var(--text-muted)", marginLeft: 8 }}>
+                    <span style={{ color: spotsLeft <= 5 ? "var(--danger)" : "var(--text-muted)", marginLeft: 8 }}>
                       ({spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"})
                     </span>
                   )}
@@ -91,11 +151,34 @@ export default function ConferenceDetailPage() {
           </div>
 
           <div className="register-card card">
+            {spotsLeft !== null && spotsLeft > 0 && !success && (
+              <div className="register-ring-row">
+                <SpotsRing taken={conf.attendee_count || 0} max={conf.max_attendees} color={m.color} />
+                <div className="register-ring-text">
+                  <strong>{spotsLeft}</strong> of {conf.max_attendees} spots remaining
+                </div>
+              </div>
+            )}
             <h2><i className="fas fa-ticket-alt" /> {t("register_attend")}</h2>
             {success ? (
-              <div className="success-msg">
-                <i className="fas fa-check-circle" />
-                <p>{t("registration_success")}</p>
+              <div className="ticket-success">
+                <Confetti />
+                <div className="ticket-card" style={{ "--cat": m.color }}>
+                  <div className="ticket-punch ticket-punch-l" />
+                  <div className="ticket-punch ticket-punch-r" />
+                  <div className="ticket-head">
+                    <i className="fas fa-check-circle" />
+                    <span>You&apos;re in!</span>
+                  </div>
+                  <div className="ticket-title">{conf.title}</div>
+                  <div className="ticket-divider" />
+                  <div className="ticket-meta">
+                    <span><i className="fas fa-user" /> {form.name}</span>
+                    <span><i className="fas fa-calendar" /> {new Date(conf.date).toLocaleDateString()}</span>
+                    {conf.location && <span><i className="fas fa-map-marker-alt" /> {conf.location}</span>}
+                  </div>
+                  <div className="ticket-note">A confirmation email is on its way to {form.email}</div>
+                </div>
               </div>
             ) : spotsLeft === 0 ? (
               <div className="alert alert-error">This conference is full.</div>

@@ -66,6 +66,7 @@ export const api = {
 
   // Admin
   adminStats: (token) => request("GET", "/api/admin/stats", null, token),
+  adminTrends: (token) => request("GET", "/api/admin/trends", null, token),
   adminOrganizers: (token, page = 1) =>
     request("GET", `/api/admin/organizers?page=${page}&per_page=20`, null, token),
   suspendOrganizer: (id, token) => request("PUT", `/api/admin/organizers/${id}/suspend`, null, token),

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import { SkeletonCard } from "../components/Skeleton";
+import { actionMeta, relTime } from "../utils/activity";
 import "./DashboardPage.css";
 
 /* Animated count-up number */
@@ -100,23 +101,6 @@ function NextEvent({ conf }) {
   );
 }
 
-const ACTIVITY_META = {
-  login:             { icon: "sign-in-alt",   color: "blue"   },
-  create_conference: { icon: "plus-circle",   color: "green"  },
-  update_conference: { icon: "edit",          color: "blue"   },
-  delete_conference: { icon: "trash",         color: "red"    },
-  update_profile:    { icon: "user-edit",     color: "purple" },
-  change_password:   { icon: "key",           color: "orange" },
-};
-
-function relTime(iso) {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
-}
-
 function ActivityFeed({ items }) {
   if (!items || items.length === 0) return null;
   return (
@@ -124,7 +108,7 @@ function ActivityFeed({ items }) {
       <div className="dash-spark-title" style={{ marginBottom: 14 }}><i className="fas fa-stream" /> Recent Activity</div>
       <div className="dash-activity-list">
         {items.map((a, i) => {
-          const meta = ACTIVITY_META[a.action] || { icon: "circle", color: "blue" };
+          const meta = actionMeta(a.action);
           return (
             <div key={i} className="dash-activity-row" style={{ animationDelay: `${i * 50}ms` }}>
               <span className={`dash-act-icon act-${meta.color}`}><i className={`fas fa-${meta.icon}`} /></span>

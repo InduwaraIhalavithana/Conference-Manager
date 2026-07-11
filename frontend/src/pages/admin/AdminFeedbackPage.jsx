@@ -4,7 +4,9 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
 import EmptyState from "../../components/EmptyState";
+import { avatarColor, initials } from "../../utils/avatars";
 import "./AdminPages.css";
+import "./AdminCharts.css";
 
 export default function AdminFeedbackPage() {
   const { t, token } = useApp();
@@ -52,11 +54,16 @@ export default function AdminFeedbackPage() {
         ) : (
           <div className="feedback-list">
             {feedback.map((fb) => (
-              <div key={fb.id} className="feedback-item card">
+              <div key={fb.id} className={`feedback-item card${fb.status !== "resolved" ? " fb-unread" : ""}`}>
                 <div className="fb-admin-head">
-                  <div>
-                    <span className="fb-subject">{fb.subject}</span>
-                    <span className="fb-from">{fb.organizer_name} · {fb.organizer_email}</span>
+                  <div className="fb-admin-head-left">
+                    <span className="fb-avatar" style={{ background: avatarColor(fb.organizer_email) }}>
+                      {initials(fb.organizer_name)}
+                    </span>
+                    <div>
+                      <span className="fb-subject">{fb.subject}</span>
+                      <span className="fb-from">{fb.organizer_name} · {fb.organizer_email}</span>
+                    </div>
                   </div>
                   <span className={`badge badge-${fb.status === "resolved" ? "success" : "warning"}`}>
                     {t(fb.status === "resolved" ? "status_resolved" : "status_open")}

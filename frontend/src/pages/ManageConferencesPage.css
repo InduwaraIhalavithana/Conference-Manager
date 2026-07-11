@@ -2,25 +2,44 @@
 .manage-list { display: flex; flex-direction: column; gap: 12px; }
 
 .manage-row {
+  --cat: var(--accent);
+  --cat-soft: var(--accent-light);
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 0 20px 0 0;
   overflow: hidden;
   flex-wrap: wrap;
-  transition: box-shadow 0.2s var(--ease-out);
+  transition: box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
-.manage-row:hover { box-shadow: var(--shadow-lg); }
+.manage-row:hover { box-shadow: var(--shadow-lg), 0 4px 18px var(--cat-soft); border-color: var(--cat); }
 
 .manage-color-bar {
   width: 4px;
   align-self: stretch;
-  background: linear-gradient(180deg, var(--accent), #818cf8);
+  background: var(--cat);
   flex-shrink: 0;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   margin: -1px 16px -1px -1px;
 }
 .manage-color-bar.past { background: linear-gradient(180deg, var(--text-muted), #6b7280); }
+
+/* Inline capacity mini-bar */
+.manage-cap-bar {
+  display: inline-block;
+  width: 70px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  overflow: hidden;
+  vertical-align: middle;
+}
+.manage-cap-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s var(--ease-out);
+}
 
 .manage-info {
   flex: 1;

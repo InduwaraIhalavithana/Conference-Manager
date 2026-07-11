@@ -2,8 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 import App from "./App";
+import { initRipple } from "./utils/ripple";
 import "./styles/global_vars.css";
 import "./styles/global.css";
+
+initRipple();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

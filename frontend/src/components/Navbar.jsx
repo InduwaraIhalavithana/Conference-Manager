@@ -50,11 +50,11 @@ export default function Navbar() {
             )}
             {isAdmin && (
               <>
-                <Link to="/admin" className="nav-link" onClick={() => setMenuOpen(false)}>{t("overview")}</Link>
-                <Link to="/admin/organizers" className="nav-link" onClick={() => setMenuOpen(false)}>{t("organizer_management")}</Link>
-                <Link to="/admin/conferences" className="nav-link" onClick={() => setMenuOpen(false)}>{t("conferences")}</Link>
-                <Link to="/admin/feedback" className="nav-link" onClick={() => setMenuOpen(false)}>{t("feedback_management")}</Link>
-                <Link to="/admin/activity" className="nav-link" onClick={() => setMenuOpen(false)}>{t("activity_log")}</Link>
+                <Link to="/admin" className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`} onClick={() => setMenuOpen(false)}>{t("overview")}</Link>
+                <Link to="/admin/organizers" className={`nav-link ${location.pathname === "/admin/organizers" ? "active" : ""}`} onClick={() => setMenuOpen(false)}>{t("organizer_management")}</Link>
+                <Link to="/admin/conferences" className={`nav-link ${location.pathname === "/admin/conferences" ? "active" : ""}`} onClick={() => setMenuOpen(false)}>{t("conferences")}</Link>
+                <Link to="/admin/feedback" className={`nav-link ${location.pathname === "/admin/feedback" ? "active" : ""}`} onClick={() => setMenuOpen(false)}>{t("feedback_management")}</Link>
+                <Link to="/admin/activity" className={`nav-link ${location.pathname === "/admin/activity" ? "active" : ""}`} onClick={() => setMenuOpen(false)}>{t("activity_log")}</Link>
               </>
             )}
           </div>

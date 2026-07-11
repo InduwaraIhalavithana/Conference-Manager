@@ -55,6 +55,7 @@ export const api = {
   exportAttendeesUrl: (confId) => `/api/attendees/${confId}/export`,
 
   // Organizer profile
+  myOverview: (token) => request("GET", "/api/organizers/me/overview", null, token),
   updateProfile: (body, token) => request("PUT", "/api/organizers/me", body, token),
   changePassword: (body, token) => request("PUT", "/api/organizers/me/password", body, token),
   deleteAccount: (body, token) => request("DELETE", "/api/organizers/me", body, token),

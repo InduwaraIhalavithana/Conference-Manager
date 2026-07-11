@@ -3,6 +3,7 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
 import Pagination from "../../components/Pagination";
+import ConfirmModal from "../../components/ConfirmModal";
 import "./AdminPages.css";
 
 export default function AdminOrganizersPage() {
@@ -42,10 +43,13 @@ export default function AdminOrganizersPage() {
     setActing(null);
   };
 
-  const del = async (id, name) => {
-    if (!window.confirm(`Delete ${name}?`)) return;
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const del = async () => {
+    const { id } = confirmDel;
     setActing(id);
     await api.deleteOrganizer(id, token);
+    setConfirmDel(null);
     load(page);
     setActing(null);
   };
@@ -96,7 +100,7 @@ export default function AdminOrganizersPage() {
                               {acting === o.id ? <span className="spinner" /> : <><i className="fas fa-ban" /> {t("suspend")}</>}
                             </button>
                           )}
-                          <button className="btn btn-danger btn-sm" onClick={() => del(o.id, `${o.first_name} ${o.last_name}`)} disabled={acting === o.id}>
+                          <button className="btn btn-danger btn-sm" onClick={() => setConfirmDel({ id: o.id, name: `${o.first_name} ${o.last_name}` })} disabled={acting === o.id}>
                             <i className="fas fa-trash" />
                           </button>
                         </div>
@@ -108,6 +112,18 @@ export default function AdminOrganizersPage() {
             </div>
             <Pagination page={page} pages={pages} onPage={load} />
           </>
+        )}
+
+        {confirmDel && (
+          <ConfirmModal
+            danger
+            title="Delete organizer?"
+            message={`${confirmDel.name}'s account, conferences, and attendee data will be permanently removed.`}
+            confirmLabel="Delete"
+            busy={acting === confirmDel.id}
+            onConfirm={del}
+            onCancel={() => setConfirmDel(null)}
+          />
         )}
       </div>
     </AdminLayout>

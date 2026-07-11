@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import CustomSelect from "../components/CustomSelect";
+import ConfirmModal from "../components/ConfirmModal";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
@@ -15,10 +16,9 @@ export default function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const handleDeleteAccount = async (e) => {
-    e.preventDefault();
-    if (!window.confirm("Permanently delete your account and all conferences? This cannot be undone.")) return;
+  const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
       await api.deleteAccount({ password: deletePassword }, token);
@@ -26,6 +26,7 @@ export default function SettingsPage() {
       navigate("/");
     } catch (err) {
       toast.error(err.message);
+      setConfirmDelete(false);
     } finally {
       setDeleting(false);
     }
@@ -131,7 +132,7 @@ export default function SettingsPage() {
               <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: 16 }}>
                 Permanently deletes your account and all associated conferences, attendees, and data. This action cannot be undone.
               </p>
-              <form onSubmit={handleDeleteAccount} className="settings-form">
+              <form onSubmit={(e) => { e.preventDefault(); setConfirmDelete(true); }} className="settings-form">
                 <div className="form-group">
                   <label className="form-label">Confirm your password</label>
                   <input
@@ -148,6 +149,18 @@ export default function SettingsPage() {
                 </button>
               </form>
             </div>
+          )}
+
+          {confirmDelete && (
+            <ConfirmModal
+              danger
+              title="Delete your account?"
+              message="Your account and every conference, attendee list, and record tied to it will be permanently erased. This cannot be undone."
+              confirmLabel="Delete forever"
+              busy={deleting}
+              onConfirm={handleDeleteAccount}
+              onCancel={() => setConfirmDelete(false)}
+            />
           )}
 
           {tab === "appearance" && (

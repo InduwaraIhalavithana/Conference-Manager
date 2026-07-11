@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import { avatarColor, initials } from "../utils/avatars";
+import ConfirmModal from "../components/ConfirmModal";
+import EmptyState from "../components/EmptyState";
 import "./ConferencesPage.css";
 import "./AttendeesPage.css";
 import "./admin/AdminPages.css";
@@ -61,12 +63,15 @@ export default function AttendeesPage() {
     ]).then(([c, a]) => { setConf(c); setAttendees(a); }).finally(() => setLoading(false));
   }, [confId, token]);
 
-  const handleCancel = async (attendee) => {
-    if (!window.confirm(`Remove ${attendee.name} from this conference?`)) return;
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const handleCancel = async () => {
+    const attendee = confirmDel;
     setDeleting(attendee.id);
     try {
       await api.cancelAttendee(confId, attendee.id, token);
       setAttendees((prev) => prev.filter((a) => a.id !== attendee.id));
+      setConfirmDel(null);
     } finally {
       setDeleting(null);
     }
@@ -125,10 +130,19 @@ export default function AttendeesPage() {
           <>
             <RegTimeline attendees={attendees} />
             {filtered.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-user-slash" />
-                <p>No attendees found.</p>
-              </div>
+              <EmptyState
+                scene="attendees"
+                title={search ? "No matching attendees" : "No attendees yet"}
+                message={search
+                  ? `Nobody matches "${search}". Try a different name or email.`
+                  : "Once people register for this conference, they'll appear here."}
+              >
+                {search && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setSearch("")}>
+                    <i className="fas fa-times" /> Clear search
+                  </button>
+                )}
+              </EmptyState>
             ) : (
               <div className="card">
                 <div style={{ marginBottom: 12, fontSize: "0.875rem", color: "var(--text-muted)" }}>
@@ -161,7 +175,7 @@ export default function AttendeesPage() {
                         <td>
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() => handleCancel(a)}
+                            onClick={() => setConfirmDel(a)}
                             disabled={deleting === a.id}
                             title="Remove attendee"
                           >
@@ -175,6 +189,18 @@ export default function AttendeesPage() {
               </div>
             )}
           </>
+        )}
+
+        {confirmDel && (
+          <ConfirmModal
+            danger
+            title="Remove attendee?"
+            message={`${confirmDel.name} (${confirmDel.email}) will be removed from this conference.`}
+            confirmLabel="Remove"
+            busy={deleting === confirmDel.id}
+            onConfirm={handleCancel}
+            onCancel={() => setConfirmDel(null)}
+          />
         )}
       </div>
     </div>

@@ -1,0 +1,59 @@
+.cmodal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 20, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: cmodalFade 0.18s ease-out;
+  padding: 20px;
+}
+@keyframes cmodalFade { from { opacity: 0; } }
+
+.cmodal-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: cmodalPop 0.22s var(--ease-out);
+}
+[data-theme="light"] .cmodal-box { background: var(--bg-card); }
+@keyframes cmodalPop {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cmodal-backdrop, .cmodal-box { animation: none; }
+}
+
+.cmodal-icon {
+  width: 54px; height: 54px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+.cmodal-icon--danger {
+  background: rgba(239,68,68,0.14);
+  color: var(--danger);
+}
+
+.cmodal-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
+.cmodal-message { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+
+.cmodal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.cmodal-actions .btn { min-width: 110px; justify-content: center; }

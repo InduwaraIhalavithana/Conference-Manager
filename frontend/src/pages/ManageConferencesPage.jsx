@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import ConferenceModal from "../components/ConferenceModal";
+import ConfirmModal from "../components/ConfirmModal";
+import EmptyState from "../components/EmptyState";
 import Pagination from "../components/Pagination";
 import { catMeta, countdownLabel } from "../utils/categories";
 import "./ManageConferencesPage.css";
@@ -31,11 +33,14 @@ export default function ManageConferencesPage() {
 
   useEffect(() => { load(1); }, [token]);
 
-  const handleDelete = async (conf) => {
-    if (!window.confirm(`Delete "${conf.title}"?`)) return;
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const handleDelete = async () => {
+    const conf = confirmDel;
     setDeleting(conf.id);
     try {
       await api.deleteConference(conf.id, token);
+      setConfirmDel(null);
       load(page);
     } finally {
       setDeleting(null);
@@ -67,13 +72,15 @@ export default function ManageConferencesPage() {
         {loading ? (
           <div className="center-spinner"><span className="spinner" /></div>
         ) : conferences.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-calendar-plus" />
-            <p>No conferences yet. Create your first one!</p>
+          <EmptyState
+            scene="conferences"
+            title="No conferences yet"
+            message="Create your first conference and start accepting registrations in minutes."
+          >
             <button className="btn btn-primary" onClick={() => setModal("create")}>
               <i className="fas fa-plus" /> {t("create_conference")}
             </button>
-          </div>
+          </EmptyState>
         ) : (
           <>
             <div className="manage-list">
@@ -122,7 +129,7 @@ export default function ManageConferencesPage() {
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(c)}
+                        onClick={() => setConfirmDel(c)}
                         disabled={deleting === c.id}
                       >
                         {deleting === c.id ? <span className="spinner" /> : <i className="fas fa-trash" />}
@@ -144,6 +151,18 @@ export default function ManageConferencesPage() {
           onSaved={handleSaved}
           onClose={() => setModal(null)}
           t={t}
+        />
+      )}
+
+      {confirmDel && (
+        <ConfirmModal
+          danger
+          title="Delete conference?"
+          message={`"${confirmDel.title}" and all its attendee registrations will be permanently removed.`}
+          confirmLabel="Delete"
+          busy={deleting === confirmDel.id}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDel(null)}
         />
       )}
     </div>

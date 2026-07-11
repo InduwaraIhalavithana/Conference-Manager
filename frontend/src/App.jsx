@@ -19,6 +19,7 @@ import AdminOrganizersPage from "./pages/admin/AdminOrganizersPage";
 import AdminConferencesPage from "./pages/admin/AdminConferencesPage";
 import AdminFeedbackPage from "./pages/admin/AdminFeedbackPage";
 import AdminActivityPage from "./pages/admin/AdminActivityPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function OrganizerRoute({ children }) {
   const { token, role } = useApp();
@@ -58,7 +59,7 @@ function AppRoutes() {
         <Route path="/admin/feedback" element={<AdminRoute><AdminFeedbackPage /></AdminRoute>} />
         <Route path="/admin/activity" element={<AdminRoute><AdminActivityPage /></AdminRoute>} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
   );

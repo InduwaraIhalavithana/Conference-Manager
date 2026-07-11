@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
+import EmptyState from "../../components/EmptyState";
 import "./AdminPages.css";
 
 export default function AdminFeedbackPage() {
@@ -47,7 +48,7 @@ export default function AdminFeedbackPage() {
         {loading ? (
           <div className="center-spinner"><span className="spinner" /></div>
         ) : feedback.length === 0 ? (
-          <div className="empty-state"><i className="fas fa-inbox" /><p>No feedback yet.</p></div>
+          <EmptyState scene="feedback" title="No feedback yet" message="When organizers submit feedback or questions, they'll show up here for you to reply." />
         ) : (
           <div className="feedback-list">
             {feedback.map((fb) => (

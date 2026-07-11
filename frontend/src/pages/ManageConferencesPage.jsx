@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import ConferenceModal from "../components/ConferenceModal";
 import Pagination from "../components/Pagination";
+import { catMeta, countdownLabel } from "../utils/categories";
 import "./ManageConferencesPage.css";
 
 export default function ManageConferencesPage() {
@@ -79,15 +80,23 @@ export default function ManageConferencesPage() {
               {conferences.map((c) => {
                 const isPast = c.date < new Date().toISOString().slice(0, 10);
                 const isDraft = c.status === "draft";
+                const m = catMeta(c.category);
+                const countdown = !isPast && countdownLabel(c.date);
+                const pct = c.max_attendees ? Math.min(100, Math.round((c.attendee_count / c.max_attendees) * 100)) : null;
                 return (
-                  <div key={c.id} className="manage-row card">
+                  <div key={c.id} className="manage-row card" style={{ "--cat": m.color, "--cat-soft": m.soft }}>
                     <div className={`manage-color-bar${isPast ? " past" : ""}`} />
                     <div className="manage-info">
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <h3 className="manage-title">{c.title}</h3>
                         {isDraft && <span className="badge badge-warning">Draft</span>}
                         {isPast && <span className="badge badge-warning">Past</span>}
-                        {c.category && <span className="tag" style={{ fontSize: "0.75rem" }}>{c.category}</span>}
+                        {c.category && (
+                          <span className="conf-cat-tag" style={{ background: m.soft, color: m.color }}>
+                            <i className={`fas fa-${m.icon}`} /> {c.category}
+                          </span>
+                        )}
+                        {countdown && <span className="conf-countdown-chip">{countdown}</span>}
                       </div>
                       <div className="manage-meta">
                         <span><i className="fas fa-calendar" /> {new Date(c.date).toLocaleDateString()}</span>
@@ -97,6 +106,11 @@ export default function ManageConferencesPage() {
                           <i className="fas fa-users" /> {c.attendee_count}
                           {c.max_attendees ? ` / ${c.max_attendees}` : ""}
                         </span>
+                        {pct !== null && (
+                          <span className="manage-cap-bar" title={`${pct}% full`}>
+                            <span style={{ width: `${pct}%`, background: m.color }} />
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="manage-actions">

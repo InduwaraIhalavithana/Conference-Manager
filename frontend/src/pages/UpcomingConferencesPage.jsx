@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import Pagination from "../components/Pagination";
+import { catMeta, countdownLabel, CATEGORY_META } from "../utils/categories";
 import "./ConferencesPage.css";
 
 const CATEGORIES = ["Tech", "Health", "Education", "Business", "Other"];
+
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 export default function UpcomingConferencesPage() {
   const { t } = useApp();
@@ -80,15 +83,22 @@ export default function UpcomingConferencesPage() {
           >
             All
           </button>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              className={`btn btn-sm ${category === c ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => handleCategory(c)}
-            >
-              {c}
-            </button>
-          ))}
+          {CATEGORIES.map((c) => {
+            const m = CATEGORY_META[c];
+            const active = category === c;
+            return (
+              <button
+                key={c}
+                className="btn btn-sm cat-chip"
+                style={active
+                  ? { background: m.color, color: "#fff", boxShadow: `0 4px 14px ${m.soft}` }
+                  : { background: m.soft, color: m.color, border: `1px solid ${m.soft}` }}
+                onClick={() => handleCategory(c)}
+              >
+                <i className={`fas fa-${m.icon}`} /> {c}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search + date range bar */}
@@ -145,33 +155,58 @@ export default function UpcomingConferencesPage() {
         ) : (
           <>
             <div className="conf-grid">
-              {filtered.map((c) => (
-                <Link to={`/conferences/${c.id}`} key={c.id} className="conf-card card">
-                  <div className="conf-card-accent" />
-                  <div className="conf-date-badge">
-                    <i className="fas fa-calendar" />
-                    {new Date(c.date).toLocaleDateString()} {c.time && `· ${c.time.slice(0, 5)}`}
-                  </div>
-                  {c.category && (
-                    <span className="tag" style={{ fontSize: "0.7rem", marginBottom: 4 }}>{c.category}</span>
-                  )}
-                  <h3 className="conf-title">{c.title}</h3>
-                  {c.description && (
-                    <p className="conf-desc">
-                      {c.description.slice(0, 100)}{c.description.length > 100 ? "…" : ""}
+              {filtered.map((c, idx) => {
+                const m = catMeta(c.category);
+                const d = new Date(c.date + "T00:00:00");
+                const countdown = countdownLabel(c.date);
+                const pct = c.max_attendees ? Math.min(100, Math.round((c.attendee_count / c.max_attendees) * 100)) : null;
+                return (
+                  <Link
+                    to={`/conferences/${c.id}`}
+                    key={c.id}
+                    className="conf-card card fade-up-card"
+                    style={{ "--cat": m.color, "--cat-soft": m.soft, "--stagger": idx % 8 }}
+                  >
+                    <div className="conf-card-accent" />
+                    <div className="conf-card-top">
+                      <div className="conf-cal-leaf">
+                        <span className="conf-cal-month">{MONTHS[d.getMonth()]}</span>
+                        <span className="conf-cal-day">{d.getDate()}</span>
+                      </div>
+                      <div className="conf-card-top-right">
+                        {countdown && <span className="conf-countdown-chip">{countdown}</span>}
+                        {c.category && (
+                          <span className="conf-cat-tag"><i className={`fas fa-${m.icon}`} /> {c.category}</span>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="conf-title">{c.title}</h3>
+                    {c.description && (
+                      <p className="conf-desc">
+                        {c.description.slice(0, 100)}{c.description.length > 100 ? "…" : ""}
+                      </p>
+                    )}
+                    <p className="conf-location">
+                      <i className="fas fa-map-marker-alt" /> {c.location || "TBA"}
+                      {c.time && <>&nbsp;·&nbsp;<i className="fas fa-clock" /> {c.time.slice(0, 5)}</>}
                     </p>
-                  )}
-                  <p className="conf-location"><i className="fas fa-map-marker-alt" /> {c.location || "TBA"}</p>
-                  <p className="conf-organizer"><i className="fas fa-user-tie" /> {c.organizer_name}</p>
-                  <div className="conf-footer">
-                    <span className="tag">
-                      <i className="fas fa-users" /> {c.attendee_count}
-                      {c.max_attendees ? ` / ${c.max_attendees}` : ""} {t("attendees")}
-                    </span>
-                    <span className="btn btn-primary btn-sm">{t("register_attend")} →</span>
-                  </div>
-                </Link>
-              ))}
+                    <p className="conf-organizer"><i className="fas fa-user-tie" /> {c.organizer_name}</p>
+                    {pct !== null && (
+                      <div className="conf-cap">
+                        <div className="conf-cap-bar"><div style={{ width: `${pct}%` }} /></div>
+                        <span>{c.max_attendees - c.attendee_count} spots left</span>
+                      </div>
+                    )}
+                    <div className="conf-footer">
+                      <span className="tag">
+                        <i className="fas fa-users" /> {c.attendee_count}
+                        {c.max_attendees ? ` / ${c.max_attendees}` : ""} {t("attendees")}
+                      </span>
+                      <span className="btn btn-primary btn-sm">{t("register_attend")} →</span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
             <Pagination page={page} pages={pages} onPage={(p) => load(p)} />
           </>

@@ -98,6 +98,29 @@ input, textarea, select { font-family: inherit; outline: none; }
 .btn-success:hover { filter: brightness(1.1); }
 .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
 
+/* ── Category tag + countdown chips (shared) ────────────── */
+.conf-cat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--cat-soft, var(--accent-light));
+  color: var(--cat, var(--accent));
+  white-space: nowrap;
+}
+.conf-countdown-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(16,185,129,0.14);
+  color: var(--success);
+  white-space: nowrap;
+}
+
 /* ── Card ───────────────────────────────────────────────── */
 .card {
   background: var(--bg-card);

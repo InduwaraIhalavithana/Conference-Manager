@@ -103,21 +103,104 @@
 @media (max-width: 480px)  { .conf-grid { grid-template-columns: 1fr; } }
 
 .conf-card {
+  --cat: var(--accent);
+  --cat-soft: var(--accent-light);
   display: flex;
   flex-direction: column;
   gap: 10px;
   text-decoration: none;
   overflow: hidden;
   padding-top: 0;
-  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
-.conf-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.conf-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--cat), 0 6px 24px var(--cat-soft);
+  border-color: var(--cat);
+}
 .conf-card-accent {
   height: 4px;
-  background: linear-gradient(90deg, var(--accent), #818cf8);
+  background: var(--cat);
   margin: -24px -24px 14px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
+
+/* Staggered card entrance */
+.fade-up-card {
+  opacity: 0;
+  animation: fadeUpIn 0.45s var(--ease-out) forwards;
+  animation-delay: calc(var(--stagger, 0) * 55ms);
+}
+@keyframes fadeUpIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-up-card { animation: none; opacity: 1; }
+}
+
+/* Card top row: calendar leaf + chips */
+.conf-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.conf-cal-leaf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+.conf-cal-month {
+  width: 100%;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 3px 0;
+  background: var(--cat);
+  color: #fff;
+}
+.conf-cal-day {
+  font-size: 1.35rem;
+  font-weight: 800;
+  padding: 2px 8px 4px;
+  background: var(--bg-secondary);
+  width: 100%;
+  text-align: center;
+}
+.conf-card-top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+/* Capacity bar on cards */
+.conf-cap { margin-top: 2px; }
+.conf-cap-bar {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.conf-cap-bar > div {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--cat);
+  transition: width 0.7s var(--ease-out);
+}
+.conf-cap > span { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Category chips row */
+.cat-chip { transition: all 0.18s var(--ease-out); }
+.cat-chip:hover { transform: translateY(-1px); filter: brightness(1.08); }
 
 .conf-date-badge {
   display: flex;

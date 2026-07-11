@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { api } from "../services/api";
 import Pagination from "../components/Pagination";
 import { catMeta, countdownLabel, CATEGORY_META } from "../utils/categories";
+import EmptyState from "../components/EmptyState";
 import "./ConferencesPage.css";
 
 const CATEGORIES = ["Tech", "Health", "Education", "Business", "Other"];
@@ -145,13 +146,15 @@ export default function UpcomingConferencesPage() {
             </div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-calendar-times" />
-            <p>No conferences match &ldquo;{search}&rdquo;</p>
-            <button className="btn btn-ghost btn-sm" onClick={() => setSearch("")}>
-              <i className="fas fa-times" /> Clear search
+          <EmptyState
+            scene="search"
+            title="No conferences match"
+            message={search ? `Nothing found for "${search}". Try different keywords or clear the filters.` : "No conferences match the selected filters."}
+          >
+            <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}>
+              <i className="fas fa-times" /> Clear filters
             </button>
-          </div>
+          </EmptyState>
         ) : (
           <>
             <div className="conf-grid">

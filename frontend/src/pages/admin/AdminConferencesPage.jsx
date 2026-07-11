@@ -4,6 +4,7 @@ import { useApp } from "../../context/AppContext";
 import { api } from "../../services/api";
 import AdminLayout from "./AdminLayout";
 import Pagination from "../../components/Pagination";
+import ConfirmModal from "../../components/ConfirmModal";
 import "./AdminPages.css";
 
 export default function AdminConferencesPage() {
@@ -30,11 +31,14 @@ export default function AdminConferencesPage() {
 
   useEffect(() => { load(1); }, [token]);
 
-  const handleDelete = async (conf) => {
-    if (!window.confirm(`Delete "${conf.title}"? This cannot be undone.`)) return;
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const handleDelete = async () => {
+    const conf = confirmDel;
     setDeleting(conf.id);
     try {
       await api.adminDeleteConference(conf.id, token);
+      setConfirmDel(null);
       load(page);
     } finally {
       setDeleting(null);
@@ -100,7 +104,7 @@ export default function AdminConferencesPage() {
                       <td>
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(c)}
+                          onClick={() => setConfirmDel(c)}
                           disabled={deleting === c.id}
                         >
                           {deleting === c.id ? <span className="spinner" /> : <i className="fas fa-trash" />}
@@ -113,6 +117,18 @@ export default function AdminConferencesPage() {
             </div>
             <Pagination page={page} pages={pages} onPage={load} />
           </>
+        )}
+
+        {confirmDel && (
+          <ConfirmModal
+            danger
+            title="Delete conference?"
+            message={`"${confirmDel.title}" and all its registrations will be permanently removed. This cannot be undone.`}
+            confirmLabel="Delete"
+            busy={deleting === confirmDel.id}
+            onConfirm={handleDelete}
+            onCancel={() => setConfirmDel(null)}
+          />
         )}
       </div>
     </AdminLayout>

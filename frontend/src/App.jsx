@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import Navbar from "./components/Navbar";
+import "./PageTransition.css";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -34,9 +35,11 @@ function AdminRoute({ children }) {
 }
 
 function AppRoutes() {
+  const location = useLocation();
   return (
     <>
       <Navbar />
+      <div key={location.pathname} className="page-transition">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -61,6 +64,7 @@ function AppRoutes() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </div>
     </>
   );
 }

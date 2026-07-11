@@ -57,6 +57,8 @@ input, textarea, select { font-family: inherit; outline: none; }
 
 /* ── Buttons ────────────────────────────────────────────── */
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -65,6 +67,19 @@ input, textarea, select { font-family: inherit; outline: none; }
   font-size: 0.875rem;
   font-weight: 600;
   transition: all 0.2s var(--ease-out);
+}
+
+.ripple-span {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  pointer-events: none;
+  transform: scale(0);
+  animation: rippleOut 0.55s var(--ease-out);
+}
+[data-theme="light"] .btn-ghost .ripple-span { background: rgba(0,50,120,0.14); }
+@keyframes rippleOut {
+  to { transform: scale(1); opacity: 0; }
 }
 
 .btn-primary {
@@ -156,7 +171,7 @@ input, textarea, select { font-family: inherit; outline: none; }
   font-size: 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.form-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(0,168,255,0.1); }
+.form-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-light); }
 .form-input::placeholder { color: var(--text-muted); }
 
 [data-theme="light"] .form-input {
@@ -165,7 +180,6 @@ input, textarea, select { font-family: inherit; outline: none; }
 }
 [data-theme="light"] .form-input:focus {
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(0,110,200,0.12);
 }
 
 /* ── Layout ─────────────────────────────────────────────── */

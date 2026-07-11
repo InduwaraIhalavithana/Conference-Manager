@@ -434,3 +434,7 @@
   .cta-card       { padding: 44px 24px; }
   .cta-card h2    { font-size: 1.6rem; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .mock-card, .mock-dot-live, .badge-top, .badge-bottom { animation: none; }
+}

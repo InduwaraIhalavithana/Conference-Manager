@@ -1,0 +1,10 @@
+.page-transition {
+  animation: pageFadeIn 0.28s var(--ease-out);
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}

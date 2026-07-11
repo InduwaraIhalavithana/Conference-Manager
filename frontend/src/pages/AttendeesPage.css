@@ -1,0 +1,102 @@
+/* ── Attendee avatars ─────────────────────────────────── */
+.att-name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+.att-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.att-row {
+  opacity: 0;
+  animation: fadeUpIn 0.35s var(--ease-out) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .att-row { animation: none; opacity: 1; }
+}
+
+/* ── Capacity pill in header ──────────────────────────── */
+.att-cap-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.att-cap-pill-bar {
+  width: 64px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+.att-cap-pill-bar > div {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  transition: width 0.7s var(--ease-out);
+}
+
+/* ── Registration timeline mini-chart ─────────────────── */
+.att-timeline { padding: 18px 22px 12px; margin-bottom: 20px; }
+.att-timeline-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.att-timeline-title { font-size: 0.9rem; font-weight: 700; }
+.att-timeline-title i { color: var(--accent); margin-right: 6px; }
+.att-timeline-sub { font-size: 0.72rem; color: var(--text-muted); }
+.att-timeline-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 64px;
+}
+.att-timeline-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.att-timeline-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent), #818cf8);
+  transform-origin: bottom;
+  animation: barGrow 0.5s var(--ease-out) backwards;
+}
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .att-timeline-bar { animation: none; }
+}
+.att-timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}

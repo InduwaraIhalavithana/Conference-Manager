@@ -36,9 +36,9 @@ echo.
 echo  ============================================================
 echo    All services launched in separate windows.
 echo.
-echo    Backend API  :  http://localhost:8002
-echo    Frontend     :  http://localhost:5174
-echo    API Docs     :  http://localhost:8002/docs
+echo    Backend API  :  http://127.0.0.1:8002
+echo    Frontend     :  http://127.0.0.1:5174
+echo    API Docs     :  http://127.0.0.1:8002/docs
 echo    Log          :  %ROOT%cm_backend.log
 echo.
 echo    Run stop-services.bat to shut everything down.

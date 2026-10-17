@@ -78,5 +78,7 @@ def test_conference_capacity(client, organizer_token):
     r1 = client.post(f"/api/attendees/{conf['id']}", json={"name": "A", "email": "a@a.com"})
     assert r1.status_code == 201
     r2 = client.post(f"/api/attendees/{conf['id']}", json={"name": "B", "email": "b@b.com"})
-    assert r2.status_code == 400
-    assert "full" in r2.json()["detail"].lower()
+    # A full conference puts the next person on the waitlist instead of refusing them.
+    assert r2.status_code == 201
+    assert r2.json()["status"] == "waitlisted"
+    assert r2.json()["waitlist_position"] == 1

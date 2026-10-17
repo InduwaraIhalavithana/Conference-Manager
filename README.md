@@ -1,148 +1,138 @@
-# Conference Manager
+# ConferenceHub (Conference Manager)
 
-A full-stack conference management application built with FastAPI (Python) and React (Vite).
+Publish conferences, take registrations with an automatic waitlist, and check people in with QR tickets.
+Every page, email and notification works in **English, Sinhala and Tamil**.
+
+Built with FastAPI + PostgreSQL (backend) and React + TypeScript + Vite (frontend).
 
 ## Features
 
-- Organizer registration, login, and JWT-authenticated sessions
-- Create, edit, and manage conferences with capacity limits, categories, and draft/published status
-- Public upcoming conferences page with search, date-range filter, and category chips
-- Attendee registration with capacity enforcement and CSV export
-- Admin dashboard: organizer management, suspension, feedback moderation
-- Password reset via email (Gmail SMTP)
-- Email notifications for registrations, feedback replies, and password resets
-- Rate-limited login endpoints (10 req/min)
-- Fully paginated list endpoints
-- 36 backend tests (pytest) + 21 frontend tests (Vitest)
+**Attendees** (no account needed)
+- Browse and search conferences by topic, city and date; upcoming and past
+- Register in seconds; join a waitlist when a conference is full
+- Ticket page with a QR code, add-to-calendar (Google Calendar or .ics) and self-cancel
+- Confirmation and day-before reminder emails in the language they registered in
 
-## Prerequisites
+**Organizers**
+- Dashboard with live numbers, 14-day trend, next-event countdown, activity and a getting-started checklist
+- Conference editor: details, cover image, venue pin on an OpenStreetMap map, agenda sessions and speakers with photos
+- Seat limits with automatic promotion from the waitlist (on cancellation or when the limit is raised)
+- Attendee list with manual check-in, CSV export and "send reminders now"
+- Check-in desk: scan QR tickets with any camera (or type the code), live arrival counter
+- Analytics: registrations and check-ins over time, by weekday, by topic, per conference
+- Profile photo (upload, replace, remove), settings, help centre and feedback to the admin team
+- Notification bell with "mark as seen" and "mark all as seen"
 
-| Tool | Version |
-|------|---------|
-| Python | 3.11+ |
-| Node.js | 18+ |
-| PostgreSQL | 15+ |
-| Git | any |
+**Administrators**
+- Dashboard with platform analytics (trends, topics, months, cities, top organizers and conferences)
+- Organizer management (search, suspend, restore, delete), all conferences, activity log
+- Organizer feedback with replies, and messages from the public contact form
 
-## Quick Start (Windows)
+**Everywhere**
+- Light and dark themes, large readable text, keyboard support, guided "Need help?" tours
+- Role-protected pages; each role reaches only its own area
+- Uploads limited to JPG/PNG/WebP (2 MB photos, 5 MB covers), checked and re-encoded on the server
+
+## Quick start (Windows)
 
 ```bash
-# 1. Clone
-git clone <repo-url>
-cd "Conference Manager"
-
-# 2. Create the database
-psql -U postgres -c "CREATE DATABASE conference_db;"
-
-# 3. Configure backend
 copy backend\.env.example backend\.env
-# Edit backend\.env — set DATABASE_URL and SECRET_KEY at minimum
+```
+Edit `backend\.env` (at least `DATABASE_URL`, `SECRET_KEY`, `ADMIN_INITIAL_PASSWORD`), then:
 
-# 4. Run setup (creates venv, installs deps)
+```bash
 setup.bat
+```
+`setup.bat` creates `backend\.venv` with the exact package versions, creates the database, installs the
+frontend and starts everything. Afterwards use `start-services.bat` and `stop-services.bat`.
 
-# 5. Start all services
-start-services.bat
+- App: http://127.0.0.1:5174
+- API docs: http://127.0.0.1:8002/docs
+
+The administrator signs in at `/admin/login` with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD`.
+Organizers create their own accounts at `/register`.
+
+## Demo data
+
+Fill the database with 24 organizers, about 70 past and upcoming conferences, speakers, agendas,
+thousands of registrations, feedback and generated pictures:
+
+```bash
+cd backend
+.venv\Scripts\python -m scripts.seed_demo --yes --password "choose-a-demo-password"
 ```
 
-App is available at:
-- Frontend: http://localhost:5174
-- API docs (Swagger): http://localhost:8002/docs
+Remove all of it again (real accounts are never touched; demo accounts use `@demo.conferencehub.lk`):
 
-To stop:
 ```bash
-stop-services.bat
+.venv\Scripts\python -m scripts.seed_demo --remove --yes
 ```
 
-## Docker Quick Start
+Take a backup with `pg_dump` first if the database holds real data.
+
+## Docker
 
 ```bash
-# Copy and edit env file first
 copy backend\.env.example backend\.env
-
-# Start everything
 docker compose up --build
-
-# App available at:
-#   Frontend:  http://localhost:5174
-#   Backend:   http://localhost:8002
-#   API docs:  http://localhost:8002/docs
 ```
 
-## Environment Variables
+Compose runs PostgreSQL, the API (with a volume for uploaded images) and the frontend on the same ports.
 
-All variables live in `backend/.env`. Copy `backend/.env.example` to get started.
+## Environment variables (`backend/.env`)
+
+Real environment variables take priority over `backend/.env`.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `SECRET_KEY` | Yes | Long random string for JWT signing |
-| `ALGORITHM` | No | JWT algorithm (default: `HS256`) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Token TTL in minutes (default: `1440`) |
-| `ADMIN_INITIAL_PASSWORD` | No | Password for the seeded admin account (default: `admin123`) |
-| `FRONTEND_URL` | No | Used in password-reset email links (default: `http://localhost:5174`) |
-| `GMAIL_USER` | No | Gmail address for outbound email (leave blank to disable email) |
-| `GMAIL_APP_PASSWORD` | No | Gmail App Password (16-char, not your Gmail password) |
+| `SECRET_KEY` | Yes | Long random string for signing sign-in tokens |
+| `ADMIN_EMAIL` | No | Administrator sign-in email (default `admin.conferencehub@gmail.com`) |
+| `ADMIN_INITIAL_PASSWORD` | Yes on first start | Administrator password when the account is first created |
+| `FRONTEND_URL` | No | Base of links in emails (default `http://127.0.0.1:5174`) |
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | No | Gmail SMTP for outgoing email. Empty = emails are written to the log |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session length (default 1440) |
+| `UPLOAD_DIR` | No | Where images are stored (default `backend/uploads`) |
+| `REMINDER_INTERVAL_SECONDS` | No | How often the reminder job runs (default 900) |
 
-## Test Accounts
+## Quality checks
 
-After first startup the database is seeded automatically.
-
-| Role | Username / Email | Password |
-|------|-----------------|----------|
-| Admin | `admin` | value of `ADMIN_INITIAL_PASSWORD` (default: `admin123`) |
-| Organizer | register at `/register` | your choice |
-
-## Ports
-
-| Service | Port |
-|---------|------|
-| Frontend (Vite dev) | 5174 |
-| Backend (uvicorn) | 8002 |
-| PostgreSQL | 5432 |
-
-## Running Tests
-
-**Backend:**
 ```bash
 cd backend
-pip install -r requirements-dev.txt
-pytest
+.venv\Scripts\ruff check app tests scripts
+.venv\Scripts\python -m pytest
 ```
 
-**Frontend:**
 ```bash
 cd frontend
+npm run lint
+npm run typecheck
 npm test
+npm run build
 ```
 
-## Project Structure
+Backend tests use their own temporary SQLite database and never touch PostgreSQL.
+GitHub Actions runs all of the above, plus the Alembic migrations against PostgreSQL.
+
+## Project structure
 
 ```
-Conference Manager/
-├── backend/
-│   ├── app/
-│   │   ├── api/          # auth routes
-│   │   ├── core/         # security, email, pagination
-│   │   ├── db/           # SQLAlchemy engine + session
-│   │   ├── models/       # ORM models
-│   │   ├── routers/      # feature routers
-│   │   ├── schemas/      # Pydantic schemas
-│   │   └── templates/    # Jinja2 email templates
-│   ├── alembic/          # DB migrations
-│   ├── tests/            # pytest test suite
-│   ├── requirements.txt
-│   └── requirements-dev.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # reusable UI components
-│   │   ├── context/      # AppContext (auth + theme + lang)
-│   │   ├── pages/        # route-level page components
-│   │   ├── services/     # api.js (fetch wrapper)
-│   │   └── __tests__/    # Vitest test suite
-│   └── package.json
-├── docker-compose.yml
-├── setup.bat
-├── start-services.bat
-└── stop-services.bat
+backend/
+  app/api/          sign-in, registration, password reset
+  app/core/         settings, errors, uploads, email (+ Sinhala/Tamil texts), notifications, reminders
+  app/models/       SQLAlchemy models
+  app/routers/      conferences, agenda, attendees + tickets, organizers, notifications, public, admin
+  alembic/          database migrations
+  scripts/          seed_demo.py
+  tests/            pytest suite
+frontend/
+  src/components/   navbar, notification bell, custom select, date picker, charts, map, QR, tour
+  src/i18n/         en.ts, si.ts, ta.ts, date formatting
+  src/pages/        public, auth, organizer and admin pages
+  src/services/     typed API client
+  src/test/         Vitest suite
 ```
+
+## Contact
+
+admin.conferencehub@gmail.com

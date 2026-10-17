@@ -1,0 +1,17 @@
+.upl { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.upl__drop {
+  position: relative; flex-shrink: 0; display: grid; place-items: center; cursor: pointer; overflow: hidden;
+  background: var(--surface-2) center / cover no-repeat; border: 2px dashed var(--border-strong); color: var(--text-3);
+  font-size: 2rem; transition: border-color var(--t), transform var(--t) var(--ease);
+}
+.upl--round .upl__drop { width: 128px; height: 128px; border-radius: 50%; }
+.upl--wide .upl__drop { width: min(100%, 420px); aspect-ratio: 16 / 9; border-radius: var(--radius); }
+.upl__drop--has { border-style: solid; border-color: var(--border); }
+.upl__drop:hover, .upl__drop--drag { border-color: var(--accent); transform: scale(1.01); }
+.upl__hover {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 8px;
+  background: rgba(3, 8, 20, 0.55); color: #fff; font-size: 0.92rem; font-weight: 650; opacity: 0; transition: opacity var(--t);
+}
+.upl__drop:hover .upl__hover, .upl__drop:focus-visible .upl__hover { opacity: 1; }
+.upl__busy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(3, 8, 20, 0.5); }
+.upl__side { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 220px; }

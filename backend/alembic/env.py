@@ -6,15 +6,11 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-load_dotenv(BASE_DIR / ".env", override=True)
+# Real environment variables win over .env, so tests, CI and Docker can point elsewhere.
+load_dotenv(BASE_DIR / ".env", override=False)
 
 from app.db.database import Base  # noqa: E402
-import app.models.organizer  # noqa: F401
-import app.models.admin      # noqa: F401
-import app.models.conference  # noqa: F401
-import app.models.attendee   # noqa: F401
-import app.models.activity   # noqa: F401
-import app.models.feedback   # noqa: F401
+import app.models  # noqa: F401,E402  (registers every table)
 
 config = context.config
 

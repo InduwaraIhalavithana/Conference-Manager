@@ -1,0 +1,28 @@
+.help-pill {
+  position: fixed; right: 22px; bottom: 22px; z-index: 750; display: inline-flex; align-items: center; gap: 9px;
+  min-height: 50px; padding: 0 20px; border-radius: 999px; border: 0; cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent-2)); color: #fff; font-family: inherit;
+  font-size: 1rem; font-weight: 700; box-shadow: var(--glow); transition: transform var(--t) var(--ease);
+  animation: pop-in 400ms var(--ease) 600ms both;
+}
+.help-pill:hover { transform: translateY(-3px) scale(1.03); }
+.help-pill i { font-size: 1.2rem; }
+@media (max-width: 520px) { .help-pill span { display: none; } .help-pill { width: 54px; padding: 0; justify-content: center; } }
+
+.tour { position: fixed; inset: 0; z-index: 1300; pointer-events: none; }
+.tour__dim { position: fixed; inset: 0; background: rgba(3, 8, 20, 0.6); }
+.tour__hole {
+  position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(3, 8, 20, 0.62), 0 0 0 3px var(--accent);
+  transition: all 320ms var(--ease);
+}
+.tour__card {
+  position: fixed; pointer-events: auto; padding: 18px 18px 14px; border-radius: 16px; background: var(--surface);
+  border: 1px solid var(--border-strong); box-shadow: var(--shadow-lg); animation: pop-in 260ms var(--ease);
+}
+.tour__card h3 { font-size: 1.12rem; margin: 8px 0 6px; }
+.tour__card p { color: var(--text-2); font-size: 0.98rem; }
+.tour__dots { display: flex; align-items: center; gap: 6px; }
+.tour__dots span:not(.tour__count) { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-3); transition: all var(--t); }
+.tour__dots span.is-on { width: 22px; border-radius: 4px; background: var(--accent); }
+.tour__count { margin-left: auto; font-size: 0.86rem; color: var(--text-3); }
+.tour__actions { display: flex; align-items: center; gap: 8px; margin-top: 14px; }

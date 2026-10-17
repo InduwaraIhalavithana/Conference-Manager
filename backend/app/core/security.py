@@ -1,9 +1,12 @@
 from __future__ import annotations
-from datetime import datetime, timedelta, timezone
-import os
 
-from jose import jwt, JWTError
+import os
+from datetime import UTC, datetime, timedelta
+
+from jose import JWTError, jwt
 from passlib.context import CryptContext
+
+import app.core.config  # noqa: F401  (loads backend/.env before SECRET_KEY is read)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -24,7 +27,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(data: dict) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {**data, "exp": expire}
     if "sub" in payload:
         payload["sub"] = str(payload["sub"])

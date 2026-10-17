@@ -1,0 +1,10 @@
+.venue-map { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; z-index: 0; }
+.venue-map--pick { cursor: crosshair; }
+.venue-map .leaflet-container { font-family: var(--font); background: var(--surface-2); }
+[data-theme='dark'] .venue-map .leaflet-tile-pane { filter: brightness(0.82) contrast(1.05) saturate(0.85); }
+.venue-pin span {
+  display: grid; place-items: center; width: 40px; height: 40px; font-size: 2.3rem; color: #e11d48;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); animation: pin-drop 500ms var(--ease);
+}
+@keyframes pin-drop { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.venue-map .leaflet-control-attribution { font-size: 12px; }

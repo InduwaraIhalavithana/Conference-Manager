@@ -1,0 +1,30 @@
+.ticket { max-width: 1040px; margin: 0 auto; border-radius: 24px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-strong); box-shadow: var(--shadow-lg); animation: pop-in 500ms var(--ease); }
+.ticket__top { position: relative; min-height: 210px; display: flex; align-items: flex-end; background: center / cover no-repeat; }
+.ticket__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(3, 8, 20, 0.1), rgba(3, 8, 20, 0.8)); }
+.ticket__head { position: relative; padding: 24px 28px; color: #fff; display: flex; flex-direction: column; gap: 8px; }
+.ticket__head h1 { color: #fff; }
+.ticket__head p { color: rgba(255, 255, 255, 0.92); font-size: 1.08rem; }
+.ticket__head .chip { width: fit-content; background: rgba(255, 255, 255, 0.95); }
+.ticket__body { display: grid; grid-template-columns: 320px minmax(0, 1fr); position: relative; }
+.ticket__body::before {
+  content: ''; position: absolute; left: 320px; top: 18px; bottom: 18px; border-left: 3px dashed var(--border-strong);
+}
+.ticket__qr { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 26px 20px; text-align: center; }
+.ticket__qr canvas { border-radius: 14px; box-shadow: var(--shadow); }
+.ticket__wait { width: 230px; height: 230px; border-radius: 14px; display: grid; place-content: center; gap: 10px; padding: 18px; background: var(--warning-soft); color: var(--warning); }
+.ticket__wait i { font-size: 2.6rem; }
+.ticket__info { padding: 26px 28px; display: flex; flex-direction: column; gap: 18px; }
+.ticket__info dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 22px; }
+.ticket__info dt { font-size: 0.9rem; color: var(--text-3); font-weight: 650; }
+.ticket__info dt i { color: var(--cat); width: 18px; }
+.ticket__info dd { margin: 3px 0 0; font-size: 1.05rem; font-weight: 600; word-break: break-word; }
+.ticket__cancel { width: fit-content; }
+@media (max-width: 760px) {
+  .ticket__body { grid-template-columns: 1fr; }
+  .ticket__body::before { display: none; }
+}
+@media print {
+  .nav, .footer, .help-pill, .to-top, .scroll-progress, .ticket__info .row, .ticket__cancel { display: none !important; }
+  .app-main { padding-top: 0; }
+  .ticket { box-shadow: none; border-color: #999; }
+}

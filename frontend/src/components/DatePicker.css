@@ -1,0 +1,38 @@
+.dp { position: relative; min-width: 0; }
+.dp__btn {
+  width: 100%; min-height: 46px; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--input); color: var(--text);
+  font-family: inherit; font-size: 1rem; text-align: left; cursor: pointer;
+}
+.dp__btn > i { color: var(--accent); }
+.dp__btn > span:first-of-type { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dp__btn--ph > span:first-of-type { color: var(--text-3); }
+.dp__btn:hover { border-color: var(--accent); }
+.dp__btn[aria-expanded='true'] { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.dp__clear { color: var(--text-3); padding: 2px 6px; border-radius: 6px; }
+.dp__clear:hover { color: var(--danger); background: var(--danger-soft); }
+
+.dp__pop {
+  position: fixed; z-index: 1400; padding: 14px; border-radius: 16px; background: var(--surface);
+  border: 1px solid var(--border-strong); box-shadow: var(--shadow-lg); animation: csel-in 160ms var(--ease);
+}
+.dp__head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.dp__month { flex: 1; font-size: 1.02rem; }
+.dp__year { width: 104px; }
+.dp__nav {
+  width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-2); cursor: pointer;
+}
+.dp__nav:hover { color: var(--accent); border-color: var(--accent); }
+.dp__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.dp__dow { text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--text-3); padding: 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp__day {
+  height: 38px; border: 0; border-radius: 10px; background: transparent; color: var(--text); font-size: 0.95rem; font-family: inherit;
+  cursor: pointer; transition: background var(--t-fast);
+}
+.dp__day:hover:not(:disabled) { background: var(--accent-soft); }
+.dp__day--out { color: var(--text-3); opacity: 0.6; }
+.dp__day--today { box-shadow: inset 0 0 0 2px var(--accent); }
+.dp__day--sel { background: linear-gradient(135deg, var(--accent-strong), var(--accent-2)) !important; color: #fff; font-weight: 700; }
+.dp__day:disabled { opacity: 0.3; cursor: not-allowed; }
+.dp__foot { display: flex; justify-content: space-between; margin-top: 10px; }

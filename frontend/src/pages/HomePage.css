@@ -41,6 +41,8 @@ html[lang='si'] .eyebrow, html[lang='ta'] .eyebrow { letter-spacing: 0.01em; tex
 .nextup__meta i { width: 20px; color: var(--cat); }
 .nextup--empty { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 50px 24px; text-align: center; }
 .nextup--empty > i { font-size: 3rem; color: var(--accent); }
+.nextup__live-box { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 12px;
+  background: var(--success-soft); border: 1px solid color-mix(in srgb, var(--success) 35%, transparent); }
 .countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .countdown__cell { text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
 .countdown__cell strong { display: block; font-size: 1.55rem; font-variant-numeric: tabular-nums; color: var(--accent); }

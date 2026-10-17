@@ -1,0 +1,124 @@
+/* Design tokens. One accent family (sky + indigo); colour elsewhere only where it means something:
+   green = done/checked in, amber = waitlist/draft/past, red = danger, category chips = category. */
+
+:root {
+  --font: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --nav-h: 76px;
+  --gutter: clamp(16px, 2.6vw, 44px);
+  --page-max: 1880px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 160ms;
+  --t: 260ms;
+
+  /* Category colours (chips, covers, cards) */
+  --cat-tech: #0284c7;
+  --cat-health: #059669;
+  --cat-education: #7c3aed;
+  --cat-business: #c2410c;
+  --cat-science: #0f766e;
+  --cat-arts: #be185d;
+  --cat-other: #475569;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #050c1d;
+  --bg-band: #0a1430;
+  --bg-band-2: #0c1838;
+  --surface: #0f1a36;
+  --surface-2: #142246;
+  --surface-3: #1a2a55;
+  --input: #0b1530;
+  --border: rgba(148, 178, 230, 0.16);
+  --border-strong: rgba(148, 178, 230, 0.3);
+  --text: #eef3ff;
+  --text-2: #c3d0ea;
+  --text-3: #9fb0d2;
+  --accent: #38bdf8;
+  --accent-2: #818cf8;
+  --accent-strong: #0ea5e9;
+  --accent-soft: rgba(56, 189, 248, 0.14);
+  --accent-ink: #04121f;
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.15);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.15);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.15);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --glow: 0 0 0 1px rgba(56, 189, 248, 0.35), 0 12px 32px rgba(14, 165, 233, 0.25);
+  --nav-bg: rgba(5, 12, 29, 0.86);
+  --hero-grad: radial-gradient(1200px 520px at 12% -10%, rgba(56, 189, 248, 0.22), transparent 60%),
+               radial-gradient(900px 500px at 92% 10%, rgba(129, 140, 248, 0.22), transparent 60%);
+  --cat-tech: #38bdf8;
+  --cat-health: #34d399;
+  --cat-education: #a78bfa;
+  --cat-business: #fb923c;
+  --cat-science: #2dd4bf;
+  --cat-arts: #f472b6;
+  --cat-other: #94a3b8;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  /* Soft blue-grey, never plain white */
+  --bg: #dbe4f1;
+  --bg-band: #cfdaec;
+  --bg-band-2: #c6d3e8;
+  --surface: #edf2fa;
+  --surface-2: #e3eaf6;
+  --surface-3: #d6e0f0;
+  --input: #f5f8fd;
+  --border: rgba(30, 58, 110, 0.16);
+  --border-strong: rgba(30, 58, 110, 0.3);
+  --text: #0b1628;
+  --text-2: #263a5a;
+  --text-3: #3d5175;
+  --accent: #075985;
+  --accent-2: #4338ca;
+  --accent-strong: #0284c7;
+  --accent-soft: rgba(3, 105, 161, 0.12);
+  --accent-ink: #ffffff;
+  --success: #065f46;
+  --success-soft: rgba(4, 120, 87, 0.13);
+  --warning: #92400e;
+  --warning-soft: rgba(217, 119, 6, 0.16);
+  --danger: #b91c1c;
+  --danger-soft: rgba(185, 28, 28, 0.12);
+  --shadow: 0 8px 24px rgba(30, 58, 110, 0.14);
+  --shadow-lg: 0 22px 50px rgba(30, 58, 110, 0.22);
+  --glow: 0 0 0 1px rgba(3, 105, 161, 0.3), 0 12px 28px rgba(3, 105, 161, 0.18);
+  --nav-bg: rgba(225, 233, 245, 0.9);
+  /* Category colours dark enough to read as text on their own tint */
+  --cat-tech: #075985;
+  --cat-health: #065f46;
+  --cat-education: #5b21b6;
+  --cat-business: #9a3412;
+  --cat-science: #115e59;
+  --cat-arts: #9d174d;
+  --cat-other: #334155;
+  --hero-grad: radial-gradient(1200px 520px at 12% -10%, rgba(14, 165, 233, 0.22), transparent 60%),
+               radial-gradient(900px 500px at 92% 10%, rgba(99, 102, 241, 0.2), transparent 60%);
+}
+
+/* Smooth colour change when the theme switches (class added for a moment by the toggle). */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition: background-color 450ms var(--ease), color 450ms var(--ease), border-color 450ms var(--ease),
+    fill 450ms var(--ease), box-shadow 450ms var(--ease) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

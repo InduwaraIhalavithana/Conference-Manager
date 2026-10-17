@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head><meta charset="utf-8"><title>{{ heading }}</title></head>
+<body style="margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#e2eaf6;padding:28px 12px;color:#0f172a">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,.12)">
+  <div style="background:linear-gradient(135deg,#0284c7,#4f46e5);padding:30px 32px">
+    <div style="color:#bae6fd;font-size:14px;font-weight:600;letter-spacing:.06em">CONFERENCEHUB</div>
+    <h1 style="color:#ffffff;margin:8px 0 0;font-size:26px">{{ heading }}</h1>
+  </div>
+  <div style="padding:30px 32px;font-size:16px;line-height:1.6">
+    <p style="margin:0 0 14px">{{ greeting }}</p>
+    {% for p in paragraphs %}<p style="margin:0 0 14px">{{ p }}</p>{% endfor %}
+    {% if quote %}<blockquote style="margin:0 0 18px;padding:14px 18px;background:#f1f5f9;border-left:4px solid #4f46e5;border-radius:6px;white-space:pre-wrap">{{ quote }}</blockquote>{% endif %}
+    {% if rows %}
+    <table style="width:100%;border-collapse:collapse;margin:6px 0 20px;background:#f0f9ff;border-radius:8px">
+      {% for label, value in rows %}
+      <tr><td style="padding:10px 14px;color:#475569;font-weight:600;width:38%">{{ label }}</td><td style="padding:10px 14px">{{ value }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if button_url %}
+    <p style="margin:8px 0 22px"><a href="{{ button_url }}" style="display:inline-block;background:#0284c7;color:#ffffff;text-decoration:none;font-weight:700;padding:13px 24px;border-radius:9px">{{ button_label }}</a></p>
+    {% endif %}
+    <p style="margin:24px 0 0;color:#475569">{{ team_sign }}</p>
+  </div>
+  <div style="padding:16px 32px;background:#f8fafc;color:#64748b;font-size:13px">{{ footer }}</div>
+</div>
+</body>
+</html>

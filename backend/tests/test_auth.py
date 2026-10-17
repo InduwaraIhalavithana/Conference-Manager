@@ -54,11 +54,12 @@ def test_get_me(client, organizer_token):
     assert res.json()["email"] == org.email
 
 
-def test_forgot_password(client, organizer_token):
+def test_forgot_password_never_returns_the_token(client, organizer_token):
     _, org = organizer_token
     res = client.post("/auth/forgot-password", json={"email": org.email})
     assert res.status_code == 200
-    assert "reset_token" in res.json()
+    assert "reset_token" not in res.json()
+    assert "token" not in res.text.lower().replace("reset link", "")
 
 
 def test_forgot_password_unknown_email(client):
@@ -67,11 +68,30 @@ def test_forgot_password_unknown_email(client):
     assert "reset_token" not in res.json()
 
 
+def _emailed_token(org_email):
+    from app.core import email
+    link = next(m["link"] for m in reversed(email.OUTBOX) if m["to"] == org_email)
+    return link.split("token=")[1]
+
+
 def test_reset_password(client, organizer_token):
     _, org = organizer_token
-    tok_res = client.post("/auth/forgot-password", json={"email": org.email})
-    reset_token = tok_res.json()["reset_token"]
+    client.post("/auth/forgot-password", json={"email": org.email})
+    reset_token = _emailed_token(org.email)
     res = client.post("/auth/reset-password", json={"token": reset_token, "new_password": "newpassword1"})
     assert res.status_code == 200
     login = client.post("/auth/login", json={"email": org.email, "password": "newpassword1"})
     assert login.status_code == 200
+    # The link works once only.
+    again = client.post("/auth/reset-password", json={"token": reset_token, "new_password": "another-pass1"})
+    assert again.status_code == 400
+    assert again.json()["code"] == "reset_invalid"
+
+
+def test_reset_tokens_are_stored_hashed(client, organizer_token, db):
+    from app.models.password_reset import PasswordResetToken
+    _, org = organizer_token
+    client.post("/auth/forgot-password", json={"email": org.email})
+    raw = _emailed_token(org.email)
+    stored = db.query(PasswordResetToken).filter_by(organizer_id=org.id).one().token
+    assert stored != raw and len(stored) == 64

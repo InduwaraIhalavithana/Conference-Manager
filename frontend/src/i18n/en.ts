@@ -89,6 +89,8 @@ const en = {
   browse_conferences: 'Browse conferences',
   start_organizing: 'Start organizing',
   home_next_up: 'Next up',
+  home_live_now: 'Happening now',
+  home_live_progress: 'Started at {start} · ends at {end}',
   home_no_upcoming: 'No upcoming conferences have been published yet.',
   cd_days: 'days',
   cd_hours: 'hours',

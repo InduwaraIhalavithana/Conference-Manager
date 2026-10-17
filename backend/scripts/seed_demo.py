@@ -14,7 +14,7 @@ import argparse
 import math
 import random
 import sys
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -37,6 +37,7 @@ from app.models.notification import Notification
 from app.models.organizer import Organizer
 
 DEMO_DOMAIN = "demo.conferencehub.lk"
+LK = timezone(timedelta(hours=5, minutes=30))  # event times are Sri Lanka local time
 ATTENDEE_DOMAIN = "attendee.demo.conferencehub.lk"
 rng = random.Random(20261017)
 
@@ -90,6 +91,88 @@ TOPICS = {
              "Film & Media Conference"],
     "Other": ["Volunteer Leaders Meetup", "Sports Management Seminar", "Community Builders Forum"],
 }
+ORGANIZER_COUNT = 36
+TODAY_SLOTS = [(time(8, 30), time(17, 30)), (time(14, 0), time(21, 0))]
+
+# Days from today. Guarantees events today, tomorrow and through the coming weeks.
+NEAR_TERM_OFFSETS = [0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 19, 21, 24, 27, 30]
+
+FOCUS = {
+    "Tech": "software, data and AI", "Health": "public health and patient care", "Education": "teaching and learning",
+    "Business": "growing businesses", "Science": "research and discovery", "Arts": "art, design and culture",
+    "Other": "community work",
+}
+
+DESCRIPTIONS = [
+    "{base} brings together practitioners, researchers and students in {city} for a day of talks, hands-on sessions "
+    "and networking on {focus}. Expect practical lessons you can use the next day and plenty of time to meet people "
+    "working on the same problems.",
+    "Join speakers from universities, industry and government in {city} for {base}. The programme mixes keynotes, "
+    "short case studies from Sri Lankan teams and small-group workshops, all focused on {focus}.",
+    "{base} is a one-day gathering for anyone working in {focus}. Hear what is working in Sri Lanka today, try new "
+    "tools in guided workshops, and leave with contacts and ideas for your own projects.",
+    "Now in its third year, {base} returns to {city} with a fuller agenda: panels with practitioners, live demos and "
+    "a career corner for students. Seats are limited, so register early.",
+]
+
+SPEAKER_BIOS = [
+    "{name} has spent more than ten years working on {topic} and advises organisations across South Asia.",
+    "{name} leads projects on {topic} and regularly speaks at regional conferences.",
+    "{name} teaches and researches {topic}, with a focus on practical results for Sri Lankan communities.",
+    "{name} founded a local initiative on {topic} that now works with partners in five districts.",
+]
+
+ORG_BIOS = [
+    "Organizes conferences and community events across Sri Lanka.",
+    "Runs the annual events programme for our faculty and partners.",
+    "Brings practitioners and students together through workshops and conferences.",
+    "Coordinates professional development events for members nationwide.",
+]
+
+# A few events written in Sinhala or Tamil, as organizers would publish them.
+LOCAL_EVENTS = [
+    {"lang": "si", "category": "Arts", "title": "සිංහල සාහිත්‍ය උළෙල",
+     "description": "ලේඛකයින්, කවියන් සහ පාඨකයින් එක් කරන සාහිත්‍ය උළෙලකි. කතිකා, කවි සැඳෑ සහ නව ලේඛකයින් සඳහා වැඩමුළු ඇතුළත් වේ."},
+    {"lang": "si", "category": "Education", "title": "ගුරු සංවර්ධන වැඩමුළුව",
+     "description": "පන්ති කාමරයේ නව ඉගැන්වීම් ක්‍රම, ඩිජිටල් මෙවලම් සහ ශිෂ්‍ය ඇගයීම පිළිබඳ ප්‍රායෝගික වැඩමුළුවකි."},
+    {"lang": "si", "category": "Science", "title": "කෘෂි තාක්ෂණ සම්මන්ත්‍රණය",
+     "description": "ගොවීන්, පර්යේෂකයින් සහ ව්‍යවසායකයින් සඳහා නවීන කෘෂි තාක්ෂණය, ජල කළමනාකරණය සහ අස්වැන්න වැඩි කිරීම ගැන සාකච්ඡා කෙරේ."},
+    {"lang": "si", "category": "Business", "title": "තරුණ ව්‍යවසායකයින්ගේ සමුළුව",
+     "description": "නව ව්‍යාපාර අදහස් ඉදිරිපත් කිරීම, මූල්‍ය උපදෙස් සහ සාර්ථක ව්‍යවසායකයින්ගේ අත්දැකීම් බෙදාගැනීමේ සමුළුවකි."},
+    {"lang": "ta", "category": "Arts", "title": "தமிழ் இலக்கிய மாநாடு",
+     "description": "எழுத்தாளர்கள், கவிஞர்கள், வாசகர்கள் ஒன்றுகூடும் இலக்கிய மாநாடு. உரைகள், கவியரங்கம், இளம் எழுத்தாளர்களுக்கான பயிலரங்குகள் இடம்பெறும்."},
+    {"lang": "ta", "category": "Education", "title": "ஆசிரியர் மேம்பாட்டுப் பயிலரங்கு",
+     "description": "புதிய கற்பித்தல் முறைகள், டிஜிட்டல் கருவிகள், மாணவர் மதிப்பீடு பற்றிய நடைமுறைப் பயிலரங்கு."},
+    {"lang": "ta", "category": "Health", "title": "சமூக சுகாதார மாநாடு",
+     "description": "சுகாதாரப் பணியாளர்கள், மருத்துவர்கள், சமூகத் தலைவர்கள் இணைந்து நோய்த் தடுப்பு, ஊட்டச்சத்து, மனநலம் பற்றிக் கலந்துரையாடுவார்கள்."},
+    {"lang": "ta", "category": "Tech", "title": "தொழில்நுட்பக் கண்காட்சி",
+     "description": "மாணவர்களும் தொடக்க நிறுவனங்களும் தங்கள் புதிய தொழில்நுட்பத் திட்டங்களைக் காட்சிப்படுத்தும் கண்காட்சியும் கருத்தரங்கும்."},
+]
+
+LOCAL_SESSIONS = {
+    "si": {"keynote": "ආරම්භක දේශනය", "talk": "විශේෂ දේශනය", "workshop": "ප්‍රායෝගික වැඩමුළුව",
+           "panel": "සාකච්ඡා මණ්ඩලය", "break": "තේ විවේකය"},
+    "ta": {"keynote": "தொடக்க உரை", "talk": "சிறப்புரை", "workshop": "நடைமுறைப் பயிலரங்கு",
+           "panel": "குழு விவாதம்", "break": "தேநீர் இடைவேளை"},
+}
+
+FEEDBACK_MESSAGES = [
+    "We used ConferenceHub for our last event and wanted to share this with the team.",
+    "Check-in went very smoothly for 180 people. One small idea below.",
+    "Our attendees loved getting the reminder in Sinhala. Could we also customise the text?",
+    "The waitlist filled up within a day. It would help to see where people heard about us.",
+    "Is there a way to copy last year's agenda into this year's conference?",
+]
+
+CONTACT_MESSAGES = [
+    "Hello, I registered for a conference but cannot find my ticket email. Could you help?",
+    "Our university would like to run its research week on ConferenceHub. Who should we talk to?",
+    "We are interested in a partnership for our annual business forum.",
+    "The camera does not start on my laptop at the check-in desk. Any tips?",
+    "Can attendees register for several conferences with the same email address?",
+    "Thank you for the Tamil interface, it made a big difference for our audience.",
+]
+
 CAT_COLORS = {"Tech": ((2, 132, 199), (79, 70, 229)), "Health": ((5, 150, 105), (13, 148, 136)),
               "Education": ((124, 58, 237), (79, 70, 229)), "Business": ((194, 65, 12), (190, 24, 93)),
               "Science": ((15, 118, 110), (2, 132, 199)), "Arts": ((190, 24, 93), (124, 58, 237)),
@@ -181,7 +264,7 @@ def seed(password: str) -> None:
 
         organizers: list[Organizer] = []
         used = set()
-        for i in range(24):
+        for i in range(ORGANIZER_COUNT):
             while True:
                 fn, ln = person()
                 if (fn, ln) not in used:
@@ -191,70 +274,92 @@ def seed(password: str) -> None:
                 first_name=fn, last_name=ln, email=f"{fn}.{ln}".lower().replace(" ", "") + f"@{DEMO_DOMAIN}",
                 password_hash=pw_hash, phone=f"+94 7{rng.randint(0, 8)} {rng.randint(100, 999)} {rng.randint(1000, 9999)}",
                 organization=rng.choice(ORGS), lang=rng.choice(["en", "en", "si", "ta"]),
-                bio="Organizes conferences and community events across Sri Lanka.",
-                is_suspended=(i == 23),
+                bio=rng.choice(ORG_BIOS),
+                is_suspended=(i == ORGANIZER_COUNT - 1),
             )
-            org.created_at = now - timedelta(days=rng.randint(3, 170), hours=rng.randint(0, 23))
+            org.created_at = now - timedelta(days=rng.randint(3, 200), hours=rng.randint(0, 23))
             db.add(org)
             organizers.append(org)
         db.flush()
         for org in organizers:
-            if rng.random() < 0.85:
+            if rng.random() < 0.95:
                 org.avatar = make_avatar(f"{org.first_name} {org.last_name}", f"org-{org.id}")
 
+        # Dates: a few events today and this week so the site always has something happening,
+        # then a spread over the next six months and the past five.
+        near = list(NEAR_TERM_OFFSETS)
+        rng.shuffle(near)
+
+        def next_offset() -> int:
+            if near:
+                return near.pop()
+            return rng.randint(1, 175) if rng.random() < 0.6 else rng.randint(-160, -2)
+
+        local_pool = list(LOCAL_EVENTS)  # each Sinhala/Tamil event appears once
+        rng.shuffle(local_pool)
         conf_count = 0
-        for org in organizers:
+        today_count = 0
+        for org in organizers[:-1]:  # the suspended account keeps no events, so the public site stays consistent
             for _ in range(rng.randint(2, 4)):
-                category = rng.choice(list(TOPICS))
-                base = rng.choice(TOPICS[category])
-                city, venue, lat, lng = rng.choice(CITIES)
-                offset = rng.randint(-150, 160)
+                offset = next_offset()
                 day = today + timedelta(days=offset)
-                start = time(rng.choice([8, 9, 9, 10, 13, 14]), rng.choice([0, 0, 30]))
-                end = time(min(start.hour + rng.randint(3, 8), 21), start.minute)
+                city, venue, lat, lng = rng.choice(CITIES)
+                if local_pool and rng.random() < 0.12:
+                    local = local_pool.pop()
+                    category, description, lang = local["category"], local["description"], local["lang"]
+                    title = f"{local['title']} {day.year}"
+                else:
+                    category = rng.choice(list(TOPICS))
+                    base = rng.choice(TOPICS[category])
+                    title = f"{base} {city} {day.year}" if rng.random() < 0.6 else f"{base} {day.year}"
+                    description = rng.choice(DESCRIPTIONS).format(base=base, city=city, focus=FOCUS[category])
+                    lang = "en"
+                if offset == 0:
+                    # Today: one daytime event and one running into the evening, so something is usually live.
+                    start, end = TODAY_SLOTS[today_count % len(TODAY_SLOTS)]
+                    today_count += 1
+                else:
+                    start = time(rng.choice([8, 9, 9, 10, 13, 14]), rng.choice([0, 0, 30]))
+                    end = time(min(start.hour + rng.randint(4, 8), 21), start.minute)
                 cap = rng.choice([None, 40, 60, 80, 100, 120, 150, 200, 300])
-                title = f"{base} {city} {day.year}" if rng.random() < 0.6 else f"{base} {day.year}"
                 conf = Conference(
-                    organizer_id=org.id, title=title,
-                    description=(f"{base} brings together practitioners, researchers and students in {city} for a day of "
-                                 f"talks, hands-on sessions and networking. Expect practical lessons you can use the next "
-                                 f"day, local case studies and plenty of time to meet people working on the same problems."),
+                    organizer_id=org.id, title=title, description=description,
                     date=day, time=start, end_time=end, location=f"{venue}, Sri Lanka",
                     venue_lat=lat + rng.uniform(-0.002, 0.002), venue_lng=lng + rng.uniform(-0.002, 0.002),
-                    max_attendees=cap, status="draft" if (offset > 60 and rng.random() < 0.15) else "published",
+                    max_attendees=cap, status="draft" if (offset > 60 and rng.random() < 0.12) else "published",
                     category=category,
                 )
                 # Published 3 to 12 weeks before the event (or before today), so registrations spread out.
-                conf.created_at = min(now, datetime.combine(day, start, tzinfo=UTC)) - timedelta(days=rng.randint(20, 85))
+                conf.created_at = min(now, datetime.combine(day, start, tzinfo=LK)) - timedelta(days=rng.randint(20, 85))
                 db.add(conf)
                 db.flush()
                 conf_count += 1
-                if rng.random() < 0.85:
+                if rng.random() < 0.9:
                     conf.cover_image = make_cover(category, f"cover-{conf.id}")
                 db.add(ActivityLog(organizer_id=org.id, action="create_conference", target=title,
                                    created_at=conf.created_at))
 
                 # Speakers and agenda
                 speakers = []
-                for p in range(rng.randint(2, 5)):
+                for p in range(rng.randint(3, 6)):
                     fn, ln = person()
                     sp = Speaker(conference_id=conf.id, name=f"{rng.choice(['Dr. ', 'Prof. ', '', '', ''])}{fn} {ln}",
                                  job_title=rng.choice(JOBS), organization=rng.choice(ORGS), position=p,
-                                 bio=f"{fn} works on {category.lower()} projects and has spoken at events across South Asia.")
+                                 bio=rng.choice(SPEAKER_BIOS).format(name=fn, topic=FOCUS[category]))
                     db.add(sp)
                     speakers.append(sp)
                 db.flush()
                 for sp in speakers:
-                    if rng.random() < 0.8:
-                        sp.photo = make_avatar(sp.name.replace("Dr. ", "").replace("Prof. ", ""), f"sp-{sp.id}", "speakers")
+                    sp.photo = make_avatar(sp.name.replace("Dr. ", "").replace("Prof. ", ""), f"sp-{sp.id}", "speakers")
                 minute = start.hour * 60 + start.minute
-                kinds = ["keynote"] + rng.sample(["talk", "talk", "workshop", "panel", "talk"], k=3) + ["break", "talk"]
+                kinds = ["keynote"] + rng.sample(["talk", "talk", "workshop", "panel", "talk"], k=3) + ["break", "talk", "panel"]
                 for k in kinds:
                     length = 15 if k == "break" else rng.choice([30, 45, 60])
                     if minute + length > 21 * 60:
                         break
+                    session_title = LOCAL_SESSIONS[lang][k] if lang != "en" else rng.choice(SESSION_TEMPLATES[k])
                     db.add(AgendaSession(
-                        conference_id=conf.id, kind=k, title=rng.choice(SESSION_TEMPLATES[k]),
+                        conference_id=conf.id, kind=k, title=session_title,
                         start_time=time(minute // 60, minute % 60), end_time=time((minute + length) // 60, (minute + length) % 60),
                         room=None if k == "break" else rng.choice(["Main hall", "Hall B", "Lab 1", "Auditorium"]),
                         speaker_id=None if k == "break" else rng.choice(speakers).id,
@@ -264,10 +369,11 @@ def seed(password: str) -> None:
                 # Registrations
                 if conf.status != "published":
                     continue
-                popularity = rng.uniform(0.35, 1.25)
-                wanted = int((cap or rng.randint(40, 160)) * popularity)
+                popularity = rng.uniform(0.45, 1.3)
+                wanted = int((cap or rng.randint(50, 180)) * popularity)
+                starts_at = datetime.combine(day, start, tzinfo=LK)
                 window_start = conf.created_at
-                window_end = min(now, datetime.combine(day, start, tzinfo=UTC))
+                window_end = min(now, starts_at)
                 registered = 0
                 emails = set()
                 for _ in range(wanted):
@@ -280,12 +386,18 @@ def seed(password: str) -> None:
                     if status == REGISTERED:
                         registered += 1
                     span = max(60.0, (window_end - window_start).total_seconds())
-                    reg_at = window_start + timedelta(seconds=rng.random() * span)
+                    # Interest builds up towards the event: more registrations near the end of the window.
+                    reg_at = window_start + timedelta(seconds=(rng.random() ** 0.8) * span)
                     a = Attendee(conference_id=conf.id, name=f"{fn} {ln}", email=em, status=status,
                                  ticket_code=new_ticket_code(db), lang=rng.choice(["en", "si", "ta"]), registered_at=reg_at)
-                    if offset < 0 and status == REGISTERED and rng.random() < rng.uniform(0.62, 0.92):
-                        a.checked_in_at = datetime.combine(day, start, tzinfo=UTC) + timedelta(minutes=rng.randint(-40, 90))
-                        a.reminder_sent_at = a.checked_in_at - timedelta(days=1)
+                    if status == REGISTERED and offset < 0 and rng.random() < rng.uniform(0.62, 0.92):
+                        a.checked_in_at = starts_at + timedelta(minutes=rng.randint(-40, 90))
+                    elif status == REGISTERED and offset == 0 and now > starts_at and rng.random() < 0.6:
+                        # Today's event is under way: people are still arriving.
+                        elapsed = min((now - starts_at).total_seconds(), 3 * 3600)
+                        a.checked_in_at = starts_at - timedelta(minutes=30) + timedelta(seconds=rng.random() * elapsed)
+                    if status == REGISTERED and offset <= 1:
+                        a.reminder_sent_at = starts_at - timedelta(days=1)
                     db.add(a)
                     db.flush()
                     if reg_at > now - timedelta(days=6) and rng.random() < 0.35:
@@ -293,6 +405,12 @@ def seed(password: str) -> None:
                                             kind="new_waitlist" if status == WAITLISTED else "new_registration",
                                             params={"attendee": a.name, "conference": title, "demo": 1},
                                             link=f"/attendees/{conf.id}", is_read=rng.random() < 0.5, created_at=reg_at))
+
+        # Recent sign-ins and edits, so activity feeds show what organizers are doing.
+        for org in organizers[:-1]:
+            for _ in range(rng.randint(1, 4)):
+                db.add(ActivityLog(organizer_id=org.id, action=rng.choice(["login", "login", "update_conference", "update_profile"]),
+                                   target=org.email, created_at=now - timedelta(hours=rng.randint(1, 240))))
 
         # Organizer feedback, some answered
         subjects = ["Can I export the waitlist too?", "Check-in camera on older phones", "Suggestion: recurring events",
@@ -303,7 +421,7 @@ def seed(password: str) -> None:
             org = rng.choice(organizers[:-1])
             replied = rng.random() < 0.55
             fb = Feedback(organizer_id=org.id, subject=subject,
-                          message="We used ConferenceHub for our last event and wanted to share this with the team.",
+                          message=rng.choice(FEEDBACK_MESSAGES),
                           status="resolved" if replied and rng.random() < 0.6 else "open",
                           reply="Thanks for writing in. We have noted this and will follow up soon." if replied else None)
             fb.created_at = now - timedelta(days=rng.randint(0, 40), hours=rng.randint(0, 23))
@@ -315,10 +433,12 @@ def seed(password: str) -> None:
 
         for i, (name, topic) in enumerate([("Shanika Perera", "topic_attending"), ("Mohamed Rizan", "topic_organizing"),
                                            ("Kumaran Selvam", "topic_partnership"), ("Andrea Jansz", "topic_technical"),
-                                           ("Ravindu Herath", "topic_general"), ("Thilini Silva", "topic_attending")]):
+                                           ("Ravindu Herath", "topic_general"), ("Thilini Silva", "topic_attending"),
+                                           ("Nalaka Gunasekara", "topic_organizing"), ("Priyanthi Rajan", "topic_attending"),
+                                           ("Zeenath Hussain", "topic_partnership"), ("Kevin Ondaatjie", "topic_technical")]):
             msg = ContactMessage(name=name, email=f"contact{i}@{DEMO_DOMAIN}", subject=topic,
-                                 message="Hello, I would like to know more about using ConferenceHub for our event.",
-                                 status="open" if i < 4 else "resolved")
+                                 message=CONTACT_MESSAGES[i % len(CONTACT_MESSAGES)],
+                                 status="open" if i < 6 else "resolved")
             msg.created_at = now - timedelta(days=rng.randint(0, 20))
             db.add(msg)
 

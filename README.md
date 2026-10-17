@@ -54,8 +54,9 @@ Organizers create their own accounts at `/register`.
 
 ## Demo data
 
-Fill the database with 24 organizers, about 70 past and upcoming conferences, speakers, agendas,
-thousands of registrations, feedback and generated pictures:
+Fill the database with 36 organizers and about 100 past and upcoming conferences (some happening today,
+a dozen this week, a few written in Sinhala or Tamil), speakers with photos, agendas, about 10,000
+registrations with waitlists and check-ins, feedback, contact messages and generated pictures:
 
 ```bash
 cd backend

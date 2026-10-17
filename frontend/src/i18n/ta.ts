@@ -91,6 +91,8 @@ const ta: Dictionary = {
   browse_conferences: 'மாநாடுகளை உலாவுங்கள்',
   start_organizing: 'ஏற்பாடு செய்யத் தொடங்குங்கள்',
   home_next_up: 'அடுத்தது',
+  home_live_now: 'இப்போது நடைபெறுகிறது',
+  home_live_progress: '{start} இல் தொடங்கியது · {end} இல் முடிவடையும்',
   home_no_upcoming: 'வரவிருக்கும் மாநாடுகள் எதுவும் இன்னும் வெளியிடப்படவில்லை.',
   cd_days: 'நாட்கள்',
   cd_hours: 'மணி',

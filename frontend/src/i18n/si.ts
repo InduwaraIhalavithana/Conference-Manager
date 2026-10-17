@@ -91,6 +91,8 @@ const si: Dictionary = {
   browse_conferences: 'සම්මන්ත්‍රණ පිරික්සන්න',
   start_organizing: 'සංවිධානය අරඹන්න',
   home_next_up: 'ඊළඟට',
+  home_live_now: 'දැන් පැවැත්වෙමින්',
+  home_live_progress: '{start} ට ආරම්භ විය · {end} ට අවසන් වේ',
   home_no_upcoming: 'ඉදිරි සම්මන්ත්‍රණ කිසිවක් තවම ප්‍රකාශ කර නැත.',
   cd_days: 'දින',
   cd_hours: 'පැය',

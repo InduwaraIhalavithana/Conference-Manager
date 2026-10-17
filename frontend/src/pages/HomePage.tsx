@@ -38,12 +38,46 @@ function Countdown({ date, time }: { date: string; time: string | null }) {
   );
 }
 
+/** Start and end of an event in the viewer's clock (times are the venue's local time). */
+function eventWindow(c: Conference): { start: number; end: number } {
+  const start = new Date(`${c.date}T${c.time ?? '00:00:00'}`).getTime();
+  const end = c.end_time ? new Date(`${c.date}T${c.end_time}`).getTime() : new Date(`${c.date}T23:59:59`).getTime();
+  return { start, end };
+}
+
+function LiveProgress({ conf }: { conf: Conference }) {
+  const { t, lang } = useApp();
+  const { start, end } = eventWindow(conf);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
+  const pct = Math.min(100, Math.max(0, Math.round(((now - start) / Math.max(1, end - start)) * 100)));
+  return (
+    <div className="nextup__live-box">
+      <div className="row row--between small">
+        <span className="text-2">{t('home_live_progress', { start: formatTime(conf.time, lang), end: formatTime(conf.end_time, lang) || '–' })}</span>
+        <strong style={{ color: 'var(--success)' }}>{pct}%</strong>
+      </div>
+      <div className="bar bar--success"><span style={{ width: `${pct}%` }} /></div>
+      {conf.checked_in_count > 0 && (
+        <span className="small text-2"><i className="fas fa-qrcode" /> {t('n_checked_in', { count: conf.checked_in_count })}</span>
+      )}
+    </div>
+  );
+}
+
 function NextUpCard({ conf }: { conf: Conference }) {
   const { t, lang } = useApp();
+  const { start, end } = eventWindow(conf);
+  const now = Date.now();
+  const live = now >= start && now < end;
+  const full = conf.max_attendees !== null && conf.attendee_count >= conf.max_attendees;
   return (
     <div className="nextup" style={{ '--cat': catColor(conf.category) } as CSSProperties}>
       <div className="nextup__cover" style={conf.cover_image ? { backgroundImage: `url(${conf.cover_image})` } : { background: coverGradient(conf.category, conf.id) }}>
-        <span className="chip chip--success nextup__live"><span className="live-dot" /> {t('home_next_up')}</span>
+        <span className="chip chip--success nextup__live"><span className="live-dot" /> {live ? t('home_live_now') : t('home_next_up')}</span>
         {conf.category && <CategoryChip category={conf.category} />}
       </div>
       <div className="nextup__body">
@@ -53,14 +87,14 @@ function NextUpCard({ conf }: { conf: Conference }) {
           {conf.time && <li><i className="fas fa-clock" /> {formatTime(conf.time, lang)}{conf.end_time && ` – ${formatTime(conf.end_time, lang)}`}</li>}
           {conf.location && <li><i className="fas fa-location-dot" /> {conf.location}</li>}
         </ul>
-        <Countdown date={conf.date} time={conf.time} />
+        {live ? <LiveProgress conf={conf} /> : <Countdown date={conf.date} time={conf.time} />}
         <CapacityBar count={conf.attendee_count} max={conf.max_attendees} />
         <div className="row row--between">
           <span className="row small text-2" style={{ gap: 8 }}>
             <Avatar name={conf.organizer_name} src={conf.organizer_avatar} size={30} /> {conf.organizer_name}
           </span>
           <Link to={`/conferences/${conf.id}`} className="btn btn--primary btn--sm">
-            {t('register_now')} <i className="fas fa-arrow-right" />
+            {live ? t('view_details') : full ? t('join_waitlist') : t('register_now')} <i className="fas fa-arrow-right" />
           </Link>
         </div>
       </div>
@@ -87,7 +121,8 @@ export default function HomePage() {
     navigate(`/conferences${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''}`);
   };
 
-  const next = featured?.next[0];
+  // The next event that has not finished yet (one under way today counts as next).
+  const next = featured?.next.find((c) => eventWindow(c).end > Date.now()) ?? featured?.next[0];
   const catCount = (c: string) => stats?.categories.find((x) => x.category === c)?.count ?? 0;
   const tickerItems = [
     ...(stats?.recent ?? []).map((r) => ({ key: `r${r.conference_id}${r.at}`, to: `/conferences/${r.conference_id}`, icon: 'user-plus', text: t('ticker_registered', { title: r.title }), when: relativeTime(r.at, lang) })),

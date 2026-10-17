@@ -1,71 +1,87 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.db.database import Base, get_db
-from app.main import app
-from app.core.security import create_access_token, hash_password
-from app.models.organizer import Organizer
-from app.models.admin import Admin
+import os
+import tempfile
+from pathlib import Path
 
-SQLALCHEMY_TEST_URL = "sqlite:///./test.db"
+# Must run before any app import: tests use their own SQLite file and upload folder,
+# skip migrations / the reminder loop, and never touch the real conference_db.
+_TMP = Path(tempfile.mkdtemp(prefix="cm-tests-"))
+os.environ["CM_TESTING"] = "1"
+os.environ["DATABASE_URL"] = f"sqlite:///{(_TMP / 'test.db').as_posix()}"
+os.environ["UPLOAD_DIR"] = str(_TMP / "uploads")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-123")
 
-engine = create_engine(SQLALCHEMY_TEST_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import event  # noqa: E402
+
+import app.models  # noqa: E402,F401
+from app.core import email  # noqa: E402
+from app.core.security import create_access_token, hash_password  # noqa: E402
+from app.db.database import Base, SessionLocal, engine  # noqa: E402
+from app.main import app  # noqa: E402
+from app.models.admin import Admin  # noqa: E402
+from app.models.organizer import Organizer  # noqa: E402
+
+assert engine.url.get_backend_name() == "sqlite", "tests must never run against Postgres"
 
 
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@event.listens_for(engine, "connect")
+def _sqlite_fk(dbapi_conn, _):
+    # Make ON DELETE CASCADE / SET NULL behave like Postgres.
+    dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
 
 @pytest.fixture(autouse=True)
 def reset_db():
     Base.metadata.create_all(bind=engine)
+    email.OUTBOX.clear()
     yield
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
 def client():
-    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def db():
-    db = TestingSessionLocal()
+    session = SessionLocal()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        session.close()
+
+
+def make_organizer(db, email_addr="test@example.com", password="password123", first="Test"):
+    org = Organizer(first_name=first, last_name="Organizer", email=email_addr, password_hash=hash_password(password))
+    db.add(org)
+    db.commit()
+    db.refresh(org)
+    return org
 
 
 @pytest.fixture
 def organizer_token(db):
-    org = Organizer(
-        first_name="Test",
-        last_name="Organizer",
-        email="test@example.com",
-        password_hash=hash_password("password123"),
-    )
-    db.add(org)
-    db.commit()
-    db.refresh(org)
-    token = create_access_token({"sub": org.id, "type": "organizer"})
-    return token, org
+    org = make_organizer(db)
+    return create_access_token({"sub": org.id, "type": "organizer"}), org
+
+
+@pytest.fixture
+def other_organizer_token(db):
+    org = make_organizer(db, "other@example.com", first="Other")
+    return create_access_token({"sub": org.id, "type": "organizer"}), org
 
 
 @pytest.fixture
 def admin_token(db):
-    admin = Admin(username="testadmin", password_hash=hash_password("admin123"))
+    admin = Admin(username="testadmin", email="admin@example.com", password_hash=hash_password("Admin@12345"))
     db.add(admin)
     db.commit()
     db.refresh(admin)
-    token = create_access_token({"sub": admin.id, "type": "admin"})
-    return token, admin
+    return create_access_token({"sub": admin.id, "type": "admin"}), admin
+
+
+def auth(token):
+    return {"Authorization": f"Bearer {token}"}

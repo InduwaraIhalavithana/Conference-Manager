@@ -1,0 +1,22 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[lint]
+select = ["E", "F", "W", "B", "I", "UP", "SIM"]
+ignore = [
+    "E221",  # aligned "=" in the model column blocks is intentional
+    "B008",  # FastAPI's Depends()/File() in defaults is the framework's style
+    "UP045", "UP007",  # Optional[...] kept where models mix it with | None
+    "SIM117",
+]
+
+[lint.isort]
+known-first-party = ["app", "tests"]
+
+[lint.per-file-ignores]
+# Translated sentences and aligned model columns read better on one line.
+"app/core/email_text.py" = ["E501"]
+"app/models/*.py" = ["E501"]
+"tests/*.py" = ["E501"]
+"scripts/*.py" = ["E501"]

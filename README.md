@@ -46,8 +46,8 @@ setup.bat
 `setup.bat` creates `backend\.venv` with the exact package versions, creates the database, installs the
 frontend and starts everything. Afterwards use `start-services.bat` and `stop-services.bat`.
 
-- App: http://127.0.0.1:5174
-- API docs: http://127.0.0.1:8002/docs
+- App: http://localhost:5174
+- API docs: http://localhost:8002/docs
 
 The administrator signs in at `/admin/login` with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD`.
 Organizers create their own accounts at `/register`.
@@ -90,7 +90,7 @@ Real environment variables take priority over `backend/.env`.
 | `SECRET_KEY` | Yes | Long random string for signing sign-in tokens |
 | `ADMIN_EMAIL` | No | Administrator sign-in email (default `admin.conferencehub@gmail.com`) |
 | `ADMIN_INITIAL_PASSWORD` | Yes on first start | Administrator password when the account is first created |
-| `FRONTEND_URL` | No | Base of links in emails (default `http://127.0.0.1:5174`) |
+| `FRONTEND_URL` | No | Base of links in emails (default `http://localhost:5174`) |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | No | Gmail SMTP for outgoing email. Empty = emails are written to the log |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session length (default 1440) |
 | `UPLOAD_DIR` | No | Where images are stored (default `backend/uploads`) |

@@ -8,14 +8,14 @@ echo    Conference Manager ^| Stopping All Services
 echo  ============================================================
 echo.
 
-REM ── Step 1: Kill the cmd windows by title ───────────────────────────────────
+REM -- Step 1: Kill the cmd windows by title
 echo  Closing service windows...
 taskkill /F /T /FI "WINDOWTITLE eq Conference Manager | Backend :8002"  >nul 2>&1
 taskkill /F /T /FI "WINDOWTITLE eq Conference Manager | Frontend :5174" >nul 2>&1
 
 timeout /t 1 /nobreak >nul
 
-REM ── Step 2: Port cleanup (by PID only — safe when other projects are running) ─
+REM -- Step 2: Port cleanup (by PID only - safe when other projects are running) -
 echo  Cleaning up leftover processes on ports 8002, 5174...
 for %%P in (8002 5174) do (
     for /f "tokens=5" %%i in ('netstat -ano 2^>nul ^| findstr /L ":%%P " ^| findstr /L "LISTENING"') do (
@@ -27,7 +27,7 @@ for %%P in (8002 5174) do (
 
 timeout /t 1 /nobreak >nul
 
-REM ── Step 3: Verify ───────────────────────────────────────────────────────────
+REM -- Step 3: Verify
 echo.
 set "REMAINING=0"
 for %%P in (8002 5174) do (

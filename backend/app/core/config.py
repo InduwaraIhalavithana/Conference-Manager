@@ -11,7 +11,7 @@ load_dotenv(BACKEND_DIR / ".env", override=False)
 
 TESTING = os.getenv("CM_TESTING") == "1"
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://127.0.0.1:5174").rstrip("/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5174").rstrip("/")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin.conferencehub@gmail.com").strip().lower()
 ADMIN_INITIAL_PASSWORD = os.getenv("ADMIN_INITIAL_PASSWORD", "")
 

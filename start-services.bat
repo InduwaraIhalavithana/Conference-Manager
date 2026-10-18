@@ -10,7 +10,7 @@ echo    Conference Manager ^| Starting All Services
 echo  ============================================================
 echo.
 
-REM ── Check if ports are already occupied ─────────────────────────────────────
+REM -- Check if ports are already occupied
 for %%P in (8002 5174) do (
     netstat -ano 2>nul | findstr /L ":%%P " | findstr /L "LISTENING" >nul
     if not errorlevel 1 (
@@ -36,10 +36,9 @@ echo.
 echo  ============================================================
 echo    All services launched in separate windows.
 echo.
-echo    Backend API  :  http://127.0.0.1:8002
-echo    Frontend     :  http://127.0.0.1:5174
-echo    API Docs     :  http://127.0.0.1:8002/docs
-echo    Log          :  %ROOT%cm_backend.log
+echo    Backend API  :  http://localhost:8002
+echo    Frontend     :  http://localhost:5174
+echo    API Docs     :  http://localhost:8002/docs
 echo.
 echo    Run stop-services.bat to shut everything down.
 echo  ============================================================

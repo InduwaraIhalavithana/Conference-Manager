@@ -1,6 +1,10 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import dns from 'node:dns';
+
+// On Windows "localhost" resolves to ::1 first, which would make Vite listen on IPv6 only.
+dns.setDefaultResultOrder('ipv4first');
 
 // Docker sets VITE_API_TARGET to the backend container; locally the API runs on 127.0.0.1.
 const API = process.env.VITE_API_TARGET || 'http://127.0.0.1:8002';
@@ -8,8 +12,9 @@ const API = process.env.VITE_API_TARGET || 'http://127.0.0.1:8002';
 export default defineConfig({
   plugins: [react()],
   server: {
-    // 127.0.0.1 explicitly: "localhost" made Vite listen on IPv6 only.
-    host: '127.0.0.1',
+    // Served as http://localhost:5174 like the other projects; ipv4first (above) makes Vite
+    // bind 127.0.0.1, so http://127.0.0.1:5174 keeps working too.
+    host: 'localhost',
     port: 5174,
     strictPort: true,
     proxy: {

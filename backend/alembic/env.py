@@ -1,16 +1,18 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
 import os
-from dotenv import load_dotenv
+from logging.config import fileConfig
 from pathlib import Path
+
+from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 # Real environment variables win over .env, so tests, CI and Docker can point elsewhere.
 load_dotenv(BASE_DIR / ".env", override=False)
 
-from app.db.database import Base  # noqa: E402
 import app.models  # noqa: F401,E402  (registers every table)
+from app.db.database import Base  # noqa: E402
 
 config = context.config
 
@@ -21,7 +23,8 @@ if DATABASE_URL.startswith("postgres://"):
 config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Keep uvicorn's loggers alive: the app runs migrations at startup, and fileConfig would silence them.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = Base.metadata
 

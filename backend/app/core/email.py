@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass, field
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from urllib.parse import urlencode
 
 import aiosmtplib
 from fastapi import BackgroundTasks
@@ -51,6 +52,7 @@ class Message:
     quote: str | None = None
     button_label: str | None = None
     button_url: str | None = None
+    code: str | None = None  # a 6-digit code shown large
 
 
 def render(msg: Message) -> str:
@@ -64,6 +66,8 @@ def render(msg: Message) -> str:
         quote=msg.quote,
         button_label=msg.button_label,
         button_url=msg.button_url,
+        code=msg.code,
+        code_label=tr(lang, "code_label"),
         team_sign=tr(lang, "team_sign"),
         footer=tr(lang, "footer"),
     )
@@ -71,7 +75,7 @@ def render(msg: Message) -> str:
 
 async def send_message(msg: Message) -> bool:
     """Send one email. Returns True when it actually went out through SMTP."""
-    OUTBOX.append({"to": msg.to, "subject": msg.subject, "lang": msg.lang, "link": msg.button_url})
+    OUTBOX.append({"to": msg.to, "subject": msg.subject, "lang": msg.lang, "link": msg.button_url, "code": msg.code})
     if not email_enabled():
         log.info("Email not sent (Gmail not configured): to=%s subject=%s link=%s", msg.to, msg.subject, msg.button_url)
         return False
@@ -185,24 +189,26 @@ def password_reset_message(org, reset_url: str) -> Message:
     )
 
 
-def confirm_registration_message(attendee, conf, confirm_url: str, hold_hours: int) -> Message:
-    """Sent right after registering: the ticket only works once this link is clicked."""
+def confirm_registration_message(attendee, conf, code: str, minutes: int, hold_hours: int) -> Message:
+    """Sent right after registering: the ticket only works once this code is entered."""
     lang = lang_or_default(attendee.lang)
     intro = "confirm_wait_intro" if attendee.status == "waitlisted" else "confirm_intro"
     return Message(
-        to=attendee.email, lang=lang, name=attendee.name,
-        subject=tr(lang, "confirm_subject", title=conf.title), heading=tr(lang, "confirm_heading"),
-        paragraphs=[tr(lang, intro, title=conf.title, hours=hold_hours)],
+        to=attendee.email, lang=lang, name=attendee.name, code=code,
+        subject=tr(lang, "confirm_subject", code=code, title=conf.title), heading=tr(lang, "confirm_heading"),
+        paragraphs=[tr(lang, intro, title=conf.title, minutes=minutes, hours=hold_hours)],
         rows=_conf_rows(conf, lang),
-        button_label=tr(lang, "btn_confirm"), button_url=confirm_url,
+        # The ticket page has a box for the code, for anyone who closed the registration page.
+        button_label=tr(lang, "btn_enter_code"), button_url=ticket_url(attendee.ticket_code),
     )
 
 
-def verify_email_message(org, verify_url: str, link_hours: int) -> Message:
+def verify_email_message(org, code: str, minutes: int) -> Message:
     lang = lang_or_default(org.lang)
     return Message(
-        to=org.email, lang=lang, name=org.first_name,
-        subject=tr(lang, "verify_subject"), heading=tr(lang, "verify_heading"),
-        paragraphs=[tr(lang, "verify_intro", hours=link_hours)],
-        button_label=tr(lang, "btn_verify"), button_url=verify_url,
+        to=org.email, lang=lang, name=org.first_name, code=code,
+        subject=tr(lang, "verify_subject", code=code), heading=tr(lang, "verify_heading"),
+        paragraphs=[tr(lang, "verify_intro", minutes=minutes)],
+        button_label=tr(lang, "btn_enter_code"),
+        button_url=f"{FRONTEND_URL}/verify-email?{urlencode({'email': org.email})}",
     )

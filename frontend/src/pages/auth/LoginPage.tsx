@@ -6,6 +6,7 @@ import { ApiError, api } from '../../services/api';
 import { errorMessage } from '../../utils/errors';
 import { Field, PasswordInput } from '../../components/ui';
 import CheckInbox from '../../components/CheckInbox';
+import CodeEntry from '../../components/CodeEntry';
 import AuthLayout from './AuthLayout';
 
 export default function LoginPage() {
@@ -47,7 +48,13 @@ export default function LoginPage() {
       {unverified && (
         <div className="card" style={{ padding: 18, marginBottom: 16 }}>
           <CheckInbox title={t('verify_title')} body={t('err_email_not_verified', { email: unverified })}
-            onResend={() => api.resendVerification(unverified)} />
+            onResend={() => api.resendVerification(unverified)}>
+            <CodeEntry onSubmit={async (code) => {
+              const res = await api.verifyEmail(unverified, code);
+              login(res.access_token, await api.me(res.access_token), 'organizer');
+              navigate(from && !from.startsWith('/admin') ? from : '/dashboard', { replace: true });
+            }} />
+          </CheckInbox>
         </div>
       )}
       <form className="form" onSubmit={submit}>

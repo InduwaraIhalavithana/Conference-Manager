@@ -13,6 +13,8 @@ import { mapsSearchUrl } from '../utils/misc';
 import AddToCalendar from '../components/AddToCalendar';
 import ConferenceCard, { CategoryChip, CountdownChip } from '../components/ConferenceCard';
 import CheckInbox from '../components/CheckInbox';
+import CodeEntry from '../components/CodeEntry';
+import { QRCode } from '../components/QR';
 import { HelpButton } from '../components/Tour';
 import { Avatar, CapacityBar, EmptyState, Field, Skeleton } from '../components/ui';
 import './ConferenceDetailPage.css';
@@ -220,7 +222,7 @@ export default function ConferenceDetailPage() {
           <aside className="cd-side">
             <section className="card cd-reg" data-tour="cd-register">
               {done ? (
-                <RegisteredPanel attendee={done.attendee} email={done.email} />
+                <RegisteredPanel confId={c.id} attendee={done.attendee} email={done.email} />
               ) : (
                 <>
                   <h2 className="card__title"><i className="fas fa-ticket" /> {past ? t('registration_closed') : full ? t('join_waitlist') : t('register_to_attend')}</h2>
@@ -278,25 +280,40 @@ export default function ConferenceDetailPage() {
   );
 }
 
-/** Shown after registering: the ticket only works once the emailed link is clicked. */
-function RegisteredPanel({ attendee: a, email }: { attendee: Attendee | null; email: string }) {
+/** Shown after registering: the ticket only works once the emailed code is entered. */
+function RegisteredPanel({ confId, attendee: a, email }: { confId: number; attendee: Attendee | null; email: string }) {
   const { t } = useApp();
-  if (!a) {
-    return <CheckInbox body={t('reg_resent_body', { email })} />;
+  const [ticket, setTicket] = useState<Attendee | null>(null);
+
+  if (ticket) {
+    const waiting = ticket.status === 'waitlisted';
+    return (
+      <div className="cd-done">
+        <div className={`cd-done__icon${waiting ? ' is-wait' : ''}`}>
+          <i className={`fas fa-${waiting ? 'hourglass-half' : 'circle-check'}`} />
+        </div>
+        <h2>{waiting ? t('wait_success_title') : t('reg_success_title')}</h2>
+        <p className="text-2">{waiting ? t('wait_success_body', { position: ticket.waitlist_position ?? 1 }) : t('reg_success_body')}</p>
+        {!waiting && <div className="cd-done__qr"><QRCode value={`${window.location.origin}/tickets/${ticket.ticket_code}`} size={190} /></div>}
+        <code className="ticket-code">{ticket.ticket_code}</code>
+        <Link to={`/tickets/${ticket.ticket_code}`} className="btn btn--primary btn--block"><i className="fas fa-ticket" /> {t('open_my_ticket')}</Link>
+        <p className="hint">{t('ticket_keep_link')}</p>
+      </div>
+    );
   }
-  const hours = a.hold_expires_at ? Math.round((Date.parse(a.hold_expires_at) - Date.parse(a.registered_at)) / 3_600_000) : 24;
-  const body = a.status === 'waitlisted'
-    ? t('wait_confirm_body', { position: a.waitlist_position ?? 1, email })
+
+  const hours = a?.hold_expires_at ? Math.round((Date.parse(a.hold_expires_at) - Date.parse(a.registered_at)) / 3_600_000) : 24;
+  const body = !a ? t('reg_resent_body', { email })
+    : a.status === 'waitlisted' ? t('wait_confirm_body', { position: a.waitlist_position ?? 1, email })
     : t('reg_confirm_body', { email, hours });
   return (
     <CheckInbox title={t('reg_confirm_title')} body={body}
-      onResend={a.ticket_code ? () => api.resendTicketConfirmation(a.ticket_code!) : undefined}>
-      {a.ticket_code && (
-        <>
-          <Link to={`/tickets/${a.ticket_code}`} className="btn btn--primary btn--block"><i className="fas fa-ticket" /> {t('open_my_ticket')}</Link>
-          <p className="hint">{t('ticket_keep_link')}</p>
-        </>
-      )}
+      onResend={a?.ticket_code ? () => api.resendTicketConfirmation(a.ticket_code!) : undefined}>
+      <CodeEntry onSubmit={async (code) => {
+        const res = await api.confirmRegistration(confId, email, code);
+        setTicket(res.attendee);
+        toast.success(t('ticket_confirmed_toast'));
+      }} />
     </CheckInbox>
   );
 }

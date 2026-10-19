@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import csv
-import hmac
 import io
+import logging
 from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
@@ -10,13 +10,12 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.core import email
-from app.core.config import CONFIRM_HOLD_HOURS
+from app.core import codes, email
+from app.core.config import CONFIRM_HOLD_HOURS, VERIFY_CODE_MINUTES
 from app.core.deps import get_current_organizer
 from app.core.errors import AppError
 from app.core.notify import notify_organizer
 from app.core.ratelimit import limiter
-from app.core.security import hash_token
 from app.core.serialize import conference_dict, conference_select
 from app.core.tickets import (
     confirmed_count,
@@ -25,7 +24,6 @@ from app.core.tickets import (
     normalize_code,
     promote_waitlist,
     registered_count,
-    start_confirmation,
     waitlist_position,
 )
 from app.db.database import get_db
@@ -34,8 +32,9 @@ from app.models.attendee import REGISTERED, WAITLISTED, Attendee
 from app.models.conference import Conference
 from app.models.organizer import Organizer
 from app.routers.conferences import own_conference
-from app.schemas.attendee import AttendeeOut, AttendeeRegister, CheckInRequest, ConfirmRequest
+from app.schemas.attendee import AttendeeOut, AttendeeRegister, CheckInRequest, ConfirmByEmailRequest, ConfirmRequest
 
+log = logging.getLogger("conference.attendees")
 router = APIRouter(prefix="/api/attendees", tags=["attendees"])
 tickets = APIRouter(prefix="/api/tickets", tags=["tickets"])
 
@@ -47,11 +46,17 @@ def _out(db: Session, a: Attendee) -> dict:
     return data
 
 
-def _send_confirmation(background: BackgroundTasks, attendee: Attendee, conf: Conference, url: str) -> None:
-    email.queue(background, email.confirm_registration_message(attendee, conf, url, CONFIRM_HOLD_HOURS))
+def _send_code(db: Session, background: BackgroundTasks, attendee: Attendee, conf: Conference) -> None:
+    """Email a fresh 6-digit code (the previous one stops working). Commits."""
+    code = codes.issue(attendee, "confirm")
+    db.commit()
+    if not email.email_enabled():
+        log.warning("Confirmation code for %s (email disabled): %s", attendee.email, code)
+    email.queue(background, email.confirm_registration_message(attendee, conf, code, VERIFY_CODE_MINUTES,
+                                                                CONFIRM_HOLD_HOURS))
 
 
-CONFIRM_RESENT = {"message": "We sent the confirmation link to your email again.", "code": "confirm_resent"}
+CONFIRM_RESENT = {"message": "We sent a new code to your email.", "code": "confirm_resent"}
 
 
 @router.post("/{conf_id}", status_code=201)
@@ -74,11 +79,10 @@ def register_attendee(request: Request, conf_id: int, body: AttendeeRegister, ba
     if existing is not None:
         if existing.confirmed_at is not None:
             raise AppError(409, "already_registered", "Already registered with this email")
-        # Registered before but never confirmed: send a fresh link. The ticket code is not returned,
-        # because whoever typed this email may not own it.
-        url = start_confirmation(existing)
-        db.commit()
-        _send_confirmation(background, existing, conf, url)
+        # Registered before but never confirmed: send a fresh code (at most once a minute). The ticket
+        # code is not returned, because whoever typed this email may not own it.
+        if codes.resend_wait(existing, "confirm") == 0:
+            _send_code(db, background, existing, conf)
         return CONFIRM_RESENT
 
     # An unconfirmed registration holds its seat, so it counts here.
@@ -87,12 +91,24 @@ def register_attendee(request: Request, conf_id: int, body: AttendeeRegister, ba
                         status=WAITLISTED if full else REGISTERED, ticket_code=new_ticket_code(db))
     db.add(attendee)
     db.flush()
-    url = start_confirmation(attendee)
-    db.commit()
+    # The organizer hears about it once the attendee confirms (see _confirm).
+    _send_code(db, background, attendee, conf)
     db.refresh(attendee)
-    # The organizer hears about it once the attendee confirms (see confirm_ticket).
-    _send_confirmation(background, attendee, conf, url)
     return _out(db, attendee)
+
+
+@router.post("/{conf_id}/confirm")
+@limiter.limit("10/minute")
+def confirm_registration(request: Request, conf_id: int, body: ConfirmByEmailRequest, background: BackgroundTasks,
+                         db: Session = Depends(get_db)):
+    """The code from the confirmation email, entered on the registration form."""
+    email_addr = body.email.lower()
+    attendee = db.execute(
+        select(Attendee).where(and_(Attendee.conference_id == conf_id, func.lower(Attendee.email) == email_addr))
+    ).scalar_one_or_none()
+    if attendee is None:
+        raise AppError(400, "code_invalid", "That code is not right", {"remaining": codes.MAX_ATTEMPTS})
+    return _confirm(db, attendee, body.code, background)
 
 
 @router.get("/{conf_id}/export")
@@ -217,19 +233,21 @@ def get_ticket(request: Request, code: str, db: Session = Depends(get_db)):
     return _ticket_payload(db, _ticket(db, code))
 
 
-@tickets.post("/{code}/confirm")
+@tickets.post("/{ticket}/confirm")
 @limiter.limit("10/minute")
-def confirm_ticket(request: Request, code: str, body: ConfirmRequest, background: BackgroundTasks,
+def confirm_ticket(request: Request, ticket: str, body: ConfirmRequest, background: BackgroundTasks,
                    db: Session = Depends(get_db)):
-    """The link in the confirmation email: activates the ticket and tells the organizer."""
-    attendee = _ticket(db, code)
+    """The code from the confirmation email, entered on the ticket page."""
+    return _confirm(db, _ticket(db, ticket), body.code, background)
+
+
+def _confirm(db: Session, attendee: Attendee, code: str, background: BackgroundTasks) -> dict:
+    """Check the code, activate the ticket and tell the organizer. Returns the ticket."""
     if attendee.confirmed_at is not None:
-        return _ticket_payload(db, attendee)  # clicking the link twice is fine
-    if not attendee.confirm_token or not hmac.compare_digest(attendee.confirm_token, hash_token(body.token)):
-        raise AppError(400, "confirm_invalid", "This confirmation link is invalid or out of date")
+        return _ticket_payload(db, attendee)  # already done, e.g. on another tab
+    codes.check(db, attendee, "confirm", code)
     conf = db.execute(select(Conference).where(Conference.id == attendee.conference_id).with_for_update()).scalar_one()
     attendee.confirmed_at = datetime.now(UTC)
-    attendee.confirm_token = None
     db.flush()
 
     params = {"attendee": attendee.name, "conference": conf.title}
@@ -258,10 +276,10 @@ def confirm_ticket(request: Request, code: str, body: ConfirmRequest, background
 def resend_confirmation(request: Request, code: str, background: BackgroundTasks, db: Session = Depends(get_db)):
     attendee = _ticket(db, code)
     if attendee.confirmed_at is None:
-        conf = db.get(Conference, attendee.conference_id)
-        url = start_confirmation(attendee)
-        db.commit()
-        _send_confirmation(background, attendee, conf, url)
+        wait = codes.resend_wait(attendee, "confirm")
+        if wait:
+            raise AppError(429, "code_wait", "Please wait before asking for another code", {"seconds": wait})
+        _send_code(db, background, attendee, db.get(Conference, attendee.conference_id))
     return CONFIRM_RESENT
 
 

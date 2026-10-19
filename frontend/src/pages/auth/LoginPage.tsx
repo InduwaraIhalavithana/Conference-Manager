@@ -9,6 +9,12 @@ import CheckInbox from '../../components/CheckInbox';
 import CodeEntry from '../../components/CodeEntry';
 import AuthLayout from './AuthLayout';
 
+/** Where to go after signing in: only a plain path inside the organizer area, never another site or the admin area. */
+function safeReturnPath(from?: string): string {
+  const ok = from && from.startsWith('/') && !from.startsWith('//') && !from.includes('\\') &&!from.startsWith('/admin');
+  return ok ? from : '/dashboard';
+}
+
 export default function LoginPage() {
   const { t, login } = useApp();
   usePageTitle('login');
@@ -29,7 +35,7 @@ export default function LoginPage() {
       const res = await api.login({ email: form.email.trim(), password: form.password });
       const me = await api.me(res.access_token);
       login(res.access_token, me, 'organizer');
-      navigate(from && !from.startsWith('/admin') ? from : '/dashboard', { replace: true });
+      navigate(safeReturnPath(from), { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.code === 'email_not_verified') setUnverified(String(err.extra.email ?? form.email.trim()));
       else setError(errorMessage(err, t));
@@ -52,7 +58,7 @@ export default function LoginPage() {
             <CodeEntry onSubmit={async (code) => {
               const res = await api.verifyEmail(unverified, code);
               login(res.access_token, await api.me(res.access_token), 'organizer');
-              navigate(from && !from.startsWith('/admin') ? from : '/dashboard', { replace: true });
+              navigate(safeReturnPath(from), { replace: true });
             }} />
           </CheckInbox>
         </div>

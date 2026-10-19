@@ -235,13 +235,14 @@ export default function ConferenceEditorPage() {
                 <h2 className="card__title"><i className="fas fa-clock" /> {t('when')}</h2>
                 <div className="form-row">
                   <Field label={t('field_date')} htmlFor="e-date" required>
-                    <DatePicker id="e-date" value={form.date} onChange={(v) => set('date', v)} ariaLabel={t('field_date')} />
+                    <DatePicker id="e-date" value={form.date} onChange={(v) => set('date', v)} ariaLabel={t('field_date')}
+                      min={isNew ? todayISO() : undefined} />
                   </Field>
                   <Field label={t('field_start_time')} htmlFor="e-time">
                     <TimeSelect id="e-time" value={form.time} onChange={(v) => set('time', v)} ariaLabel={t('field_start_time')} />
                   </Field>
                   <Field label={t('field_end_time')} htmlFor="e-end">
-                    <TimeSelect id="e-end" value={form.end_time} onChange={(v) => set('end_time', v)} ariaLabel={t('field_end_time')} />
+                    <TimeSelect id="e-end" value={form.end_time} onChange={(v) => set('end_time', v)} ariaLabel={t('field_end_time')} after={form.time} />
                   </Field>
                 </div>
               </section>
@@ -456,7 +457,7 @@ function AgendaEditor({ conf, sessions, speakers, onChange }: {
                 <TimeSelect id="s-start" allowEmpty={false} value={d.start_time} onChange={(v) => setEditing({ ...editing, data: { ...d, start_time: v } })} />
               </Field>
               <Field label={t('field_end_time')} htmlFor="s-end">
-                <TimeSelect id="s-end" value={d.end_time ?? ''} onChange={(v) => setEditing({ ...editing, data: { ...d, end_time: v || null } })} />
+                <TimeSelect id="s-end" value={d.end_time ?? ''} onChange={(v) => setEditing({ ...editing, data: { ...d, end_time: v || null } })} after={d.start_time} />
               </Field>
             </div>
             <Field label={t('field_speaker')} htmlFor="s-speaker" hint={speakers.length === 0 ? t('add_speakers_first') : undefined}>

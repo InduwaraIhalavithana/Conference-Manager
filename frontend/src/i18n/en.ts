@@ -883,6 +883,9 @@ const en = {
   err_code_locked: 'Too many wrong tries. Send a new code below.',
   err_code_wait: 'Please wait {seconds} seconds before asking for another code.',
   verify_page_body: 'Enter the 6-digit code from the email we sent you.',
+  ticket_confirmed_wait_toast: 'Email confirmed. You keep your place on the waitlist.',
+  cancel_waitlist_body: 'You will leave the waitlist for {title}. This cannot be undone.',
+  ticket_left_waitlist_body: 'You have left the waitlist. You can register again at any time.',
 };
 
 export default en;

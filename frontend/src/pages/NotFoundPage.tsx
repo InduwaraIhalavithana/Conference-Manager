@@ -9,7 +9,7 @@ export default function NotFoundPage() {
   usePageTitle('not_found_title');
   return (
     <div className="container page">
-      <EmptyState icon="map-signs" title={t('not_found_title')} message={t('not_found_body')}>
+      <EmptyState page icon="map-signs" title={t('not_found_title')} message={t('not_found_body')}>
         <Link to={role ? HOME_OF[role] : '/'} className="btn btn--primary"><i className="fas fa-house" /> {role ? t('nav_my_dashboard') : t('nav_home')}</Link>
         <Link to="/conferences" className="btn"><i className="fas fa-compass" /> {t('browse_conferences')}</Link>
       </EmptyState>

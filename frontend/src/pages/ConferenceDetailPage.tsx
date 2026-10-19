@@ -49,7 +49,7 @@ export default function ConferenceDetailPage() {
   if (missing) {
     return (
       <div className="container page">
-        <EmptyState icon="calendar-xmark" title={t('conf_not_found')} message={t('conf_not_found_body')}>
+        <EmptyState page icon="calendar-xmark" title={t('conf_not_found')} message={t('conf_not_found_body')}>
           <Link to="/conferences" className="btn btn--primary"><i className="fas fa-arrow-left" /> {t('browse_conferences')}</Link>
         </EmptyState>
       </div>
@@ -312,7 +312,7 @@ function RegisteredPanel({ confId, attendee: a, email }: { confId: number; atten
       <CodeEntry onSubmit={async (code) => {
         const res = await api.confirmRegistration(confId, email, code);
         setTicket(res.attendee);
-        toast.success(t('ticket_confirmed_toast'));
+        toast.success(res.attendee.status === 'waitlisted' ? t('ticket_confirmed_wait_toast') : t('ticket_confirmed_toast'));
       }} />
     </CheckInbox>
   );

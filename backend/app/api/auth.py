@@ -1,6 +1,4 @@
-import hashlib
 import logging
-import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
@@ -9,12 +7,12 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core import email
-from app.core.config import FRONTEND_URL
+from app.core.config import FRONTEND_URL, VERIFY_LINK_HOURS
 from app.core.deps import get_current_admin, get_current_organizer
 from app.core.errors import AppError
 from app.core.notify import notify_admins
 from app.core.ratelimit import limiter
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token, hash_password, hash_token, new_link_token, verify_password
 from app.db.database import get_db
 from app.models.activity import ActivityLog
 from app.models.admin import Admin
@@ -26,14 +24,25 @@ log = logging.getLogger("conference.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _hash_token(token: str) -> str:
-    """Reset tokens are stored hashed, so a database leak cannot be used to reset passwords."""
-    return hashlib.sha256(token.encode()).hexdigest()
+VERIFY_SENT = {"message": "Check your inbox for a link to verify your email.", "code": "verify_sent"}
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+def _send_verification(db: Session, org: Organizer, background: BackgroundTasks) -> None:
+    """Give the organizer a fresh link (older links stop working) and email it. Caller commits first."""
+    raw, hashed = new_link_token()
+    org.verify_token = hashed
+    org.verify_expires_at = datetime.now(UTC) + timedelta(hours=VERIFY_LINK_HOURS)
+    db.commit()
+    url = f"{FRONTEND_URL}/verify-email?token={raw}"
+    if not email.email_enabled():
+        # Local development without Gmail: the link only appears in the server log.
+        log.warning("Verification link for %s (email disabled): %s", org.email, url)
+    email.queue(background, email.verify_email_message(org, url, VERIFY_LINK_HOURS))
+
+
+@router.post("/register", status_code=201)
 @limiter.limit("10/minute")
-def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
+def register(request: Request, body: RegisterRequest, background: BackgroundTasks, db: Session = Depends(get_db)):
     email_addr = body.email.lower()
     if db.execute(select(Organizer.id).where(func.lower(Organizer.email) == email_addr)).first():
         raise AppError(409, "email_taken", "Email already registered")
@@ -50,7 +59,9 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
     db.flush()
     notify_admins(db, "new_organizer", {"name": f"{org.first_name} {org.last_name}"}, "/admin/organizers")
     db.commit()
-    return TokenResponse(access_token=create_access_token({"sub": org.id, "type": "organizer"}))
+    # No token yet: the organizer signs in by clicking the link in the email.
+    _send_verification(db, org, background)
+    return {**VERIFY_SENT, "email": org.email}
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -61,6 +72,8 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         raise AppError(401, "invalid_credentials", "Invalid email or password")
     if org.is_suspended:
         raise AppError(403, "account_suspended", "Account suspended")
+    if org.email_verified_at is None:
+        raise AppError(403, "email_not_verified", "Verify your email before signing in", {"email": org.email})
     db.add(ActivityLog(organizer_id=org.id, action="login", target=org.email))
     db.commit()
     return TokenResponse(access_token=create_access_token({"sub": org.id, "type": "organizer"}))
@@ -93,6 +106,45 @@ def admin_me(admin: Admin = Depends(get_current_admin)):
     return admin
 
 
+class VerifyEmailRequest(BaseModel):
+    token: str = Field(..., min_length=10, max_length=200)
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/verify-email", response_model=TokenResponse)
+@limiter.limit("10/minute")
+def verify_email(request: Request, body: VerifyEmailRequest, db: Session = Depends(get_db)):
+    """The link in the sign-up email: marks the address verified and signs the organizer in."""
+    org = db.execute(select(Organizer).where(Organizer.verify_token == hash_token(body.token))).scalar_one_or_none()
+    if not org:
+        raise AppError(400, "verify_invalid", "This verification link is invalid or was already used")
+    expires = org.verify_expires_at
+    if expires is not None and (expires if expires.tzinfo else expires.replace(tzinfo=UTC)) < datetime.now(UTC):
+        raise AppError(400, "verify_expired", "This verification link has expired", {"email": org.email})
+    if org.is_suspended:
+        raise AppError(403, "account_suspended", "Account suspended")
+    org.email_verified_at = datetime.now(UTC)
+    org.verify_token = None
+    org.verify_expires_at = None
+    db.add(ActivityLog(organizer_id=org.id, action="verify_email", target=org.email))
+    db.commit()
+    return TokenResponse(access_token=create_access_token({"sub": org.id, "type": "organizer"}))
+
+
+@router.post("/resend-verification", status_code=200)
+@limiter.limit("3/minute")
+def resend_verification(request: Request, body: ResendVerificationRequest, background: BackgroundTasks,
+                        db: Session = Depends(get_db)):
+    # Same answer whether or not the email exists or is already verified.
+    org = db.execute(select(Organizer).where(func.lower(Organizer.email) == body.email.lower())).scalar_one_or_none()
+    if org and org.email_verified_at is None and not org.is_suspended:
+        _send_verification(db, org, background)
+    return VERIFY_SENT
+
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
@@ -111,8 +163,8 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, background: B
     org = db.execute(select(Organizer).where(func.lower(Organizer.email) == body.email.lower())).scalar_one_or_none()
     if not org or org.is_suspended:
         return answer
-    raw = secrets.token_urlsafe(48)
-    db.add(PasswordResetToken(organizer_id=org.id, token=_hash_token(raw),
+    raw, hashed = new_link_token()
+    db.add(PasswordResetToken(organizer_id=org.id, token=hashed,
                               expires_at=datetime.now(UTC) + timedelta(hours=2)))
     db.commit()
     reset_url = f"{FRONTEND_URL}/reset-password?token={raw}"
@@ -127,7 +179,7 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, background: B
 @limiter.limit("10/minute")
 def reset_password(request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)):
     record = db.execute(
-        select(PasswordResetToken).where(PasswordResetToken.token == _hash_token(body.token))
+        select(PasswordResetToken).where(PasswordResetToken.token == hash_token(body.token))
     ).scalar_one_or_none()
     if not record:
         raise AppError(400, "reset_invalid", "Invalid or expired reset token")
@@ -140,6 +192,11 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
     if not org:
         raise AppError(400, "reset_invalid", "Invalid reset token")
     org.password_hash = hash_password(body.new_password)
+    if org.email_verified_at is None:
+        # The reset link reached their inbox, which proves the address too.
+        org.email_verified_at = datetime.now(UTC)
+        org.verify_token = None
+        org.verify_expires_at = None
     # One use only: drop every outstanding token for this organizer.
     for other in db.execute(select(PasswordResetToken).where(PasswordResetToken.organizer_id == org.id)).scalars():
         db.delete(other)

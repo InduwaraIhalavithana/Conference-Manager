@@ -1,5 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useApp } from '../context/AppContext';
 import { usePageTitle } from '../hooks';
@@ -9,6 +9,7 @@ import type { Ticket } from '../types';
 import { catColor, coverGradient } from '../utils/categories';
 import { errorMessage } from '../utils/errors';
 import AddToCalendar from '../components/AddToCalendar';
+import CheckInbox from '../components/CheckInbox';
 import { QRCode } from '../components/QR';
 import { HelpButton } from '../components/Tour';
 import { ConfirmModal, EmptyState, Spinner } from '../components/ui';
@@ -24,10 +25,26 @@ export default function TicketPage() {
   const [cancelled, setCancelled] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const confirmToken = params.get('confirm');
+  const handled = useRef(false);
 
   useEffect(() => {
-    api.ticket(code!).then(setTicket).catch(() => setMissing(true));
-  }, [code]);
+    // Opened from the confirmation email: activate the ticket first (only once, the link is single-use).
+    if (confirmToken) {
+      if (handled.current) return;
+      handled.current = true;
+      api.confirmTicket(code!, confirmToken)
+        .then((tk) => { setTicket(tk); toast.success(t('ticket_confirmed_toast')); })
+        .catch((err) => {
+          toast.error(errorMessage(err, t));
+          api.ticket(code!).then(setTicket).catch(() => setMissing(true));
+        })
+        .finally(() => setParams({}, { replace: true }));
+      return;
+    }
+    if (!handled.current) api.ticket(code!).then(setTicket).catch(() => setMissing(true));
+  }, [code, confirmToken, setParams, t]);
 
   const cancel = async () => {
     setBusy(true);
@@ -58,6 +75,7 @@ export default function TicketPage() {
   const { attendee: a, conference: c } = ticket;
   const past = daysUntil(c.date) < 0;
   const waiting = a.status === 'waitlisted';
+  const pending = !a.confirmed_at;
 
   return (
     <div className="container page">
@@ -65,17 +83,26 @@ export default function TicketPage() {
         <div className="ticket__top" style={c.cover_image ? { backgroundImage: `url(${c.cover_image})` } : { background: coverGradient(c.category, c.id) }}>
           <div className="ticket__shade" />
           <div className="ticket__head">
-            <span className={`chip ${waiting ? 'chip--warning' : a.checked_in_at ? 'chip--success' : 'chip--accent'}`}>
-              <i className={`fas fa-${waiting ? 'hourglass-half' : a.checked_in_at ? 'circle-check' : 'ticket'}`} />
-              {waiting ? t('ticket_waitlisted', { position: a.waitlist_position ?? 1 }) : a.checked_in_at ? t('ticket_checked_in') : t('ticket_confirmed')}
-            </span>
+            {pending ? (
+              <span className="chip chip--warning"><i className="fas fa-envelope" /> {t('ticket_unconfirmed')}</span>
+            ) : (
+              <span className={`chip ${waiting ? 'chip--warning' : a.checked_in_at ? 'chip--success' : 'chip--accent'}`}>
+                <i className={`fas fa-${waiting ? 'hourglass-half' : a.checked_in_at ? 'circle-check' : 'ticket'}`} />
+                {waiting ? t('ticket_waitlisted', { position: a.waitlist_position ?? 1 }) : a.checked_in_at ? t('ticket_checked_in') : t('ticket_confirmed')}
+              </span>
+            )}
             <h1>{c.title}</h1>
             <p>{t('ticket_for', { name: a.name })}</p>
           </div>
         </div>
         <div className="ticket__body">
           <div className="ticket__qr" data-tour="tk-qr">
-            {waiting ? (
+            {pending ? (
+              <CheckInbox title={t('ticket_unconfirmed')}
+                body={t(waiting ? 'ticket_unconfirmed_wait_body' : 'ticket_unconfirmed_body',
+                  { email: a.email, time: a.hold_expires_at ? formatDateTime(a.hold_expires_at, lang) : '' })}
+                onResend={() => api.resendTicketConfirmation(a.ticket_code!)} />
+            ) : waiting ? (
               <div className="ticket__wait"><i className="fas fa-hourglass-half" /><span>{t('ticket_qr_after_waitlist')}</span></div>
             ) : <QRCode value={`${window.location.origin}/tickets/${a.ticket_code}`} size={230} />}
             <code className="ticket-code">{a.ticket_code}</code>

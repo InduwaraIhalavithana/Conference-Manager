@@ -12,7 +12,7 @@ import { errorMessage } from '../utils/errors';
 import { mapsSearchUrl } from '../utils/misc';
 import AddToCalendar from '../components/AddToCalendar';
 import ConferenceCard, { CategoryChip, CountdownChip } from '../components/ConferenceCard';
-import { QRCode } from '../components/QR';
+import CheckInbox from '../components/CheckInbox';
 import { HelpButton } from '../components/Tour';
 import { Avatar, CapacityBar, EmptyState, Field, Skeleton } from '../components/ui';
 import './ConferenceDetailPage.css';
@@ -27,7 +27,8 @@ export default function ConferenceDetailPage() {
   const [form, setForm] = useState({ name: '', email: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState<Attendee | null>(null);
+  // After registering: the new (unconfirmed) registration, or null when we only resent the link.
+  const [done, setDone] = useState<{ attendee: Attendee | null; email: string } | null>(null);
   usePageTitle('nav_conferences', data?.conference.title);
 
   useEffect(() => {
@@ -75,8 +76,14 @@ export default function ConferenceDetailPage() {
     setError('');
     setBusy(true);
     try {
-      const a = await api.registerAttendee(c.id, { name: form.name.trim(), email: form.email.trim(), lang });
-      setDone(a);
+      const email = form.email.trim();
+      const res = await api.registerAttendee(c.id, { name: form.name.trim(), email, lang });
+      if ('code' in res) {
+        setDone({ attendee: null, email });
+        return;
+      }
+      const a = res;
+      setDone({ attendee: a, email });
       setData((d) => d && {
         ...d,
         conference: {
@@ -85,7 +92,7 @@ export default function ConferenceDetailPage() {
           waitlist_count: d.conference.waitlist_count + (a.status === 'waitlisted' ? 1 : 0),
         },
       });
-      toast.success(a.status === 'registered' ? t('reg_success_title') : t('wait_success_title'));
+      toast.success(t('reg_confirm_title'));
     } catch (err) {
       setError(err instanceof ApiError && err.code === 'already_registered' ? t('err_already_registered') : errorMessage(err, t));
     } finally {
@@ -213,21 +220,7 @@ export default function ConferenceDetailPage() {
           <aside className="cd-side">
             <section className="card cd-reg" data-tour="cd-register">
               {done ? (
-                <div className="cd-done">
-                  <div className={`cd-done__icon${done.status === 'waitlisted' ? ' is-wait' : ''}`}>
-                    <i className={`fas fa-${done.status === 'registered' ? 'circle-check' : 'hourglass-half'}`} />
-                  </div>
-                  <h2>{done.status === 'registered' ? t('reg_success_title') : t('wait_success_title')}</h2>
-                  <p className="text-2">{done.status === 'registered' ? t('reg_success_body') : t('wait_success_body', { position: done.waitlist_position ?? 1 })}</p>
-                  {done.ticket_code && (
-                    <>
-                      <div className="cd-done__qr"><QRCode value={`${window.location.origin}/tickets/${done.ticket_code}`} size={190} /></div>
-                      <code className="ticket-code">{done.ticket_code}</code>
-                      <Link to={`/tickets/${done.ticket_code}`} className="btn btn--primary btn--block"><i className="fas fa-ticket" /> {t('open_my_ticket')}</Link>
-                      <p className="hint">{t('ticket_keep_link')}</p>
-                    </>
-                  )}
-                </div>
+                <RegisteredPanel attendee={done.attendee} email={done.email} />
               ) : (
                 <>
                   <h2 className="card__title"><i className="fas fa-ticket" /> {past ? t('registration_closed') : full ? t('join_waitlist') : t('register_to_attend')}</h2>
@@ -282,5 +275,28 @@ export default function ConferenceDetailPage() {
       </div>
       <HelpButton tour="conference" />
     </div>
+  );
+}
+
+/** Shown after registering: the ticket only works once the emailed link is clicked. */
+function RegisteredPanel({ attendee: a, email }: { attendee: Attendee | null; email: string }) {
+  const { t } = useApp();
+  if (!a) {
+    return <CheckInbox body={t('reg_resent_body', { email })} />;
+  }
+  const hours = a.hold_expires_at ? Math.round((Date.parse(a.hold_expires_at) - Date.parse(a.registered_at)) / 3_600_000) : 24;
+  const body = a.status === 'waitlisted'
+    ? t('wait_confirm_body', { position: a.waitlist_position ?? 1, email })
+    : t('reg_confirm_body', { email, hours });
+  return (
+    <CheckInbox title={t('reg_confirm_title')} body={body}
+      onResend={a.ticket_code ? () => api.resendTicketConfirmation(a.ticket_code!) : undefined}>
+      {a.ticket_code && (
+        <>
+          <Link to={`/tickets/${a.ticket_code}`} className="btn btn--primary btn--block"><i className="fas fa-ticket" /> {t('open_my_ticket')}</Link>
+          <p className="hint">{t('ticket_keep_link')}</p>
+        </>
+      )}
+    </CheckInbox>
   );
 }

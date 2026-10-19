@@ -68,6 +68,8 @@ export default function CheckInPage() {
       if (err instanceof ApiError && err.code === 'already_checked_in') {
         setResult({ tone: 'warn', title: t('ci_already', { name: String(err.extra.name ?? '') }),
           body: err.extra.checked_in_at ? t('ci_already_at', { time: formatDateTime(String(err.extra.checked_in_at), lang) }) : '' });
+      } else if (err instanceof ApiError && err.code === 'ticket_unconfirmed') {
+        setResult({ tone: 'warn', title: t('ci_unconfirmed', { name: String(err.extra.name ?? '') }), body: t('ci_unconfirmed_body') });
       } else if (err instanceof ApiError && err.code === 'ticket_waitlisted') {
         setResult({ tone: 'warn', title: t('ci_waitlisted', { name: String(err.extra.name ?? '') }), body: t('ci_waitlisted_body') });
       } else {

@@ -21,6 +21,10 @@ class CheckInRequest(BaseModel):
     code: str = Field(..., min_length=4, max_length=300)
 
 
+class ConfirmRequest(BaseModel):
+    token: str = Field(..., min_length=10, max_length=200)
+
+
 class AttendeeOut(BaseModel):
     id: int
     conference_id: int
@@ -30,6 +34,8 @@ class AttendeeOut(BaseModel):
     ticket_code: str | None
     checked_in_at: datetime | None
     registered_at: datetime
+    confirmed_at: datetime | None = None
+    hold_expires_at: datetime | None = None
     waitlist_position: int | None = None
 
     class Config:

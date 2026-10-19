@@ -19,6 +19,7 @@ const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const AdminLoginPage = lazy(() => import('./pages/auth/AdminLoginPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const DashboardPage = lazy(() => import('./pages/organizer/DashboardPage'));
@@ -85,6 +86,7 @@ function AppRoutes() {
                 <Route path="/admin/login" element={<GuestOnly><AdminLoginPage /></GuestOnly>} />
                 <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
                 <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
+                <Route path="/verify-email" element={<GuestOnly><VerifyEmailPage /></GuestOnly>} />
 
                 <Route path="/dashboard" element={<RequireRole role="organizer"><DashboardPage /></RequireRole>} />
                 <Route path="/my-conferences" element={<RequireRole role="organizer"><MyConferencesPage /></RequireRole>} />

@@ -18,7 +18,8 @@ from app.core.email_text import format_date, lang_or_default, tr
 log = logging.getLogger("conference.email")
 
 GMAIL_USER = os.getenv("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
+# Google shows app passwords in groups of four ("abcd efgh ..."); the spaces are not part of it.
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "").replace(" ", "")
 
 _env = Environment(
     loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")),
@@ -173,4 +174,27 @@ def password_reset_message(org, reset_url: str) -> Message:
         subject=tr(lang, "reset_subject"), heading=tr(lang, "reset_heading"),
         paragraphs=[tr(lang, "reset_intro")],
         button_label=tr(lang, "btn_reset"), button_url=reset_url,
+    )
+
+
+def confirm_registration_message(attendee, conf, confirm_url: str, hold_hours: int) -> Message:
+    """Sent right after registering: the ticket only works once this link is clicked."""
+    lang = lang_or_default(attendee.lang)
+    intro = "confirm_wait_intro" if attendee.status == "waitlisted" else "confirm_intro"
+    return Message(
+        to=attendee.email, lang=lang, name=attendee.name,
+        subject=tr(lang, "confirm_subject", title=conf.title), heading=tr(lang, "confirm_heading"),
+        paragraphs=[tr(lang, intro, title=conf.title, hours=hold_hours)],
+        rows=_conf_rows(conf, lang),
+        button_label=tr(lang, "btn_confirm"), button_url=confirm_url,
+    )
+
+
+def verify_email_message(org, verify_url: str, link_hours: int) -> Message:
+    lang = lang_or_default(org.lang)
+    return Message(
+        to=org.email, lang=lang, name=org.first_name,
+        subject=tr(lang, "verify_subject"), heading=tr(lang, "verify_heading"),
+        paragraphs=[tr(lang, "verify_intro", hours=link_hours)],
+        button_label=tr(lang, "btn_verify"), button_url=verify_url,
     )

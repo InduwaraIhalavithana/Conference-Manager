@@ -19,6 +19,9 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BACKEND_DIR / "uploads")))
 
 # How often the reminder loop looks for conferences starting tomorrow.
 REMINDER_INTERVAL_SECONDS = int(os.getenv("REMINDER_INTERVAL_SECONDS", "900"))
+# How long an unconfirmed registration holds its seat, and how long a sign-up verification link works.
+CONFIRM_HOLD_HOURS = int(os.getenv("CONFIRM_HOLD_HOURS", "24"))
+VERIFY_LINK_HOURS = int(os.getenv("VERIFY_LINK_HOURS", "48"))
 
 CORS_ORIGINS = [
     o.strip()

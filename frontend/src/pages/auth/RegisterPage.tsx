@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { usePageTitle } from '../../hooks';
 import { api } from '../../services/api';
 import { errorMessage } from '../../utils/errors';
 import { Field, PasswordInput } from '../../components/ui';
+import CheckInbox from '../../components/CheckInbox';
 import AuthLayout from './AuthLayout';
 
 export function passwordScore(pw: string): number {
@@ -31,9 +32,9 @@ export function PasswordMeter({ value }: { value: string }) {
 }
 
 export default function RegisterPage() {
-  const { t, lang, login } = useApp();
+  const { t, lang } = useApp();
   usePageTitle('register');
-  const navigate = useNavigate();
+  const [sentTo, setSentTo] = useState('');
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', organization: '', phone: '', password: '', confirm: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -52,9 +53,8 @@ export default function RegisterPage() {
         first_name: form.first_name.trim(), last_name: form.last_name.trim(), email: form.email.trim(),
         password: form.password, phone: form.phone.trim() || null, organization: form.organization.trim() || null, lang,
       });
-      const me = await api.me(res.access_token);
-      login(res.access_token, me, 'organizer');
-      navigate('/dashboard', { replace: true });
+      // No sign-in yet: the account opens from the link in the verification email.
+      setSentTo(res.email);
     } catch (err) {
       setError(errorMessage(err, t));
     } finally {
@@ -69,6 +69,9 @@ export default function RegisterPage() {
       subtitle={t('register_subtitle')}
       side={{ title: t('register_side_title'), points: [t('register_side_1'), t('register_side_2'), t('register_side_3'), t('register_side_4')] }}
     >
+      {sentTo ? (
+        <CheckInbox body={t('verify_sent_body', { email: sentTo })} onResend={() => api.resendVerification(sentTo)} />
+      ) : (
       <form className="form" onSubmit={submit}>
         <div className="form-row">
           <Field label={t('field_first_name')} htmlFor="r-first" required>
@@ -102,6 +105,7 @@ export default function RegisterPage() {
           {busy ? <span className="spinner" /> : <><i className="fas fa-user-plus" /> {t('create_account')}</>}
         </button>
       </form>
+      )}
       <div className="auth__links">
         <span>{t('have_account')} <Link to="/login">{t('login')}</Link></span>
       </div>

@@ -125,7 +125,8 @@
 /* Attendees */
 .att-row-name { display: flex; align-items: center; gap: 12px; }
 .att-row-name strong { display: block; }
-.att-row-name small { color: var(--text-3); }
+.att-row-name small { display: block; color: var(--text-3); }
+.att-row-name .chip--xs { font-size: 0.72rem; padding: 2px 8px; margin: 3px 0 2px; }
 .att-code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-weight: 700; letter-spacing: 0.08em; }
 .att-check {
   display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-strong);

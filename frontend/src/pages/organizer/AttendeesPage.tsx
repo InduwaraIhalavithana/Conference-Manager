@@ -167,14 +167,22 @@ export default function AttendeesPage() {
                   <td>
                     <div className="att-row-name">
                       <Avatar name={a.name} size={38} />
-                      <div><strong>{a.name}</strong><small>{a.email}</small></div>
+                      <div>
+                        <strong>{a.name}</strong>
+                        {!a.confirmed_at && (
+                          <span className="chip chip--warning chip--xs" title={t('att_unconfirmed_hint', { time: a.hold_expires_at ? formatDateTime(a.hold_expires_at, lang) : '' })}>
+                            <i className="fas fa-envelope" /> {t('att_unconfirmed')}
+                          </span>
+                        )}
+                        <small>{a.email}</small>
+                      </div>
                     </div>
                   </td>
                   <td><span className="att-code">{a.ticket_code}</span></td>
                   <td className="nowrap text-2">{formatDateTime(a.registered_at, lang)}</td>
                   {tab === 'registered' && (
                     <td>
-                      <button className={`att-check${a.checked_in_at ? ' is-on' : ''}`} onClick={() => toggle(a)} disabled={busy === `c${a.id}`}
+                      <button className={`att-check${a.checked_in_at ? ' is-on' : ''}`} onClick={() => toggle(a)} disabled={busy === `c${a.id}` || !a.confirmed_at}
                         aria-pressed={Boolean(a.checked_in_at)} data-tour={i === 0 ? 'at-checkin' : undefined}
                         title={a.checked_in_at ? formatDateTime(a.checked_in_at, lang) : t('mark_checked_in')}>
                         <i className={`fas fa-${a.checked_in_at ? 'circle-check' : 'circle'}`} /> {a.checked_in_at ? t('checked_in') : t('not_checked_in')}

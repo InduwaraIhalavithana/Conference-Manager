@@ -1,5 +1,7 @@
 from datetime import date, timedelta
 
+from tests.conftest import confirm
+
 
 def _auth(token):
     return {"Authorization": f"Bearer {token}"}
@@ -24,7 +26,12 @@ def test_register_attendee(client, organizer_token):
 def test_register_duplicate_email(client, organizer_token):
     token, _ = organizer_token
     conf = _make_conf(client, token)
-    client.post(f"/api/attendees/{conf['id']}", json={"name": "Alice", "email": "alice@x.com"})
+    first = client.post(f"/api/attendees/{conf['id']}", json={"name": "Alice", "email": "alice@x.com"}).json()
+    # Not confirmed yet: registering again just resends the link, without revealing the ticket.
+    again = client.post(f"/api/attendees/{conf['id']}", json={"name": "Alice2", "email": "alice@x.com"})
+    assert again.status_code == 201 and again.json()["code"] == "confirm_resent"
+    assert "ticket_code" not in again.json()
+    confirm(client, first)
     res = client.post(f"/api/attendees/{conf['id']}", json={"name": "Alice2", "email": "alice@x.com"})
     assert res.status_code == 409
 

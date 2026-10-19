@@ -5,11 +5,15 @@
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import text
 
-from app.core.config import UPLOAD_DIR
+from app.core.config import CONFIRM_HOLD_HOURS, REMINDER_INTERVAL_SECONDS, UPLOAD_DIR
 from app.db.database import engine
+
+# An unconfirmed registration should be gone within one loop round after its hold ends.
+_STALE_HOLD = datetime.now(UTC) - timedelta(hours=CONFIRM_HOLD_HOURS, seconds=REMINDER_INTERVAL_SECONDS + 300)
 
 CHECKS = {
     "attendees without a conference":
@@ -29,12 +33,21 @@ CHECKS = {
     "conferences over capacity":
         "select count(*) from conferences c where max_attendees is not null and (select count(*) from attendees a"
         " where a.conference_id = c.id and a.status = 'registered') > c.max_attendees",
+    # Only confirmed people are promoted, so an unconfirmed waitlister may wait next to a free seat.
     "people waiting while seats are free":
         "select count(*) from conferences c where (select count(*) from attendees a where a.conference_id = c.id"
-        " and a.status = 'waitlisted') > 0 and (c.max_attendees is null or (select count(*) from attendees a"
+        " and a.status = 'waitlisted' and a.confirmed_at is not null) > 0 and (c.max_attendees is null or (select count(*) from attendees a"
         " where a.conference_id = c.id and a.status = 'registered') < c.max_attendees)",
     "checked in while on the waitlist":
         "select count(*) from attendees where checked_in_at is not null and status <> 'registered'",
+    "checked in without a confirmed email":
+        "select count(*) from attendees where checked_in_at is not null and confirmed_at is null",
+    "confirmed tickets still holding a confirmation link":
+        "select count(*) from attendees where confirmed_at is not null and confirm_token is not null",
+    "verified organizers still holding a verification link":
+        "select count(*) from organizers where email_verified_at is not null and verify_token is not null",
+    "unconfirmed seat holds past their time":
+        f"select count(*) from attendees where confirmed_at is null and registered_at < '{_STALE_HOLD.isoformat()}'",
     "unknown attendee status": "select count(*) from attendees where status not in ('registered', 'waitlisted')",
     "unknown conference status or topic":
         "select count(*) from conferences where status not in ('published', 'draft') or (category is not null and"

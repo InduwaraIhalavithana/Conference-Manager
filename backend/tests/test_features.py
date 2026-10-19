@@ -523,3 +523,10 @@ def test_reminders_skip_unconfirmed(client, organizer_token):
     _register(client, conf["id"], "Yes", "yes@x.com")
     _register(client, conf["id"], "Not", "not@x.com", confirmed=False)
     assert client.post(f"/api/conferences/{conf['id']}/reminders", headers=auth(token)).json()["sent"] == 1
+
+
+def test_demo_domains_are_never_emailed():
+    assert email.is_blocked("someone@demo.conferencehub.lk")
+    assert email.is_blocked("Guest@Attendee.Demo.ConferenceHub.lk")
+    assert not email.is_blocked("someone@gmail.com")
+    assert not email.is_blocked("someone@notdemo.conferencehub.lk.example.com")

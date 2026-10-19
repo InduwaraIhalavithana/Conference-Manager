@@ -12,7 +12,7 @@ from fastapi import BackgroundTasks
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 import app.core.config  # noqa: F401  (loads backend/.env)
-from app.core.config import FRONTEND_URL, TESTING
+from app.core.config import EMAIL_BLOCKED_DOMAINS, FRONTEND_URL, TESTING
 from app.core.email_text import format_date, lang_or_default, tr
 
 log = logging.getLogger("conference.email")
@@ -32,6 +32,11 @@ OUTBOX: list[dict] = []
 
 def email_enabled() -> bool:
     return bool(GMAIL_USER and GMAIL_APP_PASSWORD) and not TESTING
+
+
+def is_blocked(address: str) -> bool:
+    domain = address.rsplit("@", 1)[-1].lower()
+    return any(domain == d or domain.endswith(f".{d}") for d in EMAIL_BLOCKED_DOMAINS)
 
 
 @dataclass
@@ -69,6 +74,9 @@ async def send_message(msg: Message) -> bool:
     OUTBOX.append({"to": msg.to, "subject": msg.subject, "lang": msg.lang, "link": msg.button_url})
     if not email_enabled():
         log.info("Email not sent (Gmail not configured): to=%s subject=%s link=%s", msg.to, msg.subject, msg.button_url)
+        return False
+    if is_blocked(msg.to):
+        log.info("Email not sent (blocked demo domain): to=%s subject=%s", msg.to, msg.subject)
         return False
     mime = MIMEMultipart("alternative")
     mime["Subject"] = msg.subject

@@ -5,10 +5,15 @@
 .footer__grid a { color: var(--text-2); font-size: 0.98rem; width: fit-content; }
 .footer__grid a:hover { color: var(--accent); }
 .footer__brand p { color: var(--text-2); max-width: 420px; margin-top: 6px; }
-.footer__bottom {
-  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 18px var(--gutter);
-  margin-top: 34px; border-top: 1px solid var(--border); font-size: 0.92rem; color: var(--text-2);
+/* .footer prefix: the bar is also a .container, whose margin and padding rules would otherwise win
+   (which removed the gap above the bar and left its text flush against the bottom edge).
+   The large bottom padding keeps the floating buttons (bottom right) clear of the text. */
+.footer .footer__bottom {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap;
+  margin: 34px auto 0; padding: 20px var(--gutter) 92px; border-top: 1px solid var(--border);
+  font-size: 0.92rem; color: var(--text-2);
 }
+@media (max-width: 700px) { .footer .footer__bottom { flex-direction: column; align-items: flex-start; padding-bottom: 88px; } }
 @media (max-width: 900px) { .footer__grid { grid-template-columns: 1fr 1fr; } .footer__brand { grid-column: 1 / -1; } }
 @media (max-width: 520px) { .footer__grid { grid-template-columns: 1fr; } }
 

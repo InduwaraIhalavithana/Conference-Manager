@@ -1,5 +1,6 @@
 import os
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Must run before any app import: tests use their own SQLite file and upload folder,
@@ -55,7 +56,8 @@ def db():
 
 
 def make_organizer(db, email_addr="test@example.com", password="password123", first="Test"):
-    org = Organizer(first_name=first, last_name="Organizer", email=email_addr, password_hash=hash_password(password))
+    org = Organizer(first_name=first, last_name="Organizer", email=email_addr, password_hash=hash_password(password),
+                    email_verified_at=datetime.now(UTC))
     db.add(org)
     db.commit()
     db.refresh(org)
@@ -85,3 +87,16 @@ def admin_token(db):
 
 def auth(token):
     return {"Authorization": f"Bearer {token}"}
+
+
+def emailed_link(to: str) -> str:
+    """The button link of the latest email sent to this address."""
+    return next(m["link"] for m in reversed(email.OUTBOX) if m["to"] == to)
+
+
+def confirm(client, attendee: dict) -> dict:
+    """Click the confirmation link that was emailed to a newly registered attendee."""
+    token = emailed_link(attendee["email"]).split("confirm=")[1]
+    res = client.post(f"/api/tickets/{attendee['ticket_code']}/confirm", json={"token": token})
+    assert res.status_code == 200, res.text
+    return res.json()["attendee"]

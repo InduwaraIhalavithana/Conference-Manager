@@ -288,12 +288,13 @@ def remove_cover(conf_id: int, org=Depends(get_current_organizer), db: Session =
 @router.post("/{conf_id}/reminders")
 def send_reminders_now(conf_id: int, background: BackgroundTasks, org=Depends(get_current_organizer),
                        db: Session = Depends(get_db)):
-    """Email every registered attendee a reminder right away."""
+    """Email every registered attendee who confirmed their email a reminder right away."""
     conf = own_conference(db, conf_id, org)
     if conf.date < date.today():
         raise AppError(400, "conference_past", "This conference has already taken place")
     attendees = db.execute(
-        select(Attendee).where(Attendee.conference_id == conf.id, Attendee.status == REGISTERED)
+        select(Attendee).where(Attendee.conference_id == conf.id, Attendee.status == REGISTERED,
+                               Attendee.confirmed_at.is_not(None))
     ).scalars().all()
     now = datetime.now(UTC)
     for a in attendees:

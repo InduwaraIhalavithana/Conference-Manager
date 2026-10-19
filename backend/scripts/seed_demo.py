@@ -278,6 +278,7 @@ def seed(password: str) -> None:
                 is_suspended=(i == ORGANIZER_COUNT - 1),
             )
             org.created_at = now - timedelta(days=rng.randint(3, 200), hours=rng.randint(0, 23))
+            org.email_verified_at = org.created_at + timedelta(minutes=rng.randint(2, 90))
             db.add(org)
             organizers.append(org)
         db.flush()
@@ -389,7 +390,8 @@ def seed(password: str) -> None:
                     # Interest builds up towards the event: more registrations near the end of the window.
                     reg_at = window_start + timedelta(seconds=(rng.random() ** 0.8) * span)
                     a = Attendee(conference_id=conf.id, name=f"{fn} {ln}", email=em, status=status,
-                                 ticket_code=new_ticket_code(db), lang=rng.choice(["en", "si", "ta"]), registered_at=reg_at)
+                                 ticket_code=new_ticket_code(db), lang=rng.choice(["en", "si", "ta"]), registered_at=reg_at,
+                                 confirmed_at=reg_at + timedelta(minutes=rng.randint(1, 120)))
                     if status == REGISTERED and offset < 0 and rng.random() < rng.uniform(0.62, 0.92):
                         a.checked_in_at = starts_at + timedelta(minutes=rng.randint(-40, 90))
                     elif status == REGISTERED and offset == 0 and now > starts_at and rng.random() < 0.6:

@@ -98,7 +98,7 @@ export type SessionInput = Pick<AgendaSession, 'title' | 'description' | 'start_
 export const api = {
   // Auth
   register: (body: { first_name: string; last_name: string; email: string; password: string; phone?: string | null; organization?: string | null; lang: Lang }) =>
-    request<{ access_token: string }>('POST', '/auth/register', body, { auth: false }),
+    request<{ code: 'verify_sent'; email: string }>('POST', '/auth/register', body, { auth: false }),
   login: (body: { email: string; password: string }) =>
     request<{ access_token: string }>('POST', '/auth/login', body, { auth: false }),
   adminLogin: (body: { email: string; password: string }) =>
@@ -107,6 +107,10 @@ export const api = {
   /** Pass the fresh token right after sign-in, before it is stored. */
   me: (token?: string) => request<Organizer>('GET', '/auth/me', undefined, { token }),
   adminMe: (token?: string) => request<AdminUser>('GET', '/auth/admin/me', undefined, { token }),
+  /** The link in the sign-up email: verifies the address and signs the organizer in. */
+  verifyEmail: (token: string) => request<{ access_token: string }>('POST', '/auth/verify-email', { token }, { auth: false }),
+  resendVerification: (email: string) =>
+    request<{ code: string }>('POST', '/auth/resend-verification', { email }, { auth: false }),
   forgotPassword: (email: string) => request<{ code: string }>('POST', '/auth/forgot-password', { email }, { auth: false }),
   resetPassword: (token: string, new_password: string) =>
     request<{ code: string }>('POST', '/auth/reset-password', { token, new_password }, { auth: false }),
@@ -119,9 +123,14 @@ export const api = {
   conference: (id: number | string) => get<Conference>(`/api/conferences/${id}`),
   conferenceDetails: (id: number | string) => get<ConferenceDetails>(`/api/conferences/${id}/details`),
   calendarUrl: (id: number | string) => `/api/conferences/${id}/calendar.ics`,
+  /** A new registration, or `confirm_resent` when this email registered before but never confirmed. */
   registerAttendee: (confId: number, body: { name: string; email: string; lang: Lang }) =>
-    request<Attendee>('POST', `/api/attendees/${confId}`, body, { auth: false }),
+    request<Attendee | { code: 'confirm_resent' }>('POST', `/api/attendees/${confId}`, body, { auth: false }),
   ticket: (code: string) => request<Ticket>('GET', `/api/tickets/${encodeURIComponent(code)}`, undefined, { auth: false }),
+  confirmTicket: (code: string, token: string) =>
+    request<Ticket>('POST', `/api/tickets/${encodeURIComponent(code)}/confirm`, { token }, { auth: false }),
+  resendTicketConfirmation: (code: string) =>
+    request<{ code: string }>('POST', `/api/tickets/${encodeURIComponent(code)}/resend`, undefined, { auth: false }),
   cancelTicket: (code: string) => request<null>('DELETE', `/api/tickets/${encodeURIComponent(code)}`, undefined, { auth: false }),
 
   // Organizer: conferences

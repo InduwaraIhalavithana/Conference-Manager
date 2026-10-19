@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { usePageTitle, useReveal } from '../hooks';
 import { api } from '../services/api';
 import type { PublicStats } from '../types';
-import { CONTACT_EMAIL } from '../config';
+import { CONTACT_EMAIL, CREATOR } from '../config';
 import { CountUp } from '../components/ui';
 import './InfoPages.css';
 
@@ -14,6 +14,11 @@ export default function AboutPage() {
   const [stats, setStats] = useState<PublicStats | null>(null);
   useEffect(() => { api.publicStats().then(setStats).catch(() => {}); }, []);
   useReveal([stats]);
+  // The footer's "Created by" link opens /about#creator: scroll to that section.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [hash]);
 
   const roles = [
     { icon: 'user-tie', title: t('about_role_org'), points: [t('about_role_org_1'), t('about_role_org_2'), t('about_role_org_3'), t('about_role_org_4')] },
@@ -95,6 +100,28 @@ export default function AboutPage() {
                 <p className="text-2">{v.body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="band band--alt" id="creator">
+        <div className="container">
+          <div className="creator reveal">
+            <div className="creator__photo">
+              <img src={CREATOR.photo} alt={CREATOR.name} width="320" height="320" loading="lazy" />
+            </div>
+            <div className="creator__text">
+              <span className="eyebrow">{t('about_creator_eyebrow')}</span>
+              <h2>{CREATOR.name}</h2>
+              <p className="creator__role"><i className="fas fa-code" /> {t('about_creator_role')}</p>
+              <p>{t('about_creator_body')}</p>
+              <div className="creator__stack">
+                {['FastAPI', 'React + TypeScript', 'PostgreSQL', 'EN · සිං · தமி'].map((s) => <span key={s} className="chip">{s}</span>)}
+              </div>
+              <a className="btn btn--primary" href={CREATOR.github} target="_blank" rel="noopener noreferrer">
+                <i className="fab fa-github" /> {t('about_creator_github')}
+              </a>
+            </div>
           </div>
         </div>
       </section>

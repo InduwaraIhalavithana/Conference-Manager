@@ -878,6 +878,11 @@ const si: Dictionary = {
   att_unconfirmed_hint: 'තහවුරු කිරීමේ ඊමේල් පණිවිඩය තවම ක්ලික් කර නැත. ආසනය {time} දක්වා රඳවා ඇත.',
   ci_unconfirmed: '{name} ඊමේල් ලිපිනය තහවුරු කර නැත',
   ci_unconfirmed_body: 'තහවුරු කිරීමේ ඊමේල් පණිවිඩය විවෘත කර සබැඳිය ක්ලික් කරන ලෙස ඉල්ලා, නැවත ස්කෑන් කරන්න.',
+  about_creator_eyebrow: 'නිර්මාතෘ හමුවන්න',
+  about_creator_role: 'ConferenceHub හි නිර්මාතෘ සහ සංවර්ධක',
+  about_creator_body: 'ශ්‍රී ලංකාව පුරා සංවිධායකයින්ට තම උත්සව තම භාෂාවෙන්ම පවත්වාගෙන යාමට හැකි වන පරිදි, Induwara විසින් ConferenceHub මුල සිටම නිර්මාණය කර ගොඩනඟන ලදී: FastAPI පසුතලය, React යෙදුම, QR පිවිසුම් ලියාපදිංචිය සහ සිංහල හා දෙමළ පරිවර්තන.',
+  about_creator_github: 'GitHub පැතිකඩ',
+  footer_created_by: 'නිර්මාණය කළේ {name}',
 };
 
 export default si;

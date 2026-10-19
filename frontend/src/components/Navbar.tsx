@@ -233,7 +233,7 @@ export default function Navbar() {
     <header className={`nav${scrolled ? ' nav--scrolled' : ''}`}>
       <div className={`nav__inner nav--tier-${tier}`} ref={innerRef}>
         <Link to={role ? dashboard : '/'} className="nav__brand" aria-label="ConferenceHub">
-          <span className="nav__logo"><i className="fas fa-calendar-check" aria-hidden="true" /></span>
+          <img className="nav__logo" src="/logo.svg" alt="" width="44" height="44" />
           <span className="nav__name">Conference<span>Hub</span></span>
         </Link>
 

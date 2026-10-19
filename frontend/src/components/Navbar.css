@@ -12,8 +12,7 @@
 
 .nav__brand { display: flex; align-items: center; gap: 11px; text-decoration: none !important; color: var(--text); }
 .nav__logo {
-  width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 1.25rem; color: #fff;
-  background: linear-gradient(135deg, var(--accent-strong), var(--accent-2)); box-shadow: var(--glow);
+  width: 44px; height: 44px; border-radius: 50%; display: block; flex-shrink: 0; box-shadow: var(--glow);
   transition: transform var(--t) var(--ease);
 }
 .nav__brand:hover .nav__logo { transform: rotate(-8deg) scale(1.06); }

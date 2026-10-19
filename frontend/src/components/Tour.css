@@ -1,5 +1,5 @@
 .help-pill {
-  position: fixed; right: 22px; bottom: 22px; z-index: 750; display: inline-flex; align-items: center; gap: 9px;
+  order: 2; display: inline-flex; align-items: center; gap: 9px;
   min-height: 50px; padding: 0 20px; border-radius: 999px; border: 0; cursor: pointer;
   background: linear-gradient(135deg, var(--accent-strong), var(--accent-2)); color: #fff; font-family: inherit;
   font-size: 1rem; font-weight: 700; box-shadow: var(--glow); transition: transform var(--t) var(--ease);

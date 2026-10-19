@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { BackToTop, ErrorBoundary, ScrollProgress, ScrollToTop } from './components/Chrome';
+import { ErrorBoundary, FabDock, ScrollProgress, ScrollToTop } from './components/Chrome';
 import { Spinner } from './components/ui';
 import type { Role } from './types';
 
@@ -112,7 +112,7 @@ function AppRoutes() {
         </ErrorBoundary>
       </main>
       <Footer />
-      <BackToTop />
+      <FabDock />
     </>
   );
 }

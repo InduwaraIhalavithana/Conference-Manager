@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { anchorVisible, placePopup } from '../utils/popover';
 import './CustomSelect.css';
 
 export interface SelectOption<V extends string = string> {
@@ -36,26 +37,26 @@ export default function CustomSelect<V extends string>({
   const listRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const selected = options.find((o) => o.value === value);
+  // Type-to-jump: letters typed within a short time form one search ("te" -> Technology).
+  const typed = useRef({ text: '', at: 0 });
+  // Option to highlight when the list opens from typing, instead of the selected one.
+  const pending = useRef<number | null>(null);
 
   const place = useCallback(() => {
     const btn = btnRef.current;
     if (!btn) return;
-    const r = btn.getBoundingClientRect();
     const wanted = Math.min(340, options.length * 48 + 12);
-    const below = window.innerHeight - r.bottom - 12;
-    const up = below < Math.min(wanted, 220) && r.top > below;
-    const width = Math.max(r.width, compact ? 170 : r.width);
-    const left = Math.min(Math.max(8, r.left), window.innerWidth - width - 8);
-    setPos(up
-      ? { left, bottom: window.innerHeight - r.top + 6, width, maxHeight: Math.min(wanted, r.top - 12) }
-      : { left, top: r.bottom + 6, width, maxHeight: Math.min(wanted, Math.max(160, below)) });
+    const width = Math.max(btn.getBoundingClientRect().width, compact ? 170 : 0);
+    const p = placePopup(btn, wanted, width);
+    setPos({ ...p, maxHeight: Math.min(wanted, p.maxHeight) });
   }, [options.length, compact]);
 
   useLayoutEffect(() => {
     if (!open) return;
     place();
     const idx = options.findIndex((o) => o.value === value);
-    setActive(idx >= 0 ? idx : 0);
+    setActive(pending.current ?? (idx >= 0 ? idx : 0));
+    pending.current = null;
   }, [open, place, options, value]);
 
   useEffect(() => {
@@ -64,7 +65,9 @@ export default function CustomSelect<V extends string>({
       const t = e.target as Node;
       if (!btnRef.current?.contains(t) && !listRef.current?.contains(t)) setOpen(false);
     };
-    const onMove = () => place();
+    // Follow the button while it is on screen; once it scrolls away (under the navbar or off
+    // the bottom), close instead of leaving the list floating over other content.
+    const onMove = () => (anchorVisible(btnRef.current) ? place() : setOpen(false));
     document.addEventListener('mousedown', onDown);
     window.addEventListener('resize', onMove);
     window.addEventListener('scroll', onMove, true);
@@ -102,6 +105,19 @@ export default function CustomSelect<V extends string>({
       setActive(0);
     } else if (e.key === 'End') {
       setActive(options.length - 1);
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const now = Date.now();
+      const text = (now - typed.current.at < 700 ? typed.current.text : '') + e.key.toLowerCase();
+      typed.current = { text, at: now };
+      const from = open && text.length === 1 ? active + 1 : open ? active : 0;
+      for (let k = 0; k < options.length; k++) {
+        const i = (from + k) % options.length;
+        if (optionMatches(options[i], text)) {
+          if (open) setActive(i);
+          else { pending.current = i; setOpen(true); }
+          break;
+        }
+      }
     }
   };
 
@@ -150,4 +166,11 @@ export default function CustomSelect<V extends string>({
       )}
     </div>
   );
+}
+
+/** Does an option start with the typed text? Times also match without a leading zero ("9" finds 09:00). */
+function optionMatches(o: SelectOption, text: string): boolean {
+  const label = typeof o.label === 'string' ? o.label.toLowerCase() : '';
+  const value = String(o.value).toLowerCase();
+  return label.startsWith(text) || value.startsWith(text) || value.replace(/^0/, '').startsWith(text);
 }

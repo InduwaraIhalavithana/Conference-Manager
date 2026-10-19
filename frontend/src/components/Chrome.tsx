@@ -40,6 +40,18 @@ export function BackToTop() {
   );
 }
 
+/**
+ * Bottom-right dock for the floating buttons. It lives outside the page wrapper so the buttons stay on
+ * screen; pages put their "Need help?" button into it (see HelpButton), next to "back to top".
+ */
+export function FabDock() {
+  return (
+    <div id="fab-dock" className="fab-dock">
+      <BackToTop />
+    </div>
+  );
+}
+
 /** Scroll to the top on every page change (keeps hash links working). */
 export function ScrollToTop() {
   const { pathname, hash } = useLocation();

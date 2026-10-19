@@ -44,6 +44,8 @@ small { font-size: 0.86rem; } /* never below 14px */
 .band--alt { background: var(--bg-band); }
 .band--alt-2 { background: var(--bg-band-2); }
 .band--tight { padding: 28px 0; }
+/* The last section of a page keeps the same space above the footer as .page does. */
+.band:last-child { padding-bottom: 56px; }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .row--between { justify-content: space-between; }
@@ -266,6 +268,8 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
 }
 .empty h3 { font-size: 1.25rem; }
 .empty--page { padding-block: 48px; }
+/* A page that is only a message (not found, cancelled): centre it instead of leaving a gap above the footer. */
+.page:has(> .empty--page) { min-height: calc(100vh - var(--nav-h) - 120px); display: flex; flex-direction: column; justify-content: center; }
 .empty--page h1 { font-size: 1.6rem; margin: 0; }
 .empty p { color: var(--text-2); max-width: 520px; }
 .skeleton {
@@ -295,7 +299,11 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
 @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-.page-enter { animation: page-in 420ms var(--ease) both; }
+/* backwards, not both: a transform left on this wrapper after the animation would pin every
+   position: fixed element inside a page to the page instead of the screen. */
+.page-enter { animation: page-in 420ms var(--ease) backwards; }
+/* Opening animation shared by every dropdown list and menu. */
+@keyframes csel-in { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .reveal { opacity: 0; transform: translateY(22px); transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
 .reveal.is-visible { opacity: 1; transform: none; }
@@ -312,8 +320,15 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
   position: fixed; top: 0; left: 0; height: 3px; z-index: 1200; width: 100%; transform-origin: 0 50%;
   background: linear-gradient(90deg, var(--accent-strong), var(--accent-2)); transform: scaleX(0);
 }
+/* Bottom-right dock for the floating buttons ("back to top" and "Need help?"), always on screen. */
+.fab-dock {
+  position: fixed; right: 22px; bottom: 22px; z-index: 750; display: flex; align-items: center; gap: 12px;
+  pointer-events: none;
+}
+.fab-dock > * { pointer-events: auto; }
+@media (max-width: 520px) { .fab-dock { right: 14px; bottom: 14px; gap: 10px; } }
 .to-top {
-  position: fixed; right: 22px; bottom: 88px; z-index: 700; width: 48px; height: 48px; border-radius: 50%;
+  order: 1; width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
   border: 1px solid var(--border-strong); background: var(--surface); color: var(--accent); cursor: pointer;
   box-shadow: var(--shadow); font-size: 1.1rem; transition: transform var(--t), opacity var(--t);
 }

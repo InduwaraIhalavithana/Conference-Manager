@@ -43,12 +43,19 @@ export function HelpButton({ tour }: { tour: TourName }) {
     title: `tour_${tour}_${i + 1}_title` as TKey,
     body: `tour_${tour}_${i + 1}_body` as TKey,
   })), [tour]);
+  // The button goes into the floating dock (outside the page) so it is always on screen.
+  // undefined until looked up (render nothing for that first frame); null when there is no dock.
+  const [dock, setDock] = useState<HTMLElement | null | undefined>(undefined);
+  useEffect(() => { setDock(document.getElementById('fab-dock')); }, []);
+  const pill = (
+    <button type="button" className="help-pill" onClick={() => setOpen(true)} aria-label={t('tour_help_aria')}>
+      <i className="fas fa-circle-question" aria-hidden="true" />
+      <span>{t('tour_help')}</span>
+    </button>
+  );
   return (
     <>
-      <button type="button" className="help-pill" onClick={() => setOpen(true)} aria-label={t('tour_help_aria')}>
-        <i className="fas fa-circle-question" aria-hidden="true" />
-        <span>{t('tour_help')}</span>
-      </button>
+      {dock ? createPortal(pill, dock) : dock === null ? pill : null}
       {open && <Spotlight steps={steps} onClose={() => setOpen(false)} />}
     </>
   );

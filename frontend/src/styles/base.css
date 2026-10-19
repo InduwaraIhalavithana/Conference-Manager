@@ -265,6 +265,8 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
   color: var(--accent); animation: float 4s ease-in-out infinite;
 }
 .empty h3 { font-size: 1.25rem; }
+.empty--page { padding-block: 48px; }
+.empty--page h1 { font-size: 1.6rem; margin: 0; }
 .empty p { color: var(--text-2); max-width: 520px; }
 .skeleton {
   border-radius: 10px; min-height: 18px;

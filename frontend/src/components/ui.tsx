@@ -66,11 +66,15 @@ export function Stat({ icon, label, value, sub, tone, suffix }: {
 }
 
 /* ── Empty state ────────────────────────────────────────────────────────── */
-export function EmptyState({ icon, title, message, children }: { icon: string; title: ReactNode; message?: ReactNode; children?: ReactNode }) {
+/** `page` makes the title the page's main heading (for screens that are only this message). */
+export function EmptyState({ icon, title, message, children, page }: {
+  icon: string; title: ReactNode; message?: ReactNode; children?: ReactNode; page?: boolean;
+}) {
+  const Heading = page ? 'h1' : 'h3';
   return (
-    <div className="empty">
+    <div className={`empty${page ? ' empty--page' : ''}`}>
       <div className="empty__icon"><i className={`fas fa-${icon}`} aria-hidden="true" /></div>
-      <h3>{title}</h3>
+      <Heading>{title}</Heading>
       {message && <p>{message}</p>}
       {children && <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>{children}</div>}
     </div>
@@ -125,11 +129,15 @@ export function Modal({ title, icon, onClose, children, footer, size }: {
   const { t } = useApp();
   const boxRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  // Callers pass a new onClose on every render; keep the latest in a ref so the setup below runs only
+  // when the modal opens. (Re-running it on each keystroke moved focus back to the first field.)
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; });
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
       // Escape closes the modal unless a dropdown inside it is open (it closes itself first).
-      if (e.key === 'Escape' && !document.querySelector('.csel__list, .dp__pop')) onClose();
+      if (e.key === 'Escape' && !document.querySelector('.csel__list, .dp__pop')) closeRef.current();
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -139,7 +147,7 @@ export function Modal({ title, icon, onClose, children, footer, size }: {
       document.body.style.overflow = '';
       prev?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={boxRef} className={`modal${size ? ` modal--${size}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>

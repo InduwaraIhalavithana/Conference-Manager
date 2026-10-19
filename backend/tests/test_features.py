@@ -555,3 +555,12 @@ def test_demo_domains_are_never_emailed():
     assert email.is_blocked("Guest@Attendee.Demo.ConferenceHub.lk")
     assert not email.is_blocked("someone@gmail.com")
     assert not email.is_blocked("someone@notdemo.conferencehub.lk.example.com")
+
+
+def test_every_email_gets_its_own_message_id_and_date():
+    msg = email.Message(to="a@x.com", lang="en", name="A", subject="S", heading="H", code="123456")
+    first, second = email.build_mime(msg), email.build_mime(msg)
+    assert first["Date"] and first["Message-ID"]
+    assert first["Message-ID"] != second["Message-ID"]
+    assert "123456" in first.get_payload()[0].get_payload(decode=True).decode()
+

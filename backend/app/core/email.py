@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass, field
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 from urllib.parse import urlencode
 
 import aiosmtplib
@@ -73,6 +74,19 @@ def render(msg: Message) -> str:
     )
 
 
+def build_mime(msg: Message) -> MIMEMultipart:
+    mime = MIMEMultipart("alternative")
+    mime["Subject"] = msg.subject
+    mime["From"] = f"ConferenceHub <{GMAIL_USER or 'noreply@localhost'}>"
+    mime["To"] = msg.to
+    # Mail servers expect both; without a unique Message-ID, Gmail may treat two emails sent
+    # within the same second as one and silently keep only the first.
+    mime["Date"] = formatdate(localtime=True)
+    mime["Message-ID"] = make_msgid(domain=(GMAIL_USER.rsplit("@", 1)[-1] if GMAIL_USER else None))
+    mime.attach(MIMEText(render(msg), "html", "utf-8"))
+    return mime
+
+
 async def send_message(msg: Message) -> bool:
     """Send one email. Returns True when it actually went out through SMTP."""
     OUTBOX.append({"to": msg.to, "subject": msg.subject, "lang": msg.lang, "link": msg.button_url, "code": msg.code})
@@ -82,11 +96,7 @@ async def send_message(msg: Message) -> bool:
     if is_blocked(msg.to):
         log.info("Email not sent (blocked demo domain): to=%s subject=%s", msg.to, msg.subject)
         return False
-    mime = MIMEMultipart("alternative")
-    mime["Subject"] = msg.subject
-    mime["From"] = f"ConferenceHub <{GMAIL_USER}>"
-    mime["To"] = msg.to
-    mime.attach(MIMEText(render(msg), "html", "utf-8"))
+    mime = build_mime(msg)
     try:
         await aiosmtplib.send(mime, hostname="smtp.gmail.com", port=587, start_tls=True,
                               username=GMAIL_USER, password=GMAIL_APP_PASSWORD, timeout=20)

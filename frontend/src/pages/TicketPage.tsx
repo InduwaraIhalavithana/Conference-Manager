@@ -23,7 +23,8 @@ export default function TicketPage() {
   usePageTitle('ticket_title');
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [missing, setMissing] = useState(false);
-  const [cancelled, setCancelled] = useState(false);
+  // What the cancelled ticket was: a seat or a place on the waitlist (the wording differs).
+  const [cancelled, setCancelled] = useState<'seat' | 'waitlist' | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -35,7 +36,7 @@ export default function TicketPage() {
     setBusy(true);
     try {
       await api.cancelTicket(code!);
-      setCancelled(true);
+      setCancelled(ticket?.attendee.status === 'waitlisted' ? 'waitlist' : 'seat');
       setConfirm(false);
       toast.success(t('ticket_cancelled'));
     } catch (err) {
@@ -48,8 +49,8 @@ export default function TicketPage() {
   if (cancelled || missing) {
     return (
       <div className="container page">
-        <EmptyState icon={cancelled ? 'circle-check' : 'ticket'} title={cancelled ? t('ticket_cancelled') : t('ticket_not_found')}
-          message={cancelled ? t('ticket_cancelled_body') : t('ticket_not_found_body')}>
+        <EmptyState page icon={cancelled ? 'circle-check' : 'ticket'} title={cancelled ? t('ticket_cancelled') : t('ticket_not_found')}
+          message={cancelled === 'waitlist' ? t('ticket_left_waitlist_body') : cancelled ? t('ticket_cancelled_body') : t('ticket_not_found_body')}>
           <Link to="/conferences" className="btn btn--primary"><i className="fas fa-compass" /> {t('browse_conferences')}</Link>
         </EmptyState>
       </div>
@@ -88,8 +89,9 @@ export default function TicketPage() {
                   { email: a.email, time: a.hold_expires_at ? formatDateTime(a.hold_expires_at, lang) : '' })}
                 onResend={() => api.resendTicketConfirmation(a.ticket_code!)}>
                 <CodeEntry onSubmit={async (entered) => {
-                  setTicket(await api.confirmTicket(a.ticket_code!, entered));
-                  toast.success(t('ticket_confirmed_toast'));
+                  const confirmed = await api.confirmTicket(a.ticket_code!, entered);
+                  setTicket(confirmed);
+                  toast.success(confirmed.attendee.status === 'waitlisted' ? t('ticket_confirmed_wait_toast') : t('ticket_confirmed_toast'));
                 }} />
               </CheckInbox>
             ) : waiting ? (
@@ -121,7 +123,7 @@ export default function TicketPage() {
         </div>
       </div>
       {confirm && (
-        <ConfirmModal danger title={t('cancel_registration')} message={t('cancel_registration_body', { title: c.title })}
+        <ConfirmModal danger title={t('cancel_registration')} message={t(waiting ? 'cancel_waitlist_body' : 'cancel_registration_body', { title: c.title })}
           confirmLabel={t('cancel_registration')} busy={busy} onConfirm={cancel} onCancel={() => setConfirm(false)} />
       )}
       <HelpButton tour="ticket" />

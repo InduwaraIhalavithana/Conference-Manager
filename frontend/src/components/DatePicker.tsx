@@ -175,8 +175,9 @@ export default function DatePicker({ value, onChange, id, min, max, placeholder,
 }
 
 /** Times every 15 minutes, labelled in the reader's language. Value is "HH:MM" or "". */
-export function TimeSelect({ value, onChange, id, allowEmpty = true, ariaLabel }: {
-  value: string; onChange: (v: string) => void; id?: string; allowEmpty?: boolean; ariaLabel?: string;
+/** `after` (HH:MM) hides times up to and including it, e.g. end times before the start. */
+export function TimeSelect({ value, onChange, id, allowEmpty = true, ariaLabel, after }: {
+  value: string; onChange: (v: string) => void; id?: string; allowEmpty?: boolean; ariaLabel?: string; after?: string | null;
 }) {
   const { lang, t } = useApp();
   const options = useMemo(() => {
@@ -184,9 +185,12 @@ export function TimeSelect({ value, onChange, id, allowEmpty = true, ariaLabel }
     for (let m = 6 * 60; m <= 23 * 60 + 45; m += 15) {
       const hh = String(Math.floor(m / 60)).padStart(2, '0');
       const mm = String(m % 60).padStart(2, '0');
-      list.push({ value: `${hh}:${mm}`, label: formatTime(`${hh}:${mm}`, lang) });
+      const v = `${hh}:${mm}`;
+      // Keep the current value listed even if it is now too early, so it still shows (saving explains why).
+      if (after && v <= after.slice(0, 5) && v !== value.slice(0, 5)) continue;
+      list.push({ value: v, label: formatTime(v, lang) });
     }
     return list;
-  }, [lang, t, allowEmpty]);
+  }, [lang, t, allowEmpty, after, value]);
   return <CustomSelect id={id} value={value} options={options} onChange={onChange} icon="clock" ariaLabel={ariaLabel} placeholder={t('no_time')} />;
 }

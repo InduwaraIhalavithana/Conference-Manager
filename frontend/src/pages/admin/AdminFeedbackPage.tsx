@@ -106,8 +106,8 @@ export default function AdminFeedbackPage() {
                   <strong>{f.organizer_name}</strong>
                   <div className="small muted">{f.organizer_email} · {formatDateTime(f.created_at, lang)}</div>
                 </div>
-                <span className={`chip ${f.status === 'resolved' ? 'chip--success' : 'chip--warning'}`}>
-                  {f.status === 'resolved' ? t('status_resolved') : t('status_open')}
+                <span className={`chip ${f.status === 'resolved' ? 'chip--success' : f.reply ? 'chip--accent' : 'chip--warning'}`}>
+                  {f.status === 'resolved' ? t('status_resolved') : f.reply ? t('status_replied') : t('status_open')}
                 </span>
               </div>
               <h3>{f.subject}</h3>

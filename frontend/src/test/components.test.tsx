@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AppProvider } from '../context/AppContext';
 import CodeEntry from '../components/CodeEntry';
 import CustomSelect from '../components/CustomSelect';
+import { TimeSelect } from '../components/DatePicker';
 import ImageUpload from '../components/ImageUpload';
-import { PasswordInput } from '../components/ui';
+import { Modal, PasswordInput } from '../components/ui';
 import Navbar from '../components/Navbar';
 
 function wrap(ui: ReactNode, route = '/') {
@@ -140,3 +141,39 @@ describe('CodeEntry', () => {
     expect((screen.getByLabelText('1') as HTMLInputElement).value).toBe('');
   });
 });
+
+describe('Modal', () => {
+  function TwoFields() {
+    const [form, setForm] = useState({ a: '', b: '' });
+    // A new onClose on every render, like the real pages pass.
+    return (
+      <Modal title="Edit" onClose={() => setForm({ a: '', b: '' })}>
+        <input aria-label="first" value={form.a} onChange={(e) => setForm({ ...form, a: e.target.value })} />
+        <input aria-label="second" value={form.b} onChange={(e) => setForm({ ...form, b: e.target.value })} />
+      </Modal>
+    );
+  }
+
+  it('keeps focus in the field being typed in', () => {
+    wrap(<TwoFields />);
+    const second = screen.getByLabelText('second') as HTMLInputElement;
+    expect(document.activeElement).toBe(screen.getByLabelText('first'));
+    second.focus();
+    fireEvent.change(second, { target: { value: 'E' } });
+    fireEvent.change(second, { target: { value: 'En' } });
+    expect(document.activeElement).toBe(second);
+    expect(second.value).toBe('En');
+  });
+});
+
+describe('TimeSelect', () => {
+  it('only offers end times after the start time', () => {
+    wrap(<TimeSelect ariaLabel="End" value="" onChange={() => {}} after="09:00" />);
+    fireEvent.click(screen.getByRole('button', { name: 'End' }));
+    const times = screen.getAllByRole('option').map((o) => o.textContent?.trim());
+    expect(times).not.toContain('9:00');
+    expect(times).not.toContain('6:00');
+    expect(times).toContain('9:15');
+  });
+});
+

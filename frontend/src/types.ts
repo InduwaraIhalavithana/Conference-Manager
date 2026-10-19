@@ -80,6 +80,10 @@ export interface Attendee {
   ticket_code: string | null;
   checked_in_at: string | null;
   registered_at: string;
+  /** null until the attendee clicks the link in the confirmation email. */
+  confirmed_at: string | null;
+  /** When an unconfirmed registration gives its seat back (null once confirmed). */
+  hold_expires_at: string | null;
   waitlist_position: number | null;
 }
 

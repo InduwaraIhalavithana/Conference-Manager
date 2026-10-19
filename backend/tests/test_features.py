@@ -6,7 +6,7 @@ from PIL import Image
 
 from app.core import email
 from app.core.email_text import TEXT
-from tests.conftest import auth
+from tests.conftest import auth, confirm
 
 
 def _future(days=30):
@@ -20,10 +20,11 @@ def _conf(client, token, **extra):
     return res.json()
 
 
-def _register(client, conf_id, name, mail, lang="en"):
+def _register(client, conf_id, name, mail, lang="en", confirmed=True):
+    """Register, then click the emailed confirmation link (unless confirmed=False)."""
     res = client.post(f"/api/attendees/{conf_id}", json={"name": name, "email": mail, "lang": lang})
     assert res.status_code == 201, res.text
-    return res.json()
+    return confirm(client, res.json()) if confirmed else res.json()
 
 
 def _png(size=(60, 60), color=(30, 120, 220)):
@@ -115,9 +116,11 @@ def test_registration_emails_use_attendee_language(client, organizer_token):
     token, _ = organizer_token
     conf = _conf(client, token, title="Kandy Tech")
     _register(client, conf["id"], "Nimal", "nimal@x.com", lang="si")
-    mail = next(m for m in email.OUTBOX if m["to"] == "nimal@x.com")
-    assert mail["lang"] == "si"
-    assert mail["subject"] == TEXT["si"]["reg_subject"].format(title="Kandy Tech")
+    mails = [m for m in email.OUTBOX if m["to"] == "nimal@x.com"]
+    assert all(m["lang"] == "si" for m in mails)
+    # First the confirmation link, then (after confirming) the ticket.
+    assert [m["subject"] for m in mails] == [TEXT["si"]["confirm_subject"].format(title="Kandy Tech"),
+                                             TEXT["si"]["reg_subject"].format(title="Kandy Tech")]
 
 
 def test_duplicate_email_is_case_insensitive(client, organizer_token):
@@ -440,3 +443,83 @@ def test_email_text_keys_match_in_every_language():
             # placeholders must survive translation
             import re
             assert set(re.findall(r"{\w+}", value)) == set(re.findall(r"{\w+}", TEXT["en"][key])), (lang, key)
+
+
+# ── Email confirmation for attendees ────────────────────────────────────────
+
+def test_unconfirmed_ticket_holds_a_seat_but_cannot_check_in(client, organizer_token):
+    token, _ = organizer_token
+    conf = _conf(client, token, max_attendees=1)
+    pending = _register(client, conf["id"], "Pat", "pat@x.com", confirmed=False)
+    assert pending["confirmed_at"] is None and pending["hold_expires_at"]
+    # The held seat counts, so the next person goes to the waitlist.
+    assert _register(client, conf["id"], "Wes", "wes@x.com", confirmed=False)["status"] == "waitlisted"
+    res = client.post(f"/api/attendees/{conf['id']}/check-in", headers=auth(token), json={"code": pending["ticket_code"]})
+    assert res.status_code == 409 and res.json()["code"] == "ticket_unconfirmed"
+    manual = client.put(f"/api/attendees/{conf['id']}/{pending['id']}/check-in?checked_in=true", headers=auth(token))
+    assert manual.json()["code"] == "ticket_unconfirmed"
+    # The organizer is only told once the attendee confirms.
+    kinds = [n["kind"] for n in client.get("/api/notifications/", headers=auth(token)).json()["items"]]
+    assert "new_registration" not in kinds
+    confirm(client, pending)
+    kinds = [n["kind"] for n in client.get("/api/notifications/", headers=auth(token)).json()["items"]]
+    assert {"new_registration", "conference_full"} <= set(kinds)
+    ok = client.post(f"/api/attendees/{conf['id']}/check-in", headers=auth(token), json={"code": pending["ticket_code"]})
+    assert ok.status_code == 200
+
+
+def test_confirm_link_must_match(client, organizer_token):
+    token, _ = organizer_token
+    conf = _conf(client, token)
+    a = _register(client, conf["id"], "Ann", "ann@x.com", confirmed=False)
+    bad = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": "x" * 40})
+    assert bad.status_code == 400 and bad.json()["code"] == "confirm_invalid"
+    # Asking again sends a new link; the old one stops working.
+    old = email.OUTBOX[-1]["link"].split("confirm=")[1]
+    assert client.post(f"/api/tickets/{a['ticket_code']}/resend").json()["code"] == "confirm_resent"
+    stale = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": old})
+    assert stale.status_code == 400
+    done = confirm(client, a)
+    assert done["confirmed_at"] and done["hold_expires_at"] is None
+    # Clicking the link again is harmless.
+    again = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": "y" * 40})
+    assert again.status_code == 200
+
+
+def test_unconfirmed_waitlister_is_skipped_until_confirmed(client, organizer_token):
+    token, _ = organizer_token
+    conf = _conf(client, token, max_attendees=1)
+    seat = _register(client, conf["id"], "Sam", "sam@x.com")
+    early = _register(client, conf["id"], "Eve", "eve@x.com", confirmed=False)
+    _register(client, conf["id"], "Lee", "lee@x.com")
+    client.delete(f"/api/attendees/{conf['id']}/{seat['id']}", headers=auth(token))
+    people = {p["email"]: p["status"] for p in client.get(f"/api/attendees/{conf['id']}", headers=auth(token)).json()}
+    assert people == {"eve@x.com": "waitlisted", "lee@x.com": "registered"}
+    assert confirm(client, early)["status"] == "waitlisted"
+
+
+def test_expired_holds_are_released_and_seat_goes_to_waitlist(client, organizer_token, db):
+    from datetime import UTC, datetime, timedelta
+
+    from app.core.tickets import release_expired_holds
+    from app.models.attendee import Attendee
+    token, _ = organizer_token
+    conf = _conf(client, token, max_attendees=1)
+    stale = _register(client, conf["id"], "Old", "old@x.com", confirmed=False)
+    waiting = _register(client, conf["id"], "Wai", "wai@x.com")
+    row = db.get(Attendee, stale["id"])
+    row.registered_at = datetime.now(UTC) - timedelta(hours=25)
+    db.commit()
+    messages = release_expired_holds(db)
+    assert [m.to for m in messages] == ["wai@x.com"]
+    db.expire_all()
+    assert db.get(Attendee, stale["id"]) is None
+    assert db.get(Attendee, waiting["id"]).status == "registered"
+
+
+def test_reminders_skip_unconfirmed(client, organizer_token):
+    token, _ = organizer_token
+    conf = _conf(client, token)
+    _register(client, conf["id"], "Yes", "yes@x.com")
+    _register(client, conf["id"], "Not", "not@x.com", confirmed=False)
+    assert client.post(f"/api/conferences/{conf['id']}/reminders", headers=auth(token)).json()["sent"] == 1

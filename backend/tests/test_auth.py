@@ -1,10 +1,15 @@
+from tests.conftest import emailed_link
+
+
 def test_register(client):
     res = client.post("/auth/register", json={
         "first_name": "Alice", "last_name": "Smith",
         "email": "alice@example.com", "password": "secure123",
     })
     assert res.status_code == 201
-    assert "access_token" in res.json()
+    # No token until the email is verified; the link goes to the inbox instead.
+    assert "access_token" not in res.json() and res.json()["code"] == "verify_sent"
+    assert "verify-email?token=" in emailed_link("alice@example.com")
 
 
 def test_register_duplicate_email(client):
@@ -21,14 +26,66 @@ def test_register_short_password(client):
     assert res.status_code == 422
 
 
-def test_login(client):
+def test_login_requires_verified_email(client):
     client.post("/auth/register", json={
         "first_name": "Bob", "last_name": "Jones",
         "email": "bob@example.com", "password": "password99",
     })
     res = client.post("/auth/login", json={"email": "bob@example.com", "password": "password99"})
+    assert res.status_code == 403 and res.json()["code"] == "email_not_verified"
+    token = emailed_link("bob@example.com").split("token=")[1]
+    verified = client.post("/auth/verify-email", json={"token": token})
+    assert verified.status_code == 200 and "access_token" in verified.json()
+    res = client.post("/auth/login", json={"email": "bob@example.com", "password": "password99"})
     assert res.status_code == 200
     assert "access_token" in res.json()
+    # One use only.
+    again = client.post("/auth/verify-email", json={"token": token})
+    assert again.status_code == 400 and again.json()["code"] == "verify_invalid"
+
+
+def test_wrong_password_does_not_reveal_unverified(client):
+    client.post("/auth/register", json={"first_name": "E", "last_name": "F", "email": "e@f.com",
+                                        "password": "password99"})
+    res = client.post("/auth/login", json={"email": "e@f.com", "password": "wrongpass1"})
+    assert res.status_code == 401
+
+
+def test_resend_verification_replaces_the_link(client):
+    client.post("/auth/register", json={"first_name": "G", "last_name": "H", "email": "g@h.com",
+                                        "password": "password99"})
+    old = emailed_link("g@h.com").split("token=")[1]
+    res = client.post("/auth/resend-verification", json={"email": "g@h.com"})
+    assert res.status_code == 200 and res.json()["code"] == "verify_sent"
+    new = emailed_link("g@h.com").split("token=")[1]
+    assert old != new
+    assert client.post("/auth/verify-email", json={"token": old}).status_code == 400
+    assert client.post("/auth/verify-email", json={"token": new}).status_code == 200
+    # Unknown addresses get the same answer.
+    assert client.post("/auth/resend-verification", json={"email": "nobody@x.com"}).json()["code"] == "verify_sent"
+
+
+def test_expired_verification_link(client, db):
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.organizer import Organizer
+    client.post("/auth/register", json={"first_name": "I", "last_name": "J", "email": "i@j.com",
+                                        "password": "password99"})
+    token = emailed_link("i@j.com").split("token=")[1]
+    org = db.query(Organizer).filter_by(email="i@j.com").one()
+    org.verify_expires_at = datetime.now(UTC) - timedelta(minutes=1)
+    db.commit()
+    res = client.post("/auth/verify-email", json={"token": token})
+    assert res.status_code == 400 and res.json()["code"] == "verify_expired"
+
+
+def test_password_reset_also_verifies_email(client):
+    client.post("/auth/register", json={"first_name": "K", "last_name": "L", "email": "k@l.com",
+                                        "password": "password99"})
+    client.post("/auth/forgot-password", json={"email": "k@l.com"})
+    reset = emailed_link("k@l.com").split("token=")[1]
+    client.post("/auth/reset-password", json={"token": reset, "new_password": "newpassword1"})
+    assert client.post("/auth/login", json={"email": "k@l.com", "password": "newpassword1"}).status_code == 200
 
 
 def test_login_wrong_password(client):

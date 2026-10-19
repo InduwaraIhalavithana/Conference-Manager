@@ -1,4 +1,7 @@
-"""Background loop: the day before a conference, email each registered attendee once and tell the organizer."""
+"""Background loop: the day before a conference, email each confirmed attendee once and tell the organizer.
+
+The same loop releases seats held by registrations nobody confirmed in time.
+"""
 from __future__ import annotations
 
 import asyncio
@@ -11,6 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from app.core import email
 from app.core.config import REMINDER_INTERVAL_SECONDS
 from app.core.notify import notify_organizer
+from app.core.tickets import release_expired_holds
 from app.db.database import SessionLocal
 from app.models.attendee import REGISTERED, Attendee
 from app.models.conference import Conference
@@ -30,6 +34,7 @@ def collect_due(today: date | None = None) -> list[email.Message]:
         for conf in confs:
             attendees = db.execute(
                 select(Attendee).where(Attendee.conference_id == conf.id, Attendee.status == REGISTERED,
+                                       Attendee.confirmed_at.is_not(None),
                                        Attendee.reminder_sent_at.is_(None))
             ).scalars().all()
             for a in attendees:
@@ -43,7 +48,14 @@ def collect_due(today: date | None = None) -> list[email.Message]:
     return messages
 
 
+def release_holds() -> list[email.Message]:
+    with SessionLocal() as db:
+        return release_expired_holds(db)
+
+
 async def run_once() -> int:
+    for msg in await run_in_threadpool(release_holds):
+        await email.send_message(msg)
     messages = await run_in_threadpool(collect_due)
     for msg in messages:
         await email.send_message(msg)

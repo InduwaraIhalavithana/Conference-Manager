@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hmac
 import io
 from datetime import UTC, date, datetime
 
@@ -10,19 +11,30 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.core import email
+from app.core.config import CONFIRM_HOLD_HOURS
 from app.core.deps import get_current_organizer
 from app.core.errors import AppError
 from app.core.notify import notify_organizer
 from app.core.ratelimit import limiter
+from app.core.security import hash_token
 from app.core.serialize import conference_dict, conference_select
-from app.core.tickets import new_ticket_code, normalize_code, promote_waitlist, registered_count, waitlist_position
+from app.core.tickets import (
+    confirmed_count,
+    hold_expires_at,
+    new_ticket_code,
+    normalize_code,
+    promote_waitlist,
+    registered_count,
+    start_confirmation,
+    waitlist_position,
+)
 from app.db.database import get_db
 from app.models.activity import ActivityLog
 from app.models.attendee import REGISTERED, WAITLISTED, Attendee
 from app.models.conference import Conference
 from app.models.organizer import Organizer
 from app.routers.conferences import own_conference
-from app.schemas.attendee import AttendeeOut, AttendeeRegister, CheckInRequest
+from app.schemas.attendee import AttendeeOut, AttendeeRegister, CheckInRequest, ConfirmRequest
 
 router = APIRouter(prefix="/api/attendees", tags=["attendees"])
 tickets = APIRouter(prefix="/api/tickets", tags=["tickets"])
@@ -31,7 +43,15 @@ tickets = APIRouter(prefix="/api/tickets", tags=["tickets"])
 def _out(db: Session, a: Attendee) -> dict:
     data = AttendeeOut.model_validate(a).model_dump()
     data["waitlist_position"] = waitlist_position(db, a)
+    data["hold_expires_at"] = hold_expires_at(a)
     return data
+
+
+def _send_confirmation(background: BackgroundTasks, attendee: Attendee, conf: Conference, url: str) -> None:
+    email.queue(background, email.confirm_registration_message(attendee, conf, url, CONFIRM_HOLD_HOURS))
+
+
+CONFIRM_RESENT = {"message": "We sent the confirmation link to your email again.", "code": "confirm_resent"}
 
 
 @router.post("/{conf_id}", status_code=201)
@@ -48,32 +68,30 @@ def register_attendee(request: Request, conf_id: int, body: AttendeeRegister, ba
     if conf.date < date.today():
         raise AppError(400, "registration_closed", "Registration closed: the conference has already passed")
     email_addr = body.email.lower()
-    dup = db.execute(
-        select(Attendee.id).where(and_(Attendee.conference_id == conf_id, func.lower(Attendee.email) == email_addr))
-    ).first()
-    if dup:
-        raise AppError(409, "already_registered", "Already registered with this email")
+    existing = db.execute(
+        select(Attendee).where(and_(Attendee.conference_id == conf_id, func.lower(Attendee.email) == email_addr))
+    ).scalar_one_or_none()
+    if existing is not None:
+        if existing.confirmed_at is not None:
+            raise AppError(409, "already_registered", "Already registered with this email")
+        # Registered before but never confirmed: send a fresh link. The ticket code is not returned,
+        # because whoever typed this email may not own it.
+        url = start_confirmation(existing)
+        db.commit()
+        _send_confirmation(background, existing, conf, url)
+        return CONFIRM_RESENT
 
+    # An unconfirmed registration holds its seat, so it counts here.
     full = bool(conf.max_attendees) and registered_count(db, conf_id) >= conf.max_attendees
     attendee = Attendee(conference_id=conf_id, name=body.name, email=email_addr, lang=body.lang,
                         status=WAITLISTED if full else REGISTERED, ticket_code=new_ticket_code(db))
     db.add(attendee)
     db.flush()
-    position = waitlist_position(db, attendee)
-
-    params = {"attendee": attendee.name, "conference": conf.title}
-    if full:
-        notify_organizer(db, conf.organizer_id, "new_waitlist", params, f"/attendees/{conf.id}")
-    else:
-        count = registered_count(db, conf_id)
-        notify_organizer(db, conf.organizer_id, "new_registration", params, f"/attendees/{conf.id}")
-        if conf.max_attendees and count >= conf.max_attendees:
-            notify_organizer(db, conf.organizer_id, "conference_full", {"conference": conf.title},
-                             f"/attendees/{conf.id}")
-        email.queue(background, email.new_registration_message(org, conf, attendee.name, count))
+    url = start_confirmation(attendee)
     db.commit()
     db.refresh(attendee)
-    email.queue(background, email.registration_message(attendee, conf, position))
+    # The organizer hears about it once the attendee confirms (see confirm_ticket).
+    _send_confirmation(background, attendee, conf, url)
     return _out(db, attendee)
 
 
@@ -86,10 +104,10 @@ def export_attendees_csv(conf_id: int, org=Depends(get_current_organizer), db: S
     output = io.StringIO()
     output.write("﻿")  # BOM so Excel opens Sinhala/Tamil names correctly
     writer = csv.writer(output)
-    writer.writerow(["Name", "Email", "Status", "Ticket code", "Registered at", "Checked in at"])
+    writer.writerow(["Name", "Email", "Status", "Email confirmed", "Ticket code", "Registered at", "Checked in at"])
     for a in attendees:
-        writer.writerow([a.name, a.email, a.status, a.ticket_code or "", a.registered_at.isoformat(),
-                         a.checked_in_at.isoformat() if a.checked_in_at else ""])
+        writer.writerow([a.name, a.email, a.status, "yes" if a.confirmed_at else "no", a.ticket_code or "",
+                         a.registered_at.isoformat(), a.checked_in_at.isoformat() if a.checked_in_at else ""])
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv; charset=utf-8",
@@ -106,6 +124,7 @@ def list_attendees(conf_id: int, org=Depends(get_current_organizer), db: Session
     out, position = [], 0
     for a in rows:
         data = AttendeeOut.model_validate(a).model_dump()
+        data["hold_expires_at"] = hold_expires_at(a)
         if a.status == WAITLISTED:
             position += 1
             data["waitlist_position"] = position
@@ -147,6 +166,8 @@ def check_in_by_code(conf_id: int, body: CheckInRequest, org=Depends(get_current
         raise AppError(404, "ticket_not_found", "No ticket with this code for this conference")
     if attendee.status != REGISTERED:
         raise AppError(409, "ticket_waitlisted", "This person is still on the waitlist", {"name": attendee.name})
+    if attendee.confirmed_at is None:
+        raise AppError(409, "ticket_unconfirmed", "Ticket email was never confirmed", {"name": attendee.name})
     if attendee.checked_in_at:
         raise AppError(409, "already_checked_in", "Already checked in",
                        {"name": attendee.name, "checked_in_at": attendee.checked_in_at.isoformat()})
@@ -168,6 +189,8 @@ def set_check_in(conf_id: int, attendee_id: int, checked_in: bool = True, org=De
         raise AppError(404, "attendee_not_found", "Attendee not found")
     if checked_in and attendee.status != REGISTERED:
         raise AppError(409, "ticket_waitlisted", "This person is still on the waitlist", {"name": attendee.name})
+    if checked_in and attendee.confirmed_at is None:
+        raise AppError(409, "ticket_unconfirmed", "Ticket email was never confirmed", {"name": attendee.name})
     attendee.checked_in_at = (attendee.checked_in_at or datetime.now(UTC)) if checked_in else None
     db.commit()
     db.refresh(attendee)
@@ -183,12 +206,63 @@ def _ticket(db: Session, code: str) -> Attendee:
     return attendee
 
 
+def _ticket_payload(db: Session, attendee: Attendee) -> dict:
+    row = db.execute(conference_select().where(Conference.id == attendee.conference_id)).first()
+    return {"attendee": _out(db, attendee), "conference": conference_dict(row)}
+
+
 @tickets.get("/{code}")
 @limiter.limit("30/minute")
 def get_ticket(request: Request, code: str, db: Session = Depends(get_db)):
+    return _ticket_payload(db, _ticket(db, code))
+
+
+@tickets.post("/{code}/confirm")
+@limiter.limit("10/minute")
+def confirm_ticket(request: Request, code: str, body: ConfirmRequest, background: BackgroundTasks,
+                   db: Session = Depends(get_db)):
+    """The link in the confirmation email: activates the ticket and tells the organizer."""
     attendee = _ticket(db, code)
-    row = db.execute(conference_select().where(Conference.id == attendee.conference_id)).first()
-    return {"attendee": _out(db, attendee), "conference": conference_dict(row)}
+    if attendee.confirmed_at is not None:
+        return _ticket_payload(db, attendee)  # clicking the link twice is fine
+    if not attendee.confirm_token or not hmac.compare_digest(attendee.confirm_token, hash_token(body.token)):
+        raise AppError(400, "confirm_invalid", "This confirmation link is invalid or out of date")
+    conf = db.execute(select(Conference).where(Conference.id == attendee.conference_id).with_for_update()).scalar_one()
+    attendee.confirmed_at = datetime.now(UTC)
+    attendee.confirm_token = None
+    db.flush()
+
+    params = {"attendee": attendee.name, "conference": conf.title}
+    if attendee.status == WAITLISTED:
+        notify_organizer(db, conf.organizer_id, "new_waitlist", params, f"/attendees/{conf.id}")
+    else:
+        count = confirmed_count(db, conf.id)
+        notify_organizer(db, conf.organizer_id, "new_registration", params, f"/attendees/{conf.id}")
+        if conf.max_attendees and count == conf.max_attendees:
+            notify_organizer(db, conf.organizer_id, "conference_full", {"conference": conf.title},
+                             f"/attendees/{conf.id}")
+        org = db.get(Organizer, conf.organizer_id)
+        if org is not None:
+            email.queue(background, email.new_registration_message(org, conf, attendee.name, count))
+    # Seats may have freed up while they were confirming; promotion sends its own email.
+    promoted = promote_waitlist(db, conf, background)
+    db.commit()
+    db.refresh(attendee)
+    if attendee not in promoted:
+        email.queue(background, email.registration_message(attendee, conf, waitlist_position(db, attendee)))
+    return _ticket_payload(db, attendee)
+
+
+@tickets.post("/{code}/resend")
+@limiter.limit("3/minute")
+def resend_confirmation(request: Request, code: str, background: BackgroundTasks, db: Session = Depends(get_db)):
+    attendee = _ticket(db, code)
+    if attendee.confirmed_at is None:
+        conf = db.get(Conference, attendee.conference_id)
+        url = start_confirmation(attendee)
+        db.commit()
+        _send_confirmation(background, attendee, conf, url)
+    return CONFIRM_RESENT
 
 
 @tickets.delete("/{code}", status_code=204)

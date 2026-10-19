@@ -107,8 +107,9 @@ export const api = {
   /** Pass the fresh token right after sign-in, before it is stored. */
   me: (token?: string) => request<Organizer>('GET', '/auth/me', undefined, { token }),
   adminMe: (token?: string) => request<AdminUser>('GET', '/auth/admin/me', undefined, { token }),
-  /** The link in the sign-up email: verifies the address and signs the organizer in. */
-  verifyEmail: (token: string) => request<{ access_token: string }>('POST', '/auth/verify-email', { token }, { auth: false }),
+  /** The code from the sign-up email: verifies the address and signs the organizer in. */
+  verifyEmail: (email: string, code: string) =>
+    request<{ access_token: string }>('POST', '/auth/verify-email', { email, code }, { auth: false }),
   resendVerification: (email: string) =>
     request<{ code: string }>('POST', '/auth/resend-verification', { email }, { auth: false }),
   forgotPassword: (email: string) => request<{ code: string }>('POST', '/auth/forgot-password', { email }, { auth: false }),
@@ -127,8 +128,11 @@ export const api = {
   registerAttendee: (confId: number, body: { name: string; email: string; lang: Lang }) =>
     request<Attendee | { code: 'confirm_resent' }>('POST', `/api/attendees/${confId}`, body, { auth: false }),
   ticket: (code: string) => request<Ticket>('GET', `/api/tickets/${encodeURIComponent(code)}`, undefined, { auth: false }),
-  confirmTicket: (code: string, token: string) =>
-    request<Ticket>('POST', `/api/tickets/${encodeURIComponent(code)}/confirm`, { token }, { auth: false }),
+  /** The code from the confirmation email, entered on the ticket page or on the registration form. */
+  confirmTicket: (ticket: string, code: string) =>
+    request<Ticket>('POST', `/api/tickets/${encodeURIComponent(ticket)}/confirm`, { code }, { auth: false }),
+  confirmRegistration: (confId: number, email: string, code: string) =>
+    request<Ticket>('POST', `/api/attendees/${confId}/confirm`, { email, code }, { auth: false }),
   resendTicketConfirmation: (code: string) =>
     request<{ code: string }>('POST', `/api/tickets/${encodeURIComponent(code)}/resend`, undefined, { auth: false }),
   cancelTicket: (code: string) => request<null>('DELETE', `/api/tickets/${encodeURIComponent(code)}`, undefined, { auth: false }),

@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useApp } from '../../context/AppContext';
 import { usePageTitle } from '../../hooks';
 import { api } from '../../services/api';
 import { errorMessage } from '../../utils/errors';
 import { Field, PasswordInput } from '../../components/ui';
 import CheckInbox from '../../components/CheckInbox';
+import CodeEntry from '../../components/CodeEntry';
 import AuthLayout from './AuthLayout';
 
 export function passwordScore(pw: string): number {
@@ -32,8 +34,9 @@ export function PasswordMeter({ value }: { value: string }) {
 }
 
 export default function RegisterPage() {
-  const { t, lang } = useApp();
+  const { t, lang, login } = useApp();
   usePageTitle('register');
+  const navigate = useNavigate();
   const [sentTo, setSentTo] = useState('');
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', organization: '', phone: '', password: '', confirm: '' });
   const [busy, setBusy] = useState(false);
@@ -53,7 +56,7 @@ export default function RegisterPage() {
         first_name: form.first_name.trim(), last_name: form.last_name.trim(), email: form.email.trim(),
         password: form.password, phone: form.phone.trim() || null, organization: form.organization.trim() || null, lang,
       });
-      // No sign-in yet: the account opens from the link in the verification email.
+      // No sign-in yet: the account opens with the code from the verification email.
       setSentTo(res.email);
     } catch (err) {
       setError(errorMessage(err, t));
@@ -70,7 +73,14 @@ export default function RegisterPage() {
       side={{ title: t('register_side_title'), points: [t('register_side_1'), t('register_side_2'), t('register_side_3'), t('register_side_4')] }}
     >
       {sentTo ? (
-        <CheckInbox body={t('verify_sent_body', { email: sentTo })} onResend={() => api.resendVerification(sentTo)} />
+        <CheckInbox body={t('verify_sent_body', { email: sentTo })} onResend={() => api.resendVerification(sentTo)}>
+          <CodeEntry onSubmit={async (code) => {
+            const res = await api.verifyEmail(sentTo, code);
+            login(res.access_token, await api.me(res.access_token), 'organizer');
+            toast.success(t('verify_done'));
+            navigate('/dashboard', { replace: true });
+          }} />
+        </CheckInbox>
       ) : (
       <form className="form" onSubmit={submit}>
         <div className="form-row">

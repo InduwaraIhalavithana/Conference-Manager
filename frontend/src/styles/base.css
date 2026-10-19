@@ -327,3 +327,17 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
 .inbox__icon { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-size: 2.1rem;
   background: var(--accent-soft); color: var(--accent); animation: float 2.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .inbox__icon { animation: none; } }
+
+/* Six boxes for an emailed code */
+.code-entry { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: 100%; max-width: 380px; margin: 4px auto 0; }
+.code-entry__label { font-weight: 650; text-align: center; }
+.code-entry__boxes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.code-entry__box {
+  width: 100%; min-width: 0; aspect-ratio: 0.85; border-radius: 12px; border: 2px solid var(--border-strong); background: var(--surface-2);
+  color: var(--text); font-family: Consolas, 'Courier New', monospace; font-size: 1.7rem; font-weight: 800; text-align: center;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.code-entry__box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); transform: translateY(-2px); }
+.code-entry__box.is-filled { border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong)); }
+.code-entry__box:disabled { opacity: 0.6; }
+.code-entry .alert { text-align: left; }

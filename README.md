@@ -10,12 +10,12 @@ Built with FastAPI + PostgreSQL (backend) and React + TypeScript + Vite (fronten
 **Attendees** (no account needed)
 - Browse and search conferences by topic, city and date; upcoming and past
 - Register in seconds; join a waitlist when a conference is full
-- Confirm the email address from a link: the seat is held for 24 hours, and the ticket (QR) works once confirmed
+- Confirm the email address with a 6-digit code: the seat is held for 24 hours, and the ticket (QR) works once confirmed
 - Ticket page with a QR code, add-to-calendar (Google Calendar or .ics) and self-cancel
 - Confirmation and day-before reminder emails in the language they registered in
 
 **Organizers**
-- Sign up and verify the email address from a link before the first sign-in
+- Sign up and verify the email address with a 6-digit emailed code before the first sign-in
 - Dashboard with live numbers, 14-day trend, next-event countdown, activity and a getting-started checklist
 - Conference editor: details, cover image, venue pin on an OpenStreetMap map, agenda sessions and speakers with photos
 - Seat limits with automatic promotion from the waitlist (on cancellation or when the limit is raised)
@@ -93,9 +93,9 @@ Real environment variables take priority over `backend/.env`.
 | `ADMIN_EMAIL` | No | Administrator sign-in email (default `admin.conferencehub@gmail.com`) |
 | `ADMIN_INITIAL_PASSWORD` | Yes on first start | Administrator password when the account is first created |
 | `FRONTEND_URL` | No | Base of links in emails (default `http://localhost:5174`) |
-| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | No | Gmail SMTP for outgoing email (a Google app password, not the Gmail password). Empty = emails and verification links are written to the log. Test with `python -m scripts.send_test_email you@example.com` |
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | No | Gmail SMTP for outgoing email (a Google app password, not the Gmail password). Empty = emails and verification codes are written to the log. Test with `python -m scripts.send_test_email you@example.com` |
 | `CONFIRM_HOLD_HOURS` | No | How long an unconfirmed registration holds its seat (default 24) |
-| `VERIFY_LINK_HOURS` | No | How long an organizer's verification link works (default 48) |
+| `VERIFY_CODE_MINUTES` | No | How long an emailed 6-digit code works (default 15; 5 wrong tries or a new code cancel it) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session length (default 1440) |
 | `UPLOAD_DIR` | No | Where images are stored (default `backend/uploads`) |
 | `REMINDER_INTERVAL_SECONDS` | No | How often the reminder job runs (default 900) |

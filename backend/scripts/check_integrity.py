@@ -42,10 +42,10 @@ CHECKS = {
         "select count(*) from attendees where checked_in_at is not null and status <> 'registered'",
     "checked in without a confirmed email":
         "select count(*) from attendees where checked_in_at is not null and confirmed_at is null",
-    "confirmed tickets still holding a confirmation link":
-        "select count(*) from attendees where confirmed_at is not null and confirm_token is not null",
-    "verified organizers still holding a verification link":
-        "select count(*) from organizers where email_verified_at is not null and verify_token is not null",
+    "confirmed tickets still holding a code":
+        "select count(*) from attendees where confirmed_at is not null and confirm_code is not null",
+    "verified organizers still holding a code":
+        "select count(*) from organizers where email_verified_at is not null and verify_code is not null",
     "unconfirmed seat holds past their time":
         f"select count(*) from attendees where confirmed_at is null and registered_at < '{_STALE_HOLD.isoformat()}'",
     "unknown attendee status": "select count(*) from attendees where status not in ('registered', 'waitlisted')",

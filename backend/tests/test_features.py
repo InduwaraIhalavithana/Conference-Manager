@@ -6,7 +6,7 @@ from PIL import Image
 
 from app.core import email
 from app.core.email_text import TEXT
-from tests.conftest import auth, confirm
+from tests.conftest import auth, confirm, emailed_code
 
 
 def _future(days=30):
@@ -118,8 +118,9 @@ def test_registration_emails_use_attendee_language(client, organizer_token):
     _register(client, conf["id"], "Nimal", "nimal@x.com", lang="si")
     mails = [m for m in email.OUTBOX if m["to"] == "nimal@x.com"]
     assert all(m["lang"] == "si" for m in mails)
-    # First the confirmation link, then (after confirming) the ticket.
-    assert [m["subject"] for m in mails] == [TEXT["si"]["confirm_subject"].format(title="Kandy Tech"),
+    # First the code (also in the subject line), then (after confirming) the ticket.
+    code = mails[0]["code"]
+    assert [m["subject"] for m in mails] == [TEXT["si"]["confirm_subject"].format(code=code, title="Kandy Tech"),
                                              TEXT["si"]["reg_subject"].format(title="Kandy Tech")]
 
 
@@ -468,22 +469,46 @@ def test_unconfirmed_ticket_holds_a_seat_but_cannot_check_in(client, organizer_t
     assert ok.status_code == 200
 
 
-def test_confirm_link_must_match(client, organizer_token):
+def test_confirm_code_must_match(client, organizer_token, db):
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.attendee import Attendee
     token, _ = organizer_token
     conf = _conf(client, token)
     a = _register(client, conf["id"], "Ann", "ann@x.com", confirmed=False)
-    bad = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": "x" * 40})
-    assert bad.status_code == 400 and bad.json()["code"] == "confirm_invalid"
-    # Asking again sends a new link; the old one stops working.
-    old = email.OUTBOX[-1]["link"].split("confirm=")[1]
+    old = emailed_code("ann@x.com")
+    wrong = "000000" if old != "000000" else "111111"
+    bad = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"code": wrong})
+    assert bad.status_code == 400 and bad.json()["code"] == "code_invalid" and bad.json()["remaining"] == 4
+    # A new code may be asked for once a minute.
+    soon = client.post(f"/api/tickets/{a['ticket_code']}/resend")
+    assert soon.status_code == 429 and soon.json()["code"] == "code_wait" and soon.json()["seconds"] > 0
+    row = db.get(Attendee, a["id"])
+    row.confirm_sent_at = datetime.now(UTC) - timedelta(seconds=61)
+    db.commit()
     assert client.post(f"/api/tickets/{a['ticket_code']}/resend").json()["code"] == "confirm_resent"
-    stale = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": old})
-    assert stale.status_code == 400
+    new = emailed_code("ann@x.com")
+    if new != old:
+        assert client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"code": old}).status_code == 400
     done = confirm(client, a)
     assert done["confirmed_at"] and done["hold_expires_at"] is None
-    # Clicking the link again is harmless.
-    again = client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"token": "y" * 40})
-    assert again.status_code == 200
+    # Entering a code again once confirmed is harmless.
+    assert client.post(f"/api/tickets/{a['ticket_code']}/confirm", json={"code": wrong}).status_code == 200
+
+
+def test_confirm_from_the_registration_form(client, organizer_token):
+    token, _ = organizer_token
+    conf = _conf(client, token)
+    _register(client, conf["id"], "Bea", "bea@x.com", confirmed=False)
+    # Registering again only resends the code (and hides the ticket); the form confirms with email + code.
+    again = client.post(f"/api/attendees/{conf['id']}", json={"name": "Bea", "email": "bea@x.com"})
+    assert again.json()["code"] == "confirm_resent" and "ticket_code" not in again.json()
+    unknown = client.post(f"/api/attendees/{conf['id']}/confirm", json={"email": "nobody@x.com", "code": "123456"})
+    assert unknown.json()["code"] == "code_invalid"
+    res = client.post(f"/api/attendees/{conf['id']}/confirm", json={"email": "BEA@x.com", "code": emailed_code("bea@x.com")})
+    assert res.status_code == 200
+    ticket = res.json()["attendee"]
+    assert ticket["confirmed_at"] and ticket["ticket_code"]
 
 
 def test_unconfirmed_waitlister_is_skipped_until_confirmed(client, organizer_token):

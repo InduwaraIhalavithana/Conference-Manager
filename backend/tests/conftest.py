@@ -94,9 +94,14 @@ def emailed_link(to: str) -> str:
     return next(m["link"] for m in reversed(email.OUTBOX) if m["to"] == to)
 
 
+def emailed_code(to: str) -> str:
+    """The 6-digit code in the latest email that carried one to this address."""
+    return next(m["code"] for m in reversed(email.OUTBOX) if m["to"] == to and m.get("code"))
+
+
 def confirm(client, attendee: dict) -> dict:
-    """Click the confirmation link that was emailed to a newly registered attendee."""
-    token = emailed_link(attendee["email"]).split("confirm=")[1]
-    res = client.post(f"/api/tickets/{attendee['ticket_code']}/confirm", json={"token": token})
+    """Enter the code that was emailed to a newly registered attendee."""
+    code = emailed_code(attendee["email"])
+    res = client.post(f"/api/tickets/{attendee['ticket_code']}/confirm", json={"code": code})
     assert res.status_code == 200, res.text
     return res.json()["attendee"]

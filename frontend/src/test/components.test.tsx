@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { AppProvider } from '../context/AppContext';
+import CodeEntry from '../components/CodeEntry';
 import CustomSelect from '../components/CustomSelect';
 import ImageUpload from '../components/ImageUpload';
 import { PasswordInput } from '../components/ui';
@@ -117,5 +118,25 @@ describe('Navbar', () => {
     localStorage.setItem('cm_lang', 'ta');
     wrap(<Navbar />);
     expect(screen.getAllByRole('link', { name: /மாநாடுகள்/ }).length).toBeGreaterThan(0);
+  });
+});
+
+describe('CodeEntry', () => {
+  it('fills all six boxes from a paste and submits the code', async () => {
+    const onSubmit = vi.fn(async () => {});
+    wrap(<CodeEntry onSubmit={onSubmit} />);
+    fireEvent.paste(screen.getByLabelText('1'), { clipboardData: { getData: () => ' 123 456 ' } });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('123456'));
+    expect((screen.getByLabelText('6') as HTMLInputElement).value).toBe('6');
+  });
+
+  it('moves along as digits are typed and shows the error after a wrong code', async () => {
+    const onSubmit = vi.fn(async () => { throw new Error('nope'); });
+    wrap(<CodeEntry onSubmit={onSubmit} />);
+    '987654'.split('').forEach((d, i) => fireEvent.change(screen.getByLabelText(String(i + 1)), { target: { value: d } }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith('987654'));
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    // The boxes are cleared for another try.
+    expect((screen.getByLabelText('1') as HTMLInputElement).value).toBe('');
   });
 });

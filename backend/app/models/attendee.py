@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -26,6 +26,10 @@ class Attendee(Base):
     checked_in_at:    Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     registered_at:    Mapped[datetime]        = mapped_column(DateTime(timezone=True), server_default=func.now())
-    # A registration holds its seat but the ticket only works once the emailed link is clicked.
-    confirmed_at:     Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    confirm_token:    Mapped[str | None]      = mapped_column(String(64), unique=True)  # sha256 of the emailed token
+    # A registration holds its seat but the ticket only works once the emailed code is entered.
+    confirmed_at:       Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The emailed 6-digit code (an HMAC of it, see app/core/codes.py).
+    confirm_code:       Mapped[str | None]      = mapped_column(String(64))
+    confirm_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirm_attempts:   Mapped[int]             = mapped_column(Integer, default=0, server_default="0")
+    confirm_sent_at:    Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -16,6 +16,11 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin.conferencehub@gmail.com").strip().
 ADMIN_INITIAL_PASSWORD = os.getenv("ADMIN_INITIAL_PASSWORD", "")
 
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BACKEND_DIR / "uploads")))
+# Never email these domains (or their subdomains): the demo seed's made-up addresses would only bounce
+# and hurt the sending Gmail account's reputation.
+EMAIL_BLOCKED_DOMAINS = tuple(
+    d.strip().lower() for d in os.getenv("EMAIL_BLOCKED_DOMAINS", "demo.conferencehub.lk").split(",") if d.strip()
+)
 
 # How often the reminder loop looks for conferences starting tomorrow.
 REMINDER_INTERVAL_SECONDS = int(os.getenv("REMINDER_INTERVAL_SECONDS", "900"))

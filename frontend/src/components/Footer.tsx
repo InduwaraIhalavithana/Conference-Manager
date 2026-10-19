@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { CONTACT_EMAIL } from '../config';
+import { CONTACT_EMAIL, CREATOR } from '../config';
 import './Footer.css';
 
 export default function Footer() {
@@ -11,7 +11,7 @@ export default function Footer() {
       <div className="container footer__grid">
         <div className="footer__brand">
           <Link to="/" className="nav__brand">
-            <span className="nav__logo"><i className="fas fa-calendar-check" aria-hidden="true" /></span>
+            <img className="nav__logo" src="/logo.svg" alt="" width="44" height="44" />
             <span className="nav__name">Conference<span>Hub</span></span>
           </Link>
           <p>{t('footer_tagline')}</p>
@@ -47,6 +47,10 @@ export default function Footer() {
       <div className="container footer__bottom">
         <span>© {year} ConferenceHub. {t('footer_rights')}</span>
         <span className="muted">{t('footer_made')}</span>
+        <Link to="/about#creator" className="footer__creator">
+          <img src={CREATOR.photo} alt="" width="26" height="26" loading="lazy" />
+          {t('footer_created_by', { name: CREATOR.name })}
+        </Link>
       </div>
     </footer>
   );

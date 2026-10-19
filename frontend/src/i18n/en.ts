@@ -876,6 +876,11 @@ const en = {
   att_unconfirmed_hint: 'Has not clicked the confirmation email yet. Seat held until {time}.',
   ci_unconfirmed: '{name} has not confirmed their email',
   ci_unconfirmed_body: 'Ask them to open the confirmation email and click the link, then scan again.',
+  about_creator_eyebrow: 'Meet the creator',
+  about_creator_role: 'Creator & developer of ConferenceHub',
+  about_creator_body: 'Induwara designed and built ConferenceHub from the ground up: the FastAPI backend, the React app, the QR check-in desk and the Sinhala and Tamil translations, so organizers across Sri Lanka can run their events in their own language.',
+  about_creator_github: 'GitHub profile',
+  footer_created_by: 'Created by {name}',
 };
 
 export default en;

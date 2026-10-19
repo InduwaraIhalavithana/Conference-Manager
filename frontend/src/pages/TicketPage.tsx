@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useState, type CSSProperties } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useApp } from '../context/AppContext';
 import { usePageTitle } from '../hooks';
@@ -10,6 +10,7 @@ import { catColor, coverGradient } from '../utils/categories';
 import { errorMessage } from '../utils/errors';
 import AddToCalendar from '../components/AddToCalendar';
 import CheckInbox from '../components/CheckInbox';
+import CodeEntry from '../components/CodeEntry';
 import { QRCode } from '../components/QR';
 import { HelpButton } from '../components/Tour';
 import { ConfirmModal, EmptyState, Spinner } from '../components/ui';
@@ -25,26 +26,10 @@ export default function TicketPage() {
   const [cancelled, setCancelled] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [params, setParams] = useSearchParams();
-  const confirmToken = params.get('confirm');
-  const handled = useRef(false);
 
   useEffect(() => {
-    // Opened from the confirmation email: activate the ticket first (only once, the link is single-use).
-    if (confirmToken) {
-      if (handled.current) return;
-      handled.current = true;
-      api.confirmTicket(code!, confirmToken)
-        .then((tk) => { setTicket(tk); toast.success(t('ticket_confirmed_toast')); })
-        .catch((err) => {
-          toast.error(errorMessage(err, t));
-          api.ticket(code!).then(setTicket).catch(() => setMissing(true));
-        })
-        .finally(() => setParams({}, { replace: true }));
-      return;
-    }
-    if (!handled.current) api.ticket(code!).then(setTicket).catch(() => setMissing(true));
-  }, [code, confirmToken, setParams, t]);
+    api.ticket(code!).then(setTicket).catch(() => setMissing(true));
+  }, [code]);
 
   const cancel = async () => {
     setBusy(true);
@@ -101,7 +86,12 @@ export default function TicketPage() {
               <CheckInbox title={t('ticket_unconfirmed')}
                 body={t(waiting ? 'ticket_unconfirmed_wait_body' : 'ticket_unconfirmed_body',
                   { email: a.email, time: a.hold_expires_at ? formatDateTime(a.hold_expires_at, lang) : '' })}
-                onResend={() => api.resendTicketConfirmation(a.ticket_code!)} />
+                onResend={() => api.resendTicketConfirmation(a.ticket_code!)}>
+                <CodeEntry onSubmit={async (entered) => {
+                  setTicket(await api.confirmTicket(a.ticket_code!, entered));
+                  toast.success(t('ticket_confirmed_toast'));
+                }} />
+              </CheckInbox>
             ) : waiting ? (
               <div className="ticket__wait"><i className="fas fa-hourglass-half" /><span>{t('ticket_qr_after_waitlist')}</span></div>
             ) : <QRCode value={`${window.location.origin}/tickets/${a.ticket_code}`} size={230} />}

@@ -8,7 +8,7 @@ const COOLDOWN_SECONDS = 60;
 /** "We emailed you a link" panel with a resend button that cools down between sends. */
 export default function CheckInbox({ title, body, onResend, children }: {
   title?: ReactNode;
-  body: ReactNode;
+  body?: ReactNode;
   onResend?: () => Promise<unknown>;
   children?: ReactNode;
 }) {
@@ -37,17 +37,17 @@ export default function CheckInbox({ title, body, onResend, children }: {
   };
 
   return (
-    <div className="inbox" role="status">
+    <div className="inbox">
       <div className="inbox__icon" aria-hidden="true"><i className="fas fa-envelope-open-text" /></div>
       <h2>{title ?? t('inbox_title')}</h2>
-      <p>{body}</p>
+      {body && <p aria-live="polite">{body}</p>}
+      {children}
       <p className="hint">{t('inbox_spam_hint')}</p>
       {onResend && (
         <button type="button" className="btn btn--block" onClick={resend} disabled={busy || wait > 0}>
           {busy ? <span className="spinner" /> : <><i className="fas fa-paper-plane" /> {wait > 0 ? t('resend_wait', { seconds: wait }) : t('resend_link')}</>}
         </button>
       )}
-      {children}
     </div>
   );
 }

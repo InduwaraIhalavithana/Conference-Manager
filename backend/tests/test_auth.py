@@ -1,15 +1,30 @@
-from tests.conftest import emailed_link
+from tests.conftest import emailed_code, emailed_link
+
+
+def _signup(client, mail, password="password99"):
+    res = client.post("/auth/register", json={"first_name": "A", "last_name": "B", "email": mail, "password": password})
+    assert res.status_code == 201, res.text
+    return res.json()
+
+
+def _age_last_code(db, mail, seconds=61):
+    """Pretend the last code went out a while ago, so a new one may be sent."""
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.organizer import Organizer
+    org = db.query(Organizer).filter_by(email=mail).one()
+    org.verify_sent_at = datetime.now(UTC) - timedelta(seconds=seconds)
+    db.commit()
+    return org
 
 
 def test_register(client):
-    res = client.post("/auth/register", json={
-        "first_name": "Alice", "last_name": "Smith",
-        "email": "alice@example.com", "password": "secure123",
-    })
-    assert res.status_code == 201
-    # No token until the email is verified; the link goes to the inbox instead.
-    assert "access_token" not in res.json() and res.json()["code"] == "verify_sent"
-    assert "verify-email?token=" in emailed_link("alice@example.com")
+    res = _signup(client, "alice@example.com")
+    # No token until the email is verified; a 6-digit code goes to the inbox instead.
+    assert "access_token" not in res and res["code"] == "verify_sent"
+    code = emailed_code("alice@example.com")
+    assert len(code) == 6 and code.isdigit()
+    assert "verify-email?email=" in emailed_link("alice@example.com")
 
 
 def test_register_duplicate_email(client):
@@ -27,65 +42,88 @@ def test_register_short_password(client):
 
 
 def test_login_requires_verified_email(client):
-    client.post("/auth/register", json={
-        "first_name": "Bob", "last_name": "Jones",
-        "email": "bob@example.com", "password": "password99",
-    })
+    _signup(client, "bob@example.com")
     res = client.post("/auth/login", json={"email": "bob@example.com", "password": "password99"})
     assert res.status_code == 403 and res.json()["code"] == "email_not_verified"
-    token = emailed_link("bob@example.com").split("token=")[1]
-    verified = client.post("/auth/verify-email", json={"token": token})
+    code = emailed_code("bob@example.com")
+    verified = client.post("/auth/verify-email", json={"email": "BOB@example.com", "code": f" {code[:3]} {code[3:]} "})
     assert verified.status_code == 200 and "access_token" in verified.json()
     res = client.post("/auth/login", json={"email": "bob@example.com", "password": "password99"})
     assert res.status_code == 200
     assert "access_token" in res.json()
     # One use only.
-    again = client.post("/auth/verify-email", json={"token": token})
-    assert again.status_code == 400 and again.json()["code"] == "verify_invalid"
+    again = client.post("/auth/verify-email", json={"email": "bob@example.com", "code": code})
+    assert again.status_code == 400 and again.json()["code"] == "code_invalid"
+
+
+def test_wrong_code_counts_down_then_locks(client):
+    _signup(client, "c@d.com")
+    code = emailed_code("c@d.com")
+    wrong = "000000" if code != "000000" else "111111"
+    for left in (4, 3, 2, 1):
+        res = client.post("/auth/verify-email", json={"email": "c@d.com", "code": wrong})
+        assert res.json()["code"] == "code_invalid" and res.json()["remaining"] == left
+    assert client.post("/auth/verify-email", json={"email": "c@d.com", "code": wrong}).json()["code"] == "code_locked"
+    # Even the right code no longer works: a new one has to be sent.
+    assert client.post("/auth/verify-email", json={"email": "c@d.com", "code": code}).json()["code"] == "code_locked"
 
 
 def test_wrong_password_does_not_reveal_unverified(client):
-    client.post("/auth/register", json={"first_name": "E", "last_name": "F", "email": "e@f.com",
-                                        "password": "password99"})
+    _signup(client, "e@f.com")
     res = client.post("/auth/login", json={"email": "e@f.com", "password": "wrongpass1"})
     assert res.status_code == 401
 
 
-def test_resend_verification_replaces_the_link(client):
-    client.post("/auth/register", json={"first_name": "G", "last_name": "H", "email": "g@h.com",
-                                        "password": "password99"})
-    old = emailed_link("g@h.com").split("token=")[1]
+def test_resend_verification_replaces_the_code(client, db):
+    _signup(client, "g@h.com")
+    old = emailed_code("g@h.com")
+    sent = len(email_outbox())
+    # Within a minute nothing new is sent, but the answer looks the same.
+    assert client.post("/auth/resend-verification", json={"email": "g@h.com"}).json()["code"] == "verify_sent"
+    assert len(email_outbox()) == sent
+    _age_last_code(db, "g@h.com")
     res = client.post("/auth/resend-verification", json={"email": "g@h.com"})
     assert res.status_code == 200 and res.json()["code"] == "verify_sent"
-    new = emailed_link("g@h.com").split("token=")[1]
-    assert old != new
-    assert client.post("/auth/verify-email", json={"token": old}).status_code == 400
-    assert client.post("/auth/verify-email", json={"token": new}).status_code == 200
+    new = emailed_code("g@h.com")
+    if new != old:  # 1 in a million they match
+        assert client.post("/auth/verify-email", json={"email": "g@h.com", "code": old}).status_code == 400
+    assert client.post("/auth/verify-email", json={"email": "g@h.com", "code": new}).status_code == 200
     # Unknown addresses get the same answer.
     assert client.post("/auth/resend-verification", json={"email": "nobody@x.com"}).json()["code"] == "verify_sent"
 
 
-def test_expired_verification_link(client, db):
+def test_expired_code(client, db):
     from datetime import UTC, datetime, timedelta
 
     from app.models.organizer import Organizer
-    client.post("/auth/register", json={"first_name": "I", "last_name": "J", "email": "i@j.com",
-                                        "password": "password99"})
-    token = emailed_link("i@j.com").split("token=")[1]
+    _signup(client, "i@j.com")
+    code = emailed_code("i@j.com")
     org = db.query(Organizer).filter_by(email="i@j.com").one()
     org.verify_expires_at = datetime.now(UTC) - timedelta(minutes=1)
     db.commit()
-    res = client.post("/auth/verify-email", json={"token": token})
-    assert res.status_code == 400 and res.json()["code"] == "verify_expired"
+    res = client.post("/auth/verify-email", json={"email": "i@j.com", "code": code})
+    assert res.status_code == 400 and res.json()["code"] == "code_expired"
+
+
+def test_codes_are_stored_as_hmac(client, db):
+    from app.models.organizer import Organizer
+    _signup(client, "m@n.com")
+    code = emailed_code("m@n.com")
+    stored = db.query(Organizer).filter_by(email="m@n.com").one().verify_code
+    assert code not in stored and len(stored) == 64
 
 
 def test_password_reset_also_verifies_email(client):
-    client.post("/auth/register", json={"first_name": "K", "last_name": "L", "email": "k@l.com",
-                                        "password": "password99"})
+    _signup(client, "k@l.com")
     client.post("/auth/forgot-password", json={"email": "k@l.com"})
     reset = emailed_link("k@l.com").split("token=")[1]
     client.post("/auth/reset-password", json={"token": reset, "new_password": "newpassword1"})
     assert client.post("/auth/login", json={"email": "k@l.com", "password": "newpassword1"}).status_code == 200
+
+
+def email_outbox():
+    from app.core import email
+    return email.OUTBOX
 
 
 def test_login_wrong_password(client):

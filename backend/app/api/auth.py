@@ -6,8 +6,8 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.core import email
-from app.core.config import FRONTEND_URL, VERIFY_LINK_HOURS
+from app.core import codes, email
+from app.core.config import FRONTEND_URL, VERIFY_CODE_MINUTES
 from app.core.deps import get_current_admin, get_current_organizer
 from app.core.errors import AppError
 from app.core.notify import notify_admins
@@ -24,20 +24,17 @@ log = logging.getLogger("conference.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-VERIFY_SENT = {"message": "Check your inbox for a link to verify your email.", "code": "verify_sent"}
+VERIFY_SENT = {"message": "Check your inbox for a 6-digit code to verify your email.", "code": "verify_sent"}
 
 
 def _send_verification(db: Session, org: Organizer, background: BackgroundTasks) -> None:
-    """Give the organizer a fresh link (older links stop working) and email it. Caller commits first."""
-    raw, hashed = new_link_token()
-    org.verify_token = hashed
-    org.verify_expires_at = datetime.now(UTC) + timedelta(hours=VERIFY_LINK_HOURS)
+    """Email the organizer a fresh code (the previous one stops working). Caller has committed the row."""
+    code = codes.issue(org, "verify")
     db.commit()
-    url = f"{FRONTEND_URL}/verify-email?token={raw}"
     if not email.email_enabled():
-        # Local development without Gmail: the link only appears in the server log.
-        log.warning("Verification link for %s (email disabled): %s", org.email, url)
-    email.queue(background, email.verify_email_message(org, url, VERIFY_LINK_HOURS))
+        # Local development without Gmail: the code only appears in the server log.
+        log.warning("Verification code for %s (email disabled): %s", org.email, code)
+    email.queue(background, email.verify_email_message(org, code, VERIFY_CODE_MINUTES))
 
 
 @router.post("/register", status_code=201)
@@ -59,7 +56,7 @@ def register(request: Request, body: RegisterRequest, background: BackgroundTask
     db.flush()
     notify_admins(db, "new_organizer", {"name": f"{org.first_name} {org.last_name}"}, "/admin/organizers")
     db.commit()
-    # No token yet: the organizer signs in by clicking the link in the email.
+    # No token yet: the organizer signs in by entering the code from the email.
     _send_verification(db, org, background)
     return {**VERIFY_SENT, "email": org.email}
 
@@ -107,7 +104,8 @@ def admin_me(admin: Admin = Depends(get_current_admin)):
 
 
 class VerifyEmailRequest(BaseModel):
-    token: str = Field(..., min_length=10, max_length=200)
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=12)
 
 
 class ResendVerificationRequest(BaseModel):
@@ -117,18 +115,15 @@ class ResendVerificationRequest(BaseModel):
 @router.post("/verify-email", response_model=TokenResponse)
 @limiter.limit("10/minute")
 def verify_email(request: Request, body: VerifyEmailRequest, db: Session = Depends(get_db)):
-    """The link in the sign-up email: marks the address verified and signs the organizer in."""
-    org = db.execute(select(Organizer).where(Organizer.verify_token == hash_token(body.token))).scalar_one_or_none()
-    if not org:
-        raise AppError(400, "verify_invalid", "This verification link is invalid or was already used")
-    expires = org.verify_expires_at
-    if expires is not None and (expires if expires.tzinfo else expires.replace(tzinfo=UTC)) < datetime.now(UTC):
-        raise AppError(400, "verify_expired", "This verification link has expired", {"email": org.email})
+    """The code from the sign-up email: marks the address verified and signs the organizer in."""
+    org = db.execute(select(Organizer).where(func.lower(Organizer.email) == body.email.lower())).scalar_one_or_none()
+    if not org or org.email_verified_at is not None:
+        # Unknown and already-verified addresses look the same as a wrong code.
+        raise AppError(400, "code_invalid", "That code is not right", {"remaining": codes.MAX_ATTEMPTS})
     if org.is_suspended:
         raise AppError(403, "account_suspended", "Account suspended")
+    codes.check(db, org, "verify", body.code)
     org.email_verified_at = datetime.now(UTC)
-    org.verify_token = None
-    org.verify_expires_at = None
     db.add(ActivityLog(organizer_id=org.id, action="verify_email", target=org.email))
     db.commit()
     return TokenResponse(access_token=create_access_token({"sub": org.id, "type": "organizer"}))
@@ -138,9 +133,9 @@ def verify_email(request: Request, body: VerifyEmailRequest, db: Session = Depen
 @limiter.limit("3/minute")
 def resend_verification(request: Request, body: ResendVerificationRequest, background: BackgroundTasks,
                         db: Session = Depends(get_db)):
-    # Same answer whether or not the email exists or is already verified.
+    # Same answer whether or not the email exists, is already verified or asked less than a minute ago.
     org = db.execute(select(Organizer).where(func.lower(Organizer.email) == body.email.lower())).scalar_one_or_none()
-    if org and org.email_verified_at is None and not org.is_suspended:
+    if org and org.email_verified_at is None and not org.is_suspended and codes.resend_wait(org, "verify") == 0:
         _send_verification(db, org, background)
     return VERIFY_SENT
 
@@ -195,8 +190,7 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
     if org.email_verified_at is None:
         # The reset link reached their inbox, which proves the address too.
         org.email_verified_at = datetime.now(UTC)
-        org.verify_token = None
-        org.verify_expires_at = None
+        codes.clear(org, "verify")
     # One use only: drop every outstanding token for this organizer.
     for other in db.execute(select(PasswordResetToken).where(PasswordResetToken.organizer_id == org.id)).scalars():
         db.delete(other)

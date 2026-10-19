@@ -9,9 +9,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core import email
-from app.core.config import CONFIRM_HOLD_HOURS, FRONTEND_URL
+from app.core.config import CONFIRM_HOLD_HOURS
 from app.core.notify import notify_organizer
-from app.core.security import new_link_token
 from app.models.attendee import REGISTERED, WAITLISTED, Attendee
 from app.models.conference import Conference
 
@@ -57,13 +56,6 @@ def waitlist_position(db: Session, attendee: Attendee) -> int | None:
         .order_by(Attendee.registered_at, Attendee.id)
     ).scalars().all()
     return order.index(attendee.id) + 1 if attendee.id in order else None
-
-
-def start_confirmation(attendee: Attendee) -> str:
-    """Give the attendee a fresh confirmation link (older links stop working) and return its URL."""
-    raw, hashed = new_link_token()
-    attendee.confirm_token = hashed
-    return f"{FRONTEND_URL}/tickets/{attendee.ticket_code}?confirm={raw}"
 
 
 def hold_expires_at(attendee: Attendee) -> datetime | None:

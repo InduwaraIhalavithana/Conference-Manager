@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
+import { anchorVisible, placePopup } from '../utils/popover';
 import { useApp } from '../context/AppContext';
 import { formatDate, formatTime, monthNames, parseDay, toISODate, todayISO, weekdayNames } from '../i18n/format';
 import CustomSelect, { type SelectOption } from './CustomSelect';
@@ -27,13 +28,11 @@ export default function DatePicker({ value, onChange, id, min, max, placeholder,
   const popRef = useRef<HTMLDivElement>(null);
 
   const place = useCallback(() => {
-    const r = btnRef.current?.getBoundingClientRect();
-    if (!r) return;
-    const w = 320;
-    const h = 380;
-    const left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
-    const below = window.innerHeight - r.bottom;
-    setPos(below < h && r.top > below ? { left, bottom: window.innerHeight - r.top + 6, width: w } : { left, top: r.bottom + 6, width: w });
+    const btn = btnRef.current;
+    if (!btn) return;
+    // Measure the calendar itself: months spanning six weeks are taller than five-week ones.
+    const height = popRef.current?.scrollHeight || 410;
+    setPos({ ...placePopup(btn, height, 320), overflowY: 'auto' });
   }, []);
 
   useLayoutEffect(() => {
@@ -54,15 +53,22 @@ export default function DatePicker({ value, onChange, id, min, max, placeholder,
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
+    // Follow the field while it is on screen; close once it scrolls away.
+    const onScroll = () => (anchorVisible(btnRef.current) ? place() : setOpen(false));
     window.addEventListener('resize', place);
-    window.addEventListener('scroll', place, true);
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', place);
-      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [open, place]);
+
+  // A month change can change the calendar's height.
+  useLayoutEffect(() => {
+    if (open) place();
+  }, [open, view, place]);
 
   const weeks = useMemo(() => {
     const first = new Date(view.y, view.m, 1);

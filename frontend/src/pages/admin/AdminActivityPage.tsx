@@ -48,9 +48,11 @@ export default function AdminActivityPage() {
               {data.items.map((a, i) => (
                 <tr key={a.id ?? i}>
                   <td><span className="row" style={{ gap: 10, flexWrap: 'nowrap' }}><span className="feed__icon"><i className={`fas fa-${activityIcon(a.action)}`} /></span> <strong>{label(a.action)}</strong></span></td>
-                  <td>{a.organizer_name && !a.action.startsWith('admin_')
-                    ? <span className="row" style={{ gap: 8, flexWrap: 'nowrap' }}><Avatar name={a.organizer_name} src={a.organizer_avatar} size={30} /> {a.organizer_name}</span>
-                    : <span className="chip"><i className="fas fa-user-shield" /> {t('role_admin')}</span>}</td>
+                  <td>{a.action.startsWith('admin_')
+                    ? <span className="chip"><i className="fas fa-user-shield" /> {t('role_admin')}</span>
+                    : a.organizer_name
+                      ? <span className="row" style={{ gap: 8, flexWrap: 'nowrap' }}><Avatar name={a.organizer_name} src={a.organizer_avatar} size={30} /> {a.organizer_name}</span>
+                      : <span className="chip"><i className="fas fa-user-slash" /> {t('deleted_account')}</span>}</td>
                   <td className="text-2">{a.target ?? '—'}</td>
                   <td className="nowrap text-2" title={formatDateTime(a.created_at, lang)}>{relativeTime(a.created_at, lang)}</td>
                 </tr>

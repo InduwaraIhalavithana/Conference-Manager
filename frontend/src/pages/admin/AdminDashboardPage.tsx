@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
               <li key={a.id ?? i} className="feed__item">
                 <span className="feed__icon"><i className={`fas fa-${activityIcon(a.action)}`} /></span>
                 <span className="feed__text">
-                  <strong>{a.action.startsWith('admin_') ? t('role_admin') : a.organizer_name ?? t('role_admin')}</strong> · {hasKey(`act_${a.action}`) ? t(`act_${a.action}` as TKey) : a.action}
+                  <strong>{a.action.startsWith('admin_') ? t('role_admin') : a.organizer_name ?? t('deleted_account')}</strong> · {hasKey(`act_${a.action}`) ? t(`act_${a.action}` as TKey) : a.action}
                   {a.target && <span className="muted"> · {a.target}</span>}
                 </span>
                 <small className="muted nowrap">{relativeTime(a.created_at, lang)}</small>

@@ -10,7 +10,6 @@ __pycache__/
 *.pyd
 .Python
 backend/.env
-backend/venv/
 backend/.venv/
 *.egg-info/
 dist/
@@ -22,7 +21,6 @@ build/
 
 # Logs
 *.log
-cm_backend.log
 
 # OS
 .DS_Store

@@ -186,16 +186,3 @@ export function Donut({ items, center, size = 190 }: {
     </div>
   );
 }
-
-/** Tiny trend line for stat tiles. */
-export function Sparkline({ values, color = 'var(--accent)' }: { values: number[]; color?: string }) {
-  const W = 120;
-  const H = 36;
-  const max = Math.max(1, ...values);
-  const pts = values.map((v, i) => `${(i * W) / Math.max(1, values.length - 1)},${H - 3 - (v / max) * (H - 6)}`);
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="spark" aria-hidden="true">
-      <polyline points={pts.join(' ')} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

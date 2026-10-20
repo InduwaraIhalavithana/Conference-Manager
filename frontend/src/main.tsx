@@ -2,11 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
-import { initRipple } from './utils/misc';
+import { initRipple, initTableLabels } from './utils/misc';
 import './styles/tokens.css';
 import './styles/base.css';
 
 initRipple();
+initTableLabels();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

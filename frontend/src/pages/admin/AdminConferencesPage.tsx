@@ -102,8 +102,8 @@ export default function AdminConferencesPage() {
                     <td><span className="row" style={{ gap: 8, flexWrap: 'nowrap' }}><Avatar name={c.organizer_name} src={c.organizer_avatar} size={30} /> {c.organizer_name}</span></td>
                     <td className="nowrap text-2">{formatDate(c.date, lang, 'medium')}</td>
                     <td className="text-2">{c.location ?? '—'}</td>
-                    <td><strong>{c.attendee_count}</strong>{c.max_attendees && <span className="muted"> / {c.max_attendees}</span>}
-                      {c.waitlist_count > 0 && <span className="chip chip--warning" style={{ marginLeft: 6 }}>+{c.waitlist_count}</span>}</td>
+                    <td><span><strong>{c.attendee_count}</strong>{c.max_attendees && <span className="muted"> / {c.max_attendees}</span>}
+                      {c.waitlist_count > 0 && <span className="chip chip--warning" style={{ marginLeft: 6 }}>+{c.waitlist_count}</span>}</span></td>
                     <td>
                       {c.status === 'draft' ? <span className="chip chip--warning"><i className="fas fa-pen-ruler" /> {t('status_draft')}</span>
                         : past ? <span className="chip"><i className="fas fa-flag-checkered" /> {t('status_past')}</span>

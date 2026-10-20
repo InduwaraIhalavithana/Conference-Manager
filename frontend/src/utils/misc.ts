@@ -32,6 +32,32 @@ export function initRipple(): void {
   });
 }
 
+/**
+ * Copies each column header into its cells as data-label, so the CSS can turn a table into labelled
+ * cards on narrow screens. Runs for every .table, now and whenever a page renders a new one.
+ */
+export function initTableLabels(): void {
+  const label = () => {
+    document.querySelectorAll<HTMLTableElement>('table.table').forEach((table) => {
+      const heads = Array.from(table.querySelectorAll('thead th'));
+      table.querySelectorAll('tbody tr').forEach((row) => {
+        Array.from(row.children).forEach((cell, i) => {
+          const head = heads[i];
+          const text = head && !head.querySelector('.sr-only') ? (head.textContent ?? '').trim() : '';
+          if (cell.getAttribute('data-label') !== text) cell.setAttribute('data-label', text);
+        });
+      });
+    });
+  };
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; label(); });
+  }).observe(document.body, { childList: true, subtree: true });
+  label();
+}
+
 const NOTE_ICONS: Record<string, string> = {
   new_registration: 'user-plus',
   new_waitlist: 'hourglass-half',

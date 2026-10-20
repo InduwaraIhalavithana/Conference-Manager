@@ -217,6 +217,31 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
 .table tbody tr { transition: background var(--t-fast); }
 .table tbody tr:hover { background: var(--accent-soft); }
 .table .actions { display: flex; gap: 8px; justify-content: flex-end; }
+.table .chip { white-space: nowrap; }
+
+/* Phones: each row becomes a card with the column name beside every value (labels come from initTableLabels). */
+@media (max-width: 900px) {
+  .table-wrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table thead { display: none; }
+  .table tbody tr {
+    margin-bottom: 12px; padding: 4px 0; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); box-shadow: var(--shadow);
+  }
+  .table td {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0 !important;
+    padding: 9px 14px; border-bottom: 1px dashed var(--border); text-align: right;
+  }
+  .table tr td:last-child { border-bottom: 0; }
+  .table td { overflow-wrap: anywhere; }
+  .table td > * { min-width: 0; max-width: 100%; }
+  .table td .nowrap, .table td.nowrap { white-space: normal; }
+  .table td::before { content: attr(data-label); flex-shrink: 0; text-align: left; font-size: 0.84rem; font-weight: 700; color: var(--text-2); }
+  .table td[data-label='']::before { display: none; }
+  .table td:first-child { justify-content: flex-start; text-align: left; }
+  .table td:first-child::before { display: none; }
+  .table .actions { margin-left: auto; }
+}
 
 /* ── Tabs / segmented ───────────────────────────────────────────────────── */
 .tabs { display: flex; gap: 6px; padding: 6px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border); flex-wrap: wrap; }

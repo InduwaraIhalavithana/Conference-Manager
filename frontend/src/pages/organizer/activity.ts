@@ -7,6 +7,7 @@ const ICONS: Record<string, string> = {
   update_photo: 'camera',
   change_password: 'key',
   reset_password: 'key',
+  verify_email: 'envelope-circle-check',
   send_reminders: 'bell',
   cancel_attendee: 'user-minus',
   admin_suspend: 'user-lock',

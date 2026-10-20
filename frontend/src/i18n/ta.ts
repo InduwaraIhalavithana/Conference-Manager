@@ -694,6 +694,7 @@ const ta: Dictionary = {
   act_update_photo: 'புகைப்படத்தை மாற்றினார்',
   act_change_password: 'கடவுச்சொல்லை மாற்றினார்',
   act_reset_password: 'கடவுச்சொல்லை மீட்டமைத்தார்',
+  act_verify_email: 'மின்னஞ்சலை உறுதிசெய்தார்',
   act_send_reminders: 'நினைவூட்டல்களை அனுப்பினார்',
   act_cancel_attendee: 'ஒரு பதிவை ரத்து செய்தார்',
   act_admin_suspend: 'நிர்வாகி கணக்கை இடைநிறுத்தினார்',

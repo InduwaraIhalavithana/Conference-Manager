@@ -694,6 +694,7 @@ const si: Dictionary = {
   act_update_photo: 'ඡායාරූපය වෙනස් කළා',
   act_change_password: 'මුරපදය වෙනස් කළා',
   act_reset_password: 'මුරපදය යළි සැකසුවා',
+  act_verify_email: 'ඊමේල් ලිපිනය තහවුරු කළා',
   act_send_reminders: 'මතක් කිරීම් යැව්වා',
   act_cancel_attendee: 'ලියාපදිංචියක් අවලංගු කළා',
   act_admin_suspend: 'පරිපාලක විසින් ගිණුම අත්හිටෙව්වා',

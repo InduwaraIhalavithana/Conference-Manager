@@ -64,7 +64,7 @@ describe('keys that are built at runtime exist', () => {
     ['general', 'attending', 'organizing', 'technical', 'partnership'].forEach((t) => expect(hasKey(`topic_${t}`)).toBe(true));
   });
 
-  it('every error code and notification kind the backend can send has a translation', () => {
+  it('every error code, notification kind and activity action the backend can send has a translation', () => {
     const root = join(__dirname, '..', '..', '..', 'backend', 'app');
     const files: string[] = [];
     const walk = (dir: string) => {
@@ -82,5 +82,9 @@ describe('keys that are built at runtime exist', () => {
     expect(kinds.size).toBeGreaterThan(8);
     codes.forEach((c) => expect(hasKey(`err_${c}`), `err_${c}`).toBe(true));
     kinds.forEach((k) => expect(hasKey(`note_${k}`), `note_${k}`).toBe(true));
+    // Every action the backend logs shows up in the activity lists with an icon and a label.
+    const actions = new Set([...source.matchAll(/ActivityLog\([^)]*?action="([a-z_]+)"/g)].map((m) => m[1]));
+    expect(actions.size).toBeGreaterThan(8);
+    actions.forEach((a) => expect(ACTIVITY_ACTIONS, `activity action ${a}`).toContain(a));
   });
 });

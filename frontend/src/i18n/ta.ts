@@ -30,6 +30,7 @@ const ta: Dictionary = {
   register: 'பதிவு செய்',
   logout: 'வெளியேறு',
   role_admin: 'நிர்வாகி',
+  deleted_account: 'நீக்கப்பட்ட கணக்கு',
   role_organizer: 'ஏற்பாட்டாளர்',
   notifications: 'அறிவிப்புகள்',
   notifications_unread: 'அறிவிப்புகள், பார்க்காதவை {count}',

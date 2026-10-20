@@ -30,6 +30,7 @@ const si: Dictionary = {
   register: 'ලියාපදිංචි වන්න',
   logout: 'පිටවන්න',
   role_admin: 'පරිපාලක',
+  deleted_account: 'මකා දැමූ ගිණුම',
   role_organizer: 'සංවිධායක',
   notifications: 'දැනුම්දීම්',
   notifications_unread: 'දැනුම්දීම්, නොබැලූ {count}',

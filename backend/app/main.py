@@ -16,7 +16,7 @@ from app.core.config import ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD, CORS_ORIGINS, T
 from app.core.errors import install_error_handlers
 from app.core.ratelimit import limiter
 from app.core.reminders import reminder_loop
-from app.core.security import hash_password
+from app.core.security import SECRET_KEY, hash_password
 from app.core.uploads import ensure_upload_dirs
 from app.db.database import SessionLocal
 from app.models.admin import Admin
@@ -32,6 +32,14 @@ from app.routers.public import router as public_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("conference")
+
+
+def check_settings() -> None:
+    """Refuse to start with the placeholder secrets copied from .env.example."""
+    if len(SECRET_KEY) < 32 or SECRET_KEY.startswith("replace-with"):
+        raise RuntimeError("SECRET_KEY is too weak: set a random string of at least 32 characters in backend/.env")
+    if ADMIN_INITIAL_PASSWORD == "choose-a-strong-password":
+        raise RuntimeError("ADMIN_INITIAL_PASSWORD is still the placeholder from .env.example: choose your own")
 
 
 def ensure_admin() -> None:
@@ -54,6 +62,7 @@ async def lifespan(app: FastAPI):
     ensure_upload_dirs()
     task = None
     if not TESTING:
+        check_settings()
         ini_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
         command.upgrade(Config(os.path.abspath(ini_path)), "head")
         ensure_admin()

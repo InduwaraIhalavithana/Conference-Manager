@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 Lang = Literal["en", "si", "ta"]
 
@@ -64,8 +64,7 @@ class OrganizerOut(BaseModel):
     is_suspended: bool
     created_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AdminOut(BaseModel):
@@ -73,5 +72,4 @@ class AdminOut(BaseModel):
     username: str
     email: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -254,6 +254,7 @@ backend/
   app/models/       SQLAlchemy models
   app/routers/      conferences, agenda, attendees + tickets, organizers, notifications, public, admin
   alembic/          database migrations
+  Dockerfile        API image
   scripts/          seed_demo.py, check_integrity.py, send_test_email.py
   tests/            pytest suite
 frontend/
@@ -262,6 +263,7 @@ frontend/
   src/pages/        public, auth, organizer and admin pages
   src/services/     typed API client
   src/test/         Vitest suite
+  Dockerfile, nginx.conf   production image (static site + API proxy)
 screenshots/        README and gallery images
 ```
 

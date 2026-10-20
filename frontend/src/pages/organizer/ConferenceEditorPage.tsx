@@ -327,7 +327,8 @@ export default function ConferenceEditorPage() {
 
         <aside className="editor-preview">
           <h3 className="small muted" style={{ marginBottom: 10 }}><i className="fas fa-eye" /> {t('live_preview')}</h3>
-          <div style={{ pointerEvents: 'none' }}><ConferenceCard conf={preview} /></div>
+          {/* inert: the preview's links point at a page that may not exist yet, so keep them out of the tab order */}
+          <div style={{ pointerEvents: 'none' }} aria-hidden="true" {...({ inert: '' } as object)}><ConferenceCard conf={preview} /></div>
         </aside>
       </div>
       <HelpButton tour="editor" />

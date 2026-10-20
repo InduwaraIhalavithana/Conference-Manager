@@ -80,14 +80,22 @@ npm run dev
 # http://localhost:5174
 ```
 
-### Docker
+### Docker (production-style)
 
 ```bash
 copy backend\.env.example backend\.env
-docker compose up --build
+copy .env.example .env
 ```
 
-Compose runs PostgreSQL, the API (with a volume for uploaded images) and the frontend on the same ports.
+Edit `backend\.env` (`SECRET_KEY`, `ADMIN_INITIAL_PASSWORD`, `FRONTEND_URL`, Gmail settings) and set `POSTGRES_PASSWORD` in the root `.env`, then:
+
+```bash
+docker compose up --build -d
+```
+
+Compose runs PostgreSQL, the API (with a volume for uploaded images) and an nginx container that serves the built site and proxies `/api`, `/auth` and `/uploads` to the API. Only one port is published (`WEB_PORT`, default 80). Migrations run when the API starts, and the API refuses to start with the placeholder `SECRET_KEY` or admin password.
+
+For a public server, put HTTPS in front (a cloud load balancer, Caddy or certbot) and set `FRONTEND_URL` in `backend\.env` to the `https://` address so email links work. Back up the `pgdata` and `uploads` volumes.
 
 ### Prerequisites
 

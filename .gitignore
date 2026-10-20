@@ -33,3 +33,6 @@ Thumbs.db
 # Local backups and uploaded files
 backups/
 backend/uploads/
+
+# Docker Compose settings (POSTGRES_PASSWORD)
+/.env

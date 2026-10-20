@@ -164,7 +164,7 @@
 .ci-big span { color: var(--text-2); font-size: 1.1rem; }
 .ci-recent { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
 .ci-recent li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); animation: fade-up 300ms var(--ease); }
-.ci-recent li span { flex: 1; min-width: 0; }
+.ci-recent li > span:not(.avatar) { flex: 1; min-width: 0; }
 
 /* Settings + help */
 .side-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 22px; align-items: start; }

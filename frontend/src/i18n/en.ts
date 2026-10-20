@@ -692,6 +692,7 @@ const en = {
   act_update_photo: 'Changed their photo',
   act_change_password: 'Changed their password',
   act_reset_password: 'Reset their password',
+  act_verify_email: 'Verified their email',
   act_send_reminders: 'Sent reminders',
   act_cancel_attendee: 'Cancelled a registration',
   act_admin_suspend: 'Account suspended by admin',

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { LANGS, type TKey } from '../i18n';
@@ -276,7 +277,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {collapsed && menuOpen && (
+      {/* Portaled: the navbar's backdrop-filter would make this fixed drawer size itself to the
+          76px navbar instead of the screen, collapsing it to nothing on phones. */}
+      {collapsed && menuOpen && createPortal(
         <div className="nav-drawer" role="dialog" aria-label={t('main_menu')}>
           <div className="nav-drawer__panel">
             {role && (
@@ -329,7 +332,8 @@ export default function Navbar() {
             </div>
           </div>
           <button className="nav-drawer__scrim" aria-label={t('close_menu')} onClick={() => setMenuOpen(false)} />
-        </div>
+        </div>,
+        document.body,
       )}
     </header>
   );

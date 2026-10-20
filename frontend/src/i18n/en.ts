@@ -28,6 +28,7 @@ const en = {
   register: 'Register',
   logout: 'Sign out',
   role_admin: 'Administrator',
+  deleted_account: 'Deleted account',
   role_organizer: 'Organizer',
   notifications: 'Notifications',
   notifications_unread: 'Notifications, {count} unseen',

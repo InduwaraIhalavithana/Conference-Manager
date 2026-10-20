@@ -241,6 +241,7 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
   .table td:first-child { justify-content: flex-start; text-align: left; }
   .table td:first-child::before { display: none; }
   .table .actions { margin-left: auto; }
+  .table .actions .btn { min-height: 44px; min-width: 44px; }
 }
 
 /* ── Tabs / segmented ───────────────────────────────────────────────────── */

@@ -91,8 +91,7 @@ async def send_message(msg: Message) -> bool:
     """Send one email. Returns True when it actually went out through SMTP."""
     OUTBOX.append({"to": msg.to, "subject": msg.subject, "lang": msg.lang, "link": msg.button_url, "code": msg.code})
     if not email_enabled():
-        log.info("Email not sent (Gmail not configured): to=%s subject=%s link=%s code=%s",
-                 msg.to, msg.subject, msg.button_url, msg.code)
+        log.info("Email not sent (Gmail not configured): to=%s subject=%s link=%s", msg.to, msg.subject, msg.button_url)
         return False
     if is_blocked(msg.to):
         log.info("Email not sent (blocked demo domain): to=%s subject=%s", msg.to, msg.subject)

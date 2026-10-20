@@ -56,7 +56,7 @@ copy backend\.env.example backend\.env
 
 Edit `backend\.env` (at least `DATABASE_URL`, `SECRET_KEY` and `ADMIN_INITIAL_PASSWORD`), then double-click **`setup.bat`**. It creates `backend\.venv` with the exact package versions, creates the database, installs the frontend and starts everything.
 
-After that, use **`start-services.bat`** and **`stop-services.bat`**. The start script refuses to run if the ports are already in use and opens the backend and frontend in their own windows.
+After that, use **`start-services.bat`** and **`stop-services.bat`**. The start script checks that setup was done and the ports are free, opens the backend and frontend in their own windows and waits until both answer. The stop script closes those windows and frees the ports without touching other projects. Add `/q` to either script to skip the final "Press any key".
 
 - App: http://localhost:5174
 - API docs: http://localhost:8002/docs

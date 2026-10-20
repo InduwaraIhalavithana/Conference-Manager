@@ -30,7 +30,7 @@ try:
 
     cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (dbname,))
     if cur.fetchone():
-        print(f"{dbname} already exists — nothing to do.")
+        print(f"{dbname} already exists - nothing to do.")
     else:
         cur.execute(f'CREATE DATABASE "{dbname}"')
         print(f"{dbname} created successfully!")

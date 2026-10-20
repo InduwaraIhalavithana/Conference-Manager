@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class AttendeeRegister(BaseModel):
@@ -42,5 +42,4 @@ class AttendeeOut(BaseModel):
     hold_expires_at: datetime | None = None
     waitlist_position: int | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

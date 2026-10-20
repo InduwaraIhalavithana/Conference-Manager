@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
                     <tr key={c.id}>
                       <td><Link to={`/attendees/${c.id}`} style={{ fontWeight: 650 }}>{c.title}</Link></td>
                       <td className="nowrap text-2">{formatDate(c.date, lang, 'medium')}</td>
-                      <td><strong>{c.registered}</strong>{c.max_attendees && <span className="muted"> / {c.max_attendees}</span>}</td>
+                      <td><span><strong>{c.registered}</strong>{c.max_attendees && <span className="muted"> / {c.max_attendees}</span>}</span></td>
                       <td style={{ minWidth: 150 }}>
                         {fill === null ? <span className="muted small">{t('no_limit')}</span> : (
                           <div className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>

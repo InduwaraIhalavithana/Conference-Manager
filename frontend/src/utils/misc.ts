@@ -71,10 +71,6 @@ export function downloadBlob(blob: Blob, filename: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function clamp(n: number, lo: number, hi: number): number {
-  return Math.min(hi, Math.max(lo, n));
-}
-
 /** Google Calendar "add event" link. */
 export function googleCalendarUrl(c: { title: string; date: string; time: string | null; end_time: string | null; location: string | null; description: string | null }): string {
   const day = c.date.replace(/-/g, '');

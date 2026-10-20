@@ -236,8 +236,6 @@ button.chip[aria-pressed='true'] { background: var(--chip-on, var(--accent-stron
   overflow: hidden; flex: none; /* never stretched or squeezed by a flex row */
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-stack { display: flex; }
-.avatar-stack .avatar + .avatar { margin-left: -10px; }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
 .modal-backdrop {

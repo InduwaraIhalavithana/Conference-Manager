@@ -23,10 +23,6 @@ KINDS: dict[str, tuple[str, int, tuple[int, int], bool]] = {
 PUBLIC_PREFIX = "/uploads"
 
 
-def max_bytes(kind: str) -> int:
-    return KINDS[kind][1]
-
-
 async def save_image(file: UploadFile, kind: str) -> str:
     """Validate and store an upload. Returns its public URL path (/uploads/<folder>/<name>.webp)."""
     folder, limit, box, square = KINDS[kind]

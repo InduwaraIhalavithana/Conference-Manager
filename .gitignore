@@ -36,3 +36,6 @@ backend/uploads/
 
 # Docker Compose settings (POSTGRES_PASSWORD)
 /.env
+
+# Local tool settings
+.claude/

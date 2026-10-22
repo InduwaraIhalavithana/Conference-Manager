@@ -4,9 +4,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-# Optional public contact address for the site (empty by default; not stored in the repository).
-ARG VITE_CONTACT_EMAIL=
-ENV VITE_CONTACT_EMAIL=$VITE_CONTACT_EMAIL
 RUN npm run build
 
 FROM nginx:1.27-alpine

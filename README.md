@@ -216,11 +216,10 @@ A background job in the API sends day-before reminders and releases seats held b
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `SECRET_KEY` | Yes | Long random string for signing sign-in tokens and codes |
-| `ADMIN_EMAIL` | Yes on first start | Administrator sign-in email |
+| `ADMIN_EMAIL` | No | Administrator sign-in email (set your own in `backend/.env`) |
 | `ADMIN_INITIAL_PASSWORD` | Yes on first start | Administrator password when the account is first created |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session length (default 1440) |
 | `UPLOAD_DIR` | No | Where images are stored (default `backend/uploads`) |
-| `VITE_CONTACT_EMAIL` | No | Set in `frontend/.env`: a public contact address shown on the site. Empty by default, so none is shown |
 | `REMINDER_INTERVAL_SECONDS` | No | How often the reminder job runs (default 900) |
 
 Real environment variables take priority over `backend/.env`.

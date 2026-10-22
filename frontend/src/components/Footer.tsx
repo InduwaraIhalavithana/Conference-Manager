@@ -40,7 +40,7 @@ export default function Footer() {
         </div>
         <div>
           <h4>{t('footer_contact')}</h4>
-          {CONTACT_EMAIL && <a href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>}
+          <a href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>
           <span className="muted"><i className="fas fa-location-dot" /> {t('footer_location')}</span>
         </div>
       </div>

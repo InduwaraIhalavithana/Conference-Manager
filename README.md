@@ -150,7 +150,7 @@ A background job in the API sends day-before reminders and releases seats held b
 |---|---|---|
 | **Attendee** | Browse and search conferences, register, confirm by email code, QR ticket, add to calendar, cancel | No account needed |
 | **Organizer** | Dashboard, conference editor (cover, agenda, speakers, map), attendees, check-in desk, analytics, settings, help and feedback | Self-register at `/register`, then verify the email with a 6-digit code |
-| **Admin** | Platform dashboard and analytics, organizers (suspend, restore, delete), all conferences, feedback and contact messages, activity log | Created automatically on first start from `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` |
+| **Admin** | Platform dashboard and analytics, organizers (suspend, restore, delete), all conferences, feedback and contact messages, activity log | Created automatically on first start from the administrator settings in `backend/.env` |
 
 ---
 
@@ -201,7 +201,7 @@ A background job in the API sends day-before reminders and releases seats held b
 
 | Variable | Description |
 |---|---|
-| `GMAIL_USER` | Gmail address that sends the emails (e.g. `admin.conferencehub@gmail.com`) |
+| `GMAIL_USER` | Gmail address that sends the emails (e.g. `you@gmail.com`) |
 | `GMAIL_APP_PASSWORD` | A Google **app password** (needs 2-Step Verification), not the normal Gmail password |
 | `FRONTEND_URL` | Base of links in emails (default `http://localhost:5174`) |
 | `VERIFY_CODE_MINUTES` | How long an emailed 6-digit code works (default 15) |
@@ -216,7 +216,7 @@ A background job in the API sends day-before reminders and releases seats held b
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `SECRET_KEY` | Yes | Long random string for signing sign-in tokens and codes |
-| `ADMIN_EMAIL` | No | Administrator sign-in email (default `admin.conferencehub@gmail.com`) |
+| `ADMIN_EMAIL` | Yes on first start | Administrator sign-in email |
 | `ADMIN_INITIAL_PASSWORD` | Yes on first start | Administrator password when the account is first created |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Session length (default 1440) |
 | `UPLOAD_DIR` | No | Where images are stored (default `backend/uploads`) |
@@ -266,18 +266,6 @@ frontend/
   Dockerfile, nginx.conf   production image (static site + API proxy)
 screenshots/        README and gallery images
 ```
-
----
-
-## Accounts (local only)
-
-| Role | Email |
-|---|---|
-| Admin | `admin.conferencehub@gmail.com` (password from `ADMIN_INITIAL_PASSWORD`) |
-| Demo organizers | `firstname.lastname@demo.conferencehub.lk` (password chosen when seeding) |
-| Organizers | create your own at `/register` |
-
-Passwords are not listed here because this repository is public.
 
 ---
 

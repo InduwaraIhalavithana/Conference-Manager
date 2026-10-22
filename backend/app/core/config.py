@@ -12,7 +12,7 @@ load_dotenv(BACKEND_DIR / ".env", override=False)
 TESTING = os.getenv("CM_TESTING") == "1"
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5174").rstrip("/")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com").strip().lower()
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin.conferencehub@gmail.com").strip().lower()
 ADMIN_INITIAL_PASSWORD = os.getenv("ADMIN_INITIAL_PASSWORD", "")
 
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BACKEND_DIR / "uploads")))

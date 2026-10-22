@@ -101,16 +101,14 @@ export default function ContactPage() {
             )}
           </div>
           <aside className="stack">
-            {CONTACT_EMAIL && (
-              <div className="card info-channel">
-                <span className="info-role__icon"><i className="fas fa-envelope" /></span>
-                <div>
-                  <h3>{t('contact_email_title')}</h3>
-                  <a href={`mailto:${CONTACT_EMAIL}`} className="info-email">{CONTACT_EMAIL}</a>
-                  <p className="text-2 small">{t('contact_email_body')}</p>
-                </div>
+            <div className="card info-channel">
+              <span className="info-role__icon"><i className="fas fa-envelope" /></span>
+              <div>
+                <h3>{t('contact_email_title')}</h3>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="info-email">{CONTACT_EMAIL}</a>
+                <p className="text-2 small">{t('contact_email_body')}</p>
               </div>
-            )}
+            </div>
             <div className="card info-channel">
               <span className="info-role__icon"><i className="fas fa-clock" /></span>
               <div>

@@ -18,10 +18,6 @@ class AppError(HTTPException):
         self.extra = extra or {}
 
 
-def not_found(code: str = "not_found", detail: str = "Not found") -> AppError:
-    return AppError(404, code, detail)
-
-
 _STATUS_CODES = {400: "bad_request", 401: "not_authenticated", 403: "forbidden", 404: "not_found", 409: "conflict"}
 
 

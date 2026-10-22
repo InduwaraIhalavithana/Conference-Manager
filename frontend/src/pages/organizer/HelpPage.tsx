@@ -61,7 +61,7 @@ export default function HelpPage() {
   return (
     <div className="container page">
       <PageHead icon="life-ring" title={t('nav_help')} subtitle={t('help_sub')}>
-        <a className="btn" href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>
+        {CONTACT_EMAIL && <a className="btn" href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>}
       </PageHead>
       <div className="side-layout">
         <nav className="card side-nav" role="tablist">

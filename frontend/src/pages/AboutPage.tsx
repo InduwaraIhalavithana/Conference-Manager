@@ -133,7 +133,9 @@ export default function AboutPage() {
               <h2>{t('about_contact_title')}</h2>
               <p>{t('about_contact_body')}</p>
             </div>
-            <a className="btn btn--lg" href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>
+            {CONTACT_EMAIL
+              ? <a className="btn btn--lg" href={`mailto:${CONTACT_EMAIL}`}><i className="fas fa-envelope" /> {CONTACT_EMAIL}</a>
+              : <Link className="btn btn--lg" to="/contact"><i className="fas fa-envelope" /> {t('nav_contact')}</Link>}
           </div>
         </div>
       </section>

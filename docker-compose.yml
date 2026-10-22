@@ -1,6 +1,6 @@
 # Production-style stack: nginx serves the built site and proxies the API; only port 80 is published.
 # Put TLS in front (a cloud load balancer, Caddy or certbot) and set FRONTEND_URL to the https address.
-# Settings come from backend/.env; POSTGRES_PASSWORD and WEB_PORT may be set in a root .env file.
+# Settings come from backend/.env; POSTGRES_PASSWORD, WEB_PORT and VITE_CONTACT_EMAIL may be set in a root .env file.
 services:
   db:
     image: postgres:16-alpine
@@ -38,7 +38,10 @@ services:
       start_period: 30s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_CONTACT_EMAIL: ${VITE_CONTACT_EMAIL:-}
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-80}:80"

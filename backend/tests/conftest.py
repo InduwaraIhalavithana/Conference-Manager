@@ -78,7 +78,7 @@ def other_organizer_token(db):
 
 @pytest.fixture
 def admin_token(db):
-    admin = Admin(username="testadmin", email="admin@example.com", password_hash=hash_password("Admin@12345"))
+    admin = Admin(username="testadmin", email="admin@example.com", password_hash=hash_password("Test-only-admin-pass-1"))
     db.add(admin)
     db.commit()
     db.refresh(admin)

@@ -36,7 +36,7 @@ def _png(size=(60, 60), color=(30, 120, 220)):
 # ── Admin sign-in and error codes ───────────────────────────────────────────
 
 def test_admin_logs_in_with_email(client, admin_token):
-    res = client.post("/auth/admin/login", json={"email": "ADMIN@example.com", "password": "Admin@12345"})
+    res = client.post("/auth/admin/login", json={"email": "ADMIN@example.com", "password": "Test-only-admin-pass-1"})
     assert res.status_code == 200
     me = client.get("/auth/admin/me", headers=auth(res.json()["access_token"])).json()
     assert me["email"] == "admin@example.com"

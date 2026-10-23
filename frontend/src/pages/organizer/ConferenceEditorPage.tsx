@@ -32,6 +32,11 @@ const QUICK_PLACES: { name: string; lat: number; lng: number }[] = [
   { name: 'Kurunegala', lat: 7.4863, lng: 80.3647 },
 ];
 
+const PLACE_LABELS: Record<string, Record<string, string>> = {
+  si: { Colombo: 'කොළඹ', Kandy: 'මහනුවර', Galle: 'ගාල්ල', Jaffna: 'යාපනය', Negombo: 'මීගමුව', Kurunegala: 'කුරුණෑගල' },
+  ta: { Colombo: 'கொழும்பு', Kandy: 'கண்டி', Galle: 'காலி', Jaffna: 'யாழ்ப்பாணம்', Negombo: 'நீர்கொழும்பு', Kurunegala: 'குருணாகல்' },
+};
+
 interface FormState {
   title: string;
   description: string;
@@ -86,7 +91,7 @@ function toInput(f: FormState): ConferenceInput {
 export default function ConferenceEditorPage() {
   const { id } = useParams();
   const isNew = !id;
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = (params.get('tab') as Tab) || 'details';
@@ -277,7 +282,7 @@ export default function ConferenceEditorPage() {
                   <span className="small text-2">{t('quick_pin')}</span>
                   {QUICK_PLACES.map((p) => (
                     <button key={p.name} type="button" className="chip" onClick={() => setForm((f) => ({ ...f, venue_lat: p.lat, venue_lng: p.lng, location: f.location || `${p.name}, Sri Lanka` }))}>
-                      <i className="fas fa-location-dot" /> {p.name}
+                      <i className="fas fa-location-dot" /> {PLACE_LABELS[lang]?.[p.name] ?? p.name}
                     </button>
                   ))}
                   {form.venue_lat !== null && (

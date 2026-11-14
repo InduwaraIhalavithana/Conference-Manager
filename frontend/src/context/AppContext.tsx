@@ -86,16 +86,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // The API client reads the token from here and signs the user out when the server rejects it.
-  useEffect(() => {
-    configureApi(
-      () => tokenRef.current,
-      () => {
-        if (!tokenRef.current) return;
-        logout();
-        toast.error(translate(langRef.current, 'session_expired'), { id: 'session-expired' });
-      },
-    );
-  }, [logout]);
+  // Wired up while rendering, not in an effect: child effects run before a parent's, so a request
+  // made by a child on the first render (the notification bell's count) would go out without the token.
+  useState(() => configureApi(
+    () => tokenRef.current,
+    () => {
+      if (!tokenRef.current) return;
+      logout();
+      toast.error(translate(langRef.current, 'session_expired'), { id: 'session-expired' });
+    },
+  ));
 
   const login = useCallback((token: string, user: User, role: Role) => {
     tokenRef.current = token;

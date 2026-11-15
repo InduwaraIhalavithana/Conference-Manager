@@ -274,3 +274,9 @@ screenshots/        README and gallery images
 Designed and built by **[Induwara Ihalavithana](https://github.com/InduwaraIhalavithana)**.
 
 Questions or ideas? Open an issue on this repository.
+
+## License
+
+The code is released under the [MIT License](LICENSE).
+
+The license covers the source code only. The creator's photo (`frontend/public/creator.webp`) and the ConferenceHub name and logo (`branding/`, `frontend/public/logo.svg`, `frontend/public/apple-touch-icon.png`) are not covered and may not be reused without permission.

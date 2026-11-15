@@ -6,6 +6,8 @@
 
 Full-stack web application for running conferences in Sri Lanka. Organizers publish events with a cover, agenda, speakers and a venue map; attendees register in seconds without an account, confirm their email with a 6-digit code and get a QR ticket; a waitlist fills free seats automatically; and the check-in desk scans tickets with any phone camera. Administrators oversee every organizer, conference and message. Every page, email and notification works in English, Sinhala and Tamil.
 
+**Demo video:** [watch the walkthrough on LinkedIn](https://lnkd.in/p/g9dPTWVa) · **More projects:** [induwara-ihalavithana.vercel.app](https://induwara-ihalavithana.vercel.app)
+
 ---
 
 ## Screenshots

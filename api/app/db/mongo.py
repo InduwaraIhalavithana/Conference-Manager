@@ -23,8 +23,17 @@ async def disconnect() -> None:
         _client = None
 
 
+def client() -> AsyncMongoClient[dict[str, Any]]:
+    if _client is None:
+        raise RuntimeError("MongoDB is not connected")
+    return _client
+
+
 async def ping() -> bool:
     if _client is None:
         return False
-    await _client.admin.command("ping")
+    try:
+        await _client.admin.command("ping")
+    except Exception:
+        return False
     return True

@@ -1,19 +1,14 @@
-"""A conference is one MongoDB document (the aggregate). Phase 0 spike: only the fields the spike shows."""
+"""A conference is one MongoDB document (the aggregate). Phase 0 fields only; Phase 2 adds days, tracks,
+sessions, speakers, venue and capacity."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated, Literal
 
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pymongo import ASCENDING, IndexModel
 
-
-class LocalizedText(BaseModel):
-    """Text an organizer writes, kept in all three app languages."""
-
-    en: str
-    si: str | None = None
-    ta: str | None = None
+from app.models.common import LocalizedText, utcnow
 
 
 class Conference(Document):
@@ -23,7 +18,7 @@ class Conference(Document):
     summary: LocalizedText | None = None
     city: str
     starts_at: datetime
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=utcnow)
 
     class Settings:
         name = "conferences"

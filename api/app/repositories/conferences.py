@@ -1,10 +1,12 @@
 """Repository pattern: every read and write of the conferences collection goes through here."""
 
 from dataclasses import dataclass
+from uuid import uuid4
 
 from beanie import PydanticObjectId
-from beanie.exceptions import RevisionIdWasChanged
+from beanie.odm.utils.encoder import Encoder
 from pymongo.errors import DuplicateKeyError
+from pymongo.results import UpdateResult
 
 from app.models import Conference
 from app.models.common import utcnow
@@ -70,12 +72,22 @@ async def insert(conference: Conference) -> Conference:
     return conference
 
 
+# Seat counters are only ever changed with atomic $inc (repositories/registrations.py). A whole-document save
+# must never write them back, or it would undo registrations made since the document was read.
+_NOT_SAVED = frozenset({"id", "revision_id", "counters"})
+
+
 async def save(conference: Conference) -> None:
+    """Save every field except the counters, only if nobody saved the conference since it was read."""
     conference.updated_at = utcnow()
-    try:
-        await conference.save()
-    except RevisionIdWasChanged as err:
-        raise StaleWriteError(str(conference.id)) from err
+    new_revision = uuid4()
+    data = Encoder(exclude=_NOT_SAVED, to_db=True).encode(conference)
+    result = await Conference.find_one({"_id": conference.id, "revision_id": conference.revision_id}).update(
+        {"$set": {**data, "revision_id": new_revision}}
+    )
+    if not isinstance(result, UpdateResult) or result.matched_count != 1:
+        raise StaleWriteError(str(conference.id))
+    conference.revision_id = new_revision
 
 
 async def delete(conference: Conference) -> None:

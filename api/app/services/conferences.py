@@ -33,7 +33,7 @@ from app.models.conference import (
 )
 from app.repositories import accounts, conference_search, messages
 from app.repositories import conferences as repo
-from app.services import uploads
+from app.services import registrations, uploads
 from app.services.auth import Viewer, validate
 
 MAX_DAYS = 14
@@ -340,7 +340,13 @@ async def update(viewer: Viewer | None, conference_id: str, **data: object) -> C
         raise DomainError(ErrorCode.INVALID_STATE, "A cancelled or archived conference cannot be edited")
     if body.starts_at != conference.starts_at and body.starts_at < datetime.now(UTC):
         raise DomainError(ErrorCode.VALIDATION, "A conference cannot be moved into the past", field="startsAt")
+    taken = conference.counters.registered
+    if body.capacity is not None and body.capacity < taken:
+        raise DomainError(
+            ErrorCode.CAPACITY_BELOW_TAKEN, f"{taken} people already have seats", field="capacity", taken=taken
+        )
     old_cover = conference.cover_url
+    old_capacity = conference.capacity
     if body.cover_url and body.cover_url != old_cover:
         uploads.require_own_upload(body.cover_url, "cover")
     _apply(conference, body)
@@ -348,6 +354,9 @@ async def update(viewer: Viewer | None, conference_id: str, **data: object) -> C
     await _save(conference)
     if old_cover and old_cover != conference.cover_url:
         await uploads.discard_if_unused(old_cover)
+    more_seats = conference.capacity is None or (old_capacity is not None and conference.capacity > old_capacity)
+    if more_seats and conference.id is not None:
+        await registrations.promote_waitlist(conference.id)
     await _log(viewer, "conference_updated", conference)
     return conference
 
@@ -400,6 +409,7 @@ async def cancel(viewer: Viewer | None, conference_id: str) -> Conference:
     conference.status = "cancelled"
     conference.cancelled_at = utcnow()
     await _save(conference)
+    await registrations.notify_conference_cancelled(conference)
     await _log(viewer, "conference_cancelled", conference)
     return conference
 

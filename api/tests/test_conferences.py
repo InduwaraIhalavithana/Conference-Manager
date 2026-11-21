@@ -8,6 +8,7 @@ import pytest
 
 from app.models import Conference
 from app.repositories import conferences as repo
+from app.repositories import registrations as registration_repo
 from tests.conftest import ADMIN_PASSWORD, Api, sign_in_organizer
 
 SL = "+05:30"
@@ -179,9 +180,8 @@ async def test_registered_people_block_unpublish_and_delete(api: Api) -> None:
     await sign_in_organizer(api)
     conf = await create_published(api)
     doc = await repo.by_id(conf["id"])
-    assert doc is not None
-    doc.counters.registered = 3
-    await repo.save(doc)
+    assert doc is not None and doc.id is not None
+    await registration_repo.bump(doc.id, registered=3)
     assert (await api.gql(UNPUBLISH, {"id": conf["id"]}))["data"]["unpublishConference"]["code"] == "INVALID_STATE"
     assert (await api.gql(DELETE, {"id": conf["id"]}))["data"]["deleteConference"]["code"] == "INVALID_STATE"
 
@@ -345,6 +345,12 @@ async def test_hidden_and_ended_conferences_are_not_listed(api: Api, other_api: 
     assert hidden_doc is not None and ended_doc is not None
     hidden_doc.hidden = True
     await repo.save(hidden_doc)
+    # A save never writes the seat counters back (they only change through atomic increments).
+    await registration_repo.bump(hidden_doc.id, registered=2)  # type: ignore[arg-type]
+    hidden_doc.title.en = f"Hidden {word} renamed"
+    await repo.save(hidden_doc)
+    reloaded = await repo.by_id(hidden["id"])
+    assert reloaded is not None and reloaded.counters.registered == 2 and reloaded.title.en.endswith("renamed")
     await Conference.get_pymongo_collection().update_one(
         {"_id": ended_doc.id},
         {

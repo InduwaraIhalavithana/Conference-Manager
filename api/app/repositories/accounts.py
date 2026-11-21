@@ -1,5 +1,7 @@
 """Repository for organizers and admins: all reads and writes of those two collections go through here."""
 
+from datetime import datetime
+
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
@@ -43,6 +45,12 @@ async def insert_organizer(organizer: Organizer) -> Organizer:
 async def save_organizer(organizer: Organizer) -> None:
     organizer.updated_at = utcnow()
     await organizer.save()
+
+
+async def delete_unverified_before(cutoff: datetime) -> int:
+    """Organizers who never entered their sign-up code, older than `cutoff` (they cannot have conferences)."""
+    result = await Organizer.find({"email_verified_at": None, "created_at": {"$lt": cutoff}}).delete()
+    return result.deleted_count if result else 0
 
 
 async def admin_by_id(admin_id: PydanticObjectId | str) -> Admin | None:

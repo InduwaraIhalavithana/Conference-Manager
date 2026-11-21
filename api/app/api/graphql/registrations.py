@@ -127,6 +127,11 @@ class AlreadyCheckedIn:
 
 
 @strawberry.type
+class RemindersSent:
+    count: int
+
+
+@strawberry.type
 class AttendeeEdge:
     cursor: str
     node: Attendee
@@ -147,6 +152,7 @@ ConfirmationResult = Annotated[ConfirmationSent | UserError, strawberry.union("C
 AttendeesResult = Annotated[AttendeeConnection | UserError, strawberry.union("AttendeesResult")]
 AttendeeResult = Annotated[Attendee | UserError, strawberry.union("AttendeeResult")]
 CheckInResult = Annotated[CheckedIn | AlreadyCheckedIn | UserError, strawberry.union("CheckInResult")]
+RemindersResult = Annotated[RemindersSent | UserError, strawberry.union("RemindersResult")]
 
 
 @strawberry.input
@@ -281,5 +287,12 @@ class RegistrationMutation:
         async def run() -> Attendee:
             doc = await service.remove_attendee(info.context.viewer, str(conference_id), str(attendee_id))
             return Attendee.from_doc(doc)
+
+        return await guarded(run)
+
+    @strawberry.mutation(description="Email the day-before reminder now to confirmed attendees who have not had it.")
+    async def send_reminders_now(self, info: Info[Context, None], conference_id: strawberry.ID) -> RemindersResult:
+        async def run() -> RemindersSent:
+            return RemindersSent(count=await service.send_reminders_now(info.context.viewer, str(conference_id)))
 
         return await guarded(run)

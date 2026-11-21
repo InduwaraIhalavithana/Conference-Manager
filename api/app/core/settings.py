@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     mongo_url: str = "mongodb://localhost:27017/?replicaSet=rs0&directConnection=true"
     mongo_db: str = "conferencehub"
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://127.0.0.1:6379/0"  # 127.0.0.1, not localhost: on Windows localhost tries IPv6 first
     # Prefix for every Redis key, so tests (and several apps on one Redis) never collide.
     redis_prefix: str = "cm3"
 
@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     # The admin account is created once, on first start, from these two values. The password is never logged.
     admin_email: str = "admin@example.com"
     admin_initial_password: SecretStr | None = None
+
+    # Email: "queue" hands messages to the ARQ worker (run `uv run arq app.worker.WorkerSettings`);
+    # "log" writes them to the API log instead (no worker needed).
+    email_delivery: Literal["queue", "log"] = "queue"
+    gmail_user: str | None = None
+    gmail_app_password: SecretStr | None = None
+    # Never emailed: the demo seed's made-up addresses and the example domains used in tests and docs.
+    email_blocked_domains: list[str] = ["demo.conferencehub.lk", "example.com", "example.org", "example.net"]
 
     # Uploaded images (re-encoded to WebP). Mounted as a Docker volume in production so they survive redeploys.
     upload_dir: str = "uploads"

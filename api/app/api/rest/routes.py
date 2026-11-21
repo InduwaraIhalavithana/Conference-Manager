@@ -1,14 +1,15 @@
-"""The few REST endpoints: health, the CSRF token and image uploads. (Calendar files and CSV come in Phase 3.)"""
+"""The few REST endpoints: health, the CSRF token, image uploads, calendar files and the attendee CSV."""
 
 from typing import Any
 
 from fastapi import APIRouter, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.responses import Response as RawResponse
 
 from app.api import cookies
 from app.core.errors import DomainError, ErrorCode
+from app.services import exports, uploads
 from app.services import health as health_service
-from app.services import uploads
 from app.services.auth import resolve_viewer
 
 router = APIRouter()
@@ -21,6 +22,7 @@ STATUS = {
     ErrorCode.FILE_TOO_LARGE: 413,
     ErrorCode.FILE_TYPE: 415,
     ErrorCode.FILE_NOT_IMAGE: 415,
+    ErrorCode.NOT_FOUND: 404,
 }
 
 
@@ -59,3 +61,32 @@ async def upload(request: Request, kind: str, file: UploadFile) -> dict[str, str
     except DomainError as err:
         return _error(err)
     return {"url": url}
+
+
+@router.get("/conferences/{slug}/calendar.ics", response_model=None)
+async def calendar(slug: str) -> RawResponse | JSONResponse:
+    """Add-to-calendar file for a public conference."""
+    try:
+        filename, body = await exports.public_calendar(slug)
+    except DomainError as err:
+        return _error(err)
+    return RawResponse(
+        body,
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/conferences/{conference_id}/attendees.csv", response_model=None)
+async def attendees_csv(request: Request, conference_id: str) -> RawResponse | JSONResponse:
+    """The organizer's attendee list as CSV (sign-in cookie; only for the conference's owner)."""
+    try:
+        viewer = await resolve_viewer(request.cookies.get(cookies.ACCESS))
+        filename, body = await exports.attendees_csv(viewer, conference_id)
+    except DomainError as err:
+        return _error(err)
+    return RawResponse(
+        body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store"},
+    )

@@ -348,7 +348,11 @@ async def forgot_password(ip: str, email_addr: str) -> None:
             to=organizer.email,
             kind="password_reset",
             lang=organizer.lang,
-            params={"link": f"{settings.frontend_url}/reset?token={raw}", "hours": settings.password_reset_hours},
+            params={
+                "name": organizer.first_name,
+                "link": f"{settings.frontend_url}/reset?token={raw}",
+                "hours": settings.password_reset_hours,
+            },
         )
     )
 

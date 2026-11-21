@@ -126,6 +126,12 @@ async def expired_holds(now: datetime, limit: int = 500) -> list[Registration]:
     )
 
 
+async def confirmed_without_reminder(conference_id: PydanticObjectId) -> list[Registration]:
+    return await Registration.find(
+        {"conference_id": conference_id, "status": "registered", "reminder_sent_at": None}
+    ).to_list()
+
+
 async def active_for_conference(conference_id: PydanticObjectId) -> list[Registration]:
     return await Registration.find({"conference_id": conference_id, "active": True}).to_list()
 

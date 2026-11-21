@@ -1,6 +1,7 @@
 """Repository pattern: every read and write of the conferences collection goes through here."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import uuid4
 
 from beanie import PydanticObjectId
@@ -74,7 +75,7 @@ async def insert(conference: Conference) -> Conference:
 
 # Seat counters are only ever changed with atomic $inc (repositories/registrations.py). A whole-document save
 # must never write them back, or it would undo registrations made since the document was read.
-_NOT_SAVED = frozenset({"id", "revision_id", "counters"})
+_NOT_SAVED = frozenset({"id", "revision_id", "counters", "reminders_sent_at"})
 
 
 async def save(conference: Conference) -> None:
@@ -129,6 +130,20 @@ async def search(criteria: SearchCriteria) -> SearchPage:
             )
         )
     return SearchPage(hits=hits, end_cursor=hits[-1].cursor if hits else None, has_next=has_next)
+
+
+async def starting_between(start: datetime, end: datetime) -> list[Conference]:
+    return await Conference.find(
+        {"status": "published", "hidden": False, "starts_at": {"$gte": start, "$lt": end}}
+    ).to_list()
+
+
+async def running_or_recent(since: datetime) -> list[Conference]:
+    return await Conference.find({"status": {"$in": ["published", "cancelled"]}, "ends_at": {"$gte": since}}).to_list()
+
+
+async def mark_reminders_sent(conference_id: PydanticObjectId, at: datetime) -> None:
+    await Conference.get_pymongo_collection().update_one({"_id": conference_id}, {"$set": {"reminders_sent_at": at}})
 
 
 async def file_still_used(url: str) -> bool:

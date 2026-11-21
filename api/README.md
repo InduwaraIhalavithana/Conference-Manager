@@ -71,6 +71,36 @@ Patterns in use: **Repository** (`repositories/`), **Strategy** (`services/email
 - Search sits behind a **Strategy** (`repositories/conference_search.py`): MongoDB's text and 2dsphere indexes now, Atlas Search can slot in later.
 - Images: `POST /upload?kind=cover|speaker` (signed in, CSRF header), re-encoded to WebP without metadata, served from `/uploads`. Replaced or deleted images are removed; duplicated conferences get their own copies.
 
+## Registrations, the worker and email (Phase 3)
+
+- **Seats can never be overbooked.** A seat is taken by one atomic, conditional increment (`counters.registered < capacity`) inside a MongoDB transaction (`repositories/unit_of_work.py`, the **Unit of Work** pattern). A test fires 200 registrations at once at 25 seats: exactly 25 get a seat and the rest are waitlisted.
+- Attendees need no account. A new registration **holds** its seat for 24 hours until the emailed 6-digit code is entered. Waitlisters confirm too, and only confirmed waitlisters move up, oldest first.
+- The 12-character ticket code (no 0/O or 1/I/L) is the key to the ticket: view it, resend the code, cancel.
+- Organizers (owner only): attendee list with filters and cursors; check-in by ticket code with duplicates flagged; undo; remove an attendee; "send reminders now"; CSV export at `GET /conferences/{id}/attendees.csv`, safe against spreadsheet formula injection.
+- Check-ins are also written to a MongoDB **time-series collection** (`checkin_events`) for the arrival charts in Phase 5.
+- Anyone can download a calendar file at `GET /conferences/{slug}/calendar.ics`.
+- Conference saves never write the seat counters back, so an edit can never undo registrations made since the page was loaded.
+
+**The worker** is a second process (ARQ, an async job queue in Redis):
+
+```bash
+uv run arq app.worker.WorkerSettings
+```
+
+- Emails are queued by the API and sent by the worker through Gmail SMTP, with up to 3 tries. They are rendered in the reader's language (EN/SI/TA, Jinja2 with auto-escaping).
+- Without `GMAIL_USER` / `GMAIL_APP_PASSWORD`, emails go to the worker's log instead, codes included.
+- Demo and example domains are never emailed.
+- Set `EMAIL_DELIVERY=log` to skip the worker entirely in development.
+- Scheduled jobs, each safe to run twice:
+
+| Job | When |
+|---|---|
+| Release expired holds and promote the waitlist | every 10 minutes |
+| Day-before reminders | hourly |
+| Recount seat counters and fix any drift | nightly |
+| Delete organizers who never verified their email (after 7 days) | nightly |
+| Delete uploaded images nothing uses (after a day) | nightly |
+
 Sample data: `uv run python -m scripts.seed_spike` adds two published conferences with agendas and one draft; `--remove` deletes them.
 
 See [`../docs/security-checklist.md`](../docs/security-checklist.md) for the OWASP Top 10 mapping and [`../docs/adr`](../docs/adr) for the decision records.

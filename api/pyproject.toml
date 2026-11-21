@@ -4,9 +4,12 @@ version = "3.0.0a0"
 description = "ConferenceHub v3 API: async FastAPI + Strawberry GraphQL + MongoDB (Beanie)"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "aiosmtplib>=5.1.3",
+    "arq>=0.25.0",
     "beanie>=2.2.0",
     "email-validator>=2.4.0",
     "fastapi>=0.165.0",
+    "jinja2>=3.1.6",
     "pillow>=13.0.0",
     "pwdlib[argon2]>=0.4.2",
     "pydantic-settings>=2.16.3",
@@ -44,6 +47,8 @@ select = ["E", "F", "W", "B", "I", "UP", "SIM", "ASYNC"]
 # GraphQL query strings and sample data read better on one line.
 "tests/*.py" = ["E501"]
 "scripts/*.py" = ["E501"]
+# Translated email sentences read better on one line.
+"app/core/email_text.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "scripts", "tests"]
@@ -66,7 +71,7 @@ include_external_packages = true
 [[tool.importlinter.contracts]]
 name = "Layers: api -> services -> repositories -> db -> models -> core"
 type = "layers"
-layers = ["app.main", "app.api", "app.services", "app.repositories", "app.db", "app.models", "app.core"]
+layers = ["app.main | app.worker", "app.api", "app.services", "app.repositories", "app.db", "app.models", "app.core"]
 
 [[tool.importlinter.contracts]]
 name = "The API layer never touches the database directly"

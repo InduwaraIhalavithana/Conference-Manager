@@ -39,3 +39,10 @@ backend/uploads/
 
 # Local tool settings
 .claude/
+
+# v3 (api/ and web/; web/ has its own .gitignore too)
+api/.venv/
+api/.env
+api/.mypy_cache/
+api/.ruff_cache/
+api/.pytest_cache/

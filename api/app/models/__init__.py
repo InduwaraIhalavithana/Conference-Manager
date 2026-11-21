@@ -5,8 +5,8 @@ from app.models.auth import AuthSession, PasswordReset
 from app.models.common import ActorRef, LocalizedText
 from app.models.conference import Conference
 from app.models.messages import ActivityLog, ContactMessage, Feedback, Notification
+from app.models.registration import CheckInEvent, Registration
 
-# Registrations arrive in Phase 3, the full conference aggregate in Phase 2.
 DOCUMENT_MODELS: list[type[Document]] = [
     Organizer,
     Admin,
@@ -17,11 +17,14 @@ DOCUMENT_MODELS: list[type[Document]] = [
     ActivityLog,
     Feedback,
     ContactMessage,
+    Registration,
+    CheckInEvent,
 ]
 
 __all__ = [
     "DOCUMENT_MODELS",
     "ActivityLog",
+    "CheckInEvent",
     "ActorRef",
     "Admin",
     "AuthSession",
@@ -32,4 +35,5 @@ __all__ = [
     "Notification",
     "Organizer",
     "PasswordReset",
+    "Registration",
 ]

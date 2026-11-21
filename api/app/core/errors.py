@@ -34,6 +34,11 @@ class ErrorCode(StrEnum):
     FILE_TYPE = "file_type"
     FILE_TOO_LARGE = "file_too_large"
     FILE_NOT_IMAGE = "file_not_image"
+    REGISTRATION_CLOSED = "registration_closed"
+    REGISTRATION_INACTIVE = "registration_inactive"
+    CHECKIN_UNCONFIRMED = "checkin_unconfirmed"
+    CHECKIN_WAITLISTED = "checkin_waitlisted"
+    CAPACITY_BELOW_TAKEN = "capacity_below_taken"
 
 
 class DomainError(Exception):

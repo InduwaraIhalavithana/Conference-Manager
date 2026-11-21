@@ -1,6 +1,6 @@
 """Redis connection (rate limits now; cache, pub/sub and the ARQ job queue in later phases)."""
 
-from redis.asyncio import Redis
+from redis.asyncio import BlockingConnectionPool, Redis
 
 _redis: Redis | None = None
 _prefix = "cm3"
@@ -8,7 +8,9 @@ _prefix = "cm3"
 
 async def connect(url: str, prefix: str) -> None:
     global _redis, _prefix
-    _redis = Redis.from_url(url, decode_responses=True)
+    # A blocking pool: under a burst of requests, callers wait briefly for a free connection instead of failing.
+    pool = BlockingConnectionPool.from_url(url, max_connections=50, timeout=5, decode_responses=True)
+    _redis = Redis(connection_pool=pool)
     _prefix = prefix
     await _redis.ping()
 

@@ -1,0 +1,22 @@
+# Security checklist (OWASP Top 10, 2021)
+
+How ConferenceHub v3 handles each OWASP Top 10 risk. Every phase PR updates the rows it touched and says so in its description.
+Status: **done** = built and tested; **planned** = the phase that delivers it.
+
+| # | Risk | How v3 handles it | Status | Tests |
+|---|---|---|---|---|
+| A01 | Broken access control | Every GraphQL resolver gets the viewer from the server-side session; sign-in-only mutations return `NOT_AUTHENTICATED` otherwise. Suspended organizers and revoked sessions count as signed out immediately (the session is checked on every request). Organizers may only touch their own conferences and attendees. | done for auth (Phase 1); per-conference ownership planned (Phase 2) | `test_change_password_needs_sign_in`, `test_suspended_organizer_is_refused_and_signed_out`, `test_login_works_and_logout_ends_the_session` |
+| A02 | Cryptographic failures | Passwords hashed with Argon2id (pwdlib); v2 PBKDF2 hashes upgraded at the next sign-in. Email codes and reset tokens stored only as HMAC/SHA-256. Tokens signed with HS256 and a required 32+ character `SECRET_KEY` (placeholders refused at start). Cookies `Secure` in production (start-up refuses otherwise). | done | `test_core.py`, `test_admin_password_is_only_stored_as_a_hash`, `test_forgot_and_reset_password_signs_out_everywhere` |
+| A03 | Injection | MongoDB queries are built from typed values through Beanie, never from strings; GraphQL arguments are typed by the schema; input validated with Pydantic in the service layer. HTML emails escape values (Jinja2 autoescape, Phase 3). | done (Phase 1 scope) | `test_register_rejects_a_taken_email_and_bad_input` |
+| A04 | Insecure design | Business rules live in `app/services` with an enforced layer order (import-linter). Answers to "resend code" and "forgot password" do not reveal whether an email is registered; wrong email and wrong password give the same error, after the same hashing time. Seat-limit safety designed with conditional updates and a load test (Phase 3). | done for auth; seat limits planned (Phase 3) | `test_unknown_email_looks_like_a_wrong_code`, `test_login_wrong_password_and_unknown_email_look_the_same` |
+| A05 | Security misconfiguration | No defaults for secrets; GraphiQL, `/docs` and GraphQL introspection are off in production; query depth, token and alias limits; CORS allow-list. Security headers and CSP from Next.js (Phase 4). | done for the API; headers planned (Phase 4) | `test_queries_with_too_many_aliases_are_refused` |
+| A06 | Vulnerable and outdated components | `pip-audit` (API) and `npm audit --omit=dev` (web) run in CI and fail on known vulnerabilities; Dependabot opens update PRs weekly; lockfiles (`uv.lock`, `package-lock.json`) pin exact versions. | done | CI jobs |
+| A07 | Identification and authentication failures | Email verification by 6-digit code (15 minutes, 5 tries, resend once a minute); rate limits per IP on every sign-in, sign-up, code and reset mutation (Redis); short-lived access tokens (15 min) in httpOnly cookies; refresh tokens rotated on every use, and reusing an old one revokes the session; changing or resetting a password signs out other devices; CSRF double-submit header on every mutation. | done | `test_auth.py` (refresh rotation and reuse, CSRF, rate limit, code lock-out) |
+| A08 | Software and data integrity failures | Dependencies installed from lockfiles only (`uv sync --locked`, `npm ci`); CI must be green before merging; uploads re-encoded server-side (Phase 2). | done; uploads planned (Phase 2) | CI |
+| A09 | Security logging and monitoring failures | Structured JSON logs with a request ID on every line and response; sign-ins, verifications, password changes and refresh-token reuse written to the activity log; Sentry for errors (no personal data sent). Passwords, tokens and codes are never logged (codes only by the local-development email stand-in). | done | `test_reusing_an_old_refresh_token_revokes_the_session` (activity entry) |
+| A10 | Server-side request forgery | The API makes no requests to URLs supplied by users. Map tiles and geocoding are fetched by the browser (Phase 4). | done (nothing to forge) | — |
+
+## Secrets
+
+- `SECRET_KEY`, the admin password, SMTP credentials and the Sentry DSN only exist in git-ignored `.env` files or the host's environment.
+- The admin password is never written in code, tests, seed scripts, docs, logs or chat. Tests use their own throw-away admin password in a throw-away database.

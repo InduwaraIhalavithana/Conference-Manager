@@ -1,11 +1,11 @@
-"""GraphQL schema (code-first with Strawberry). Phase 0 spike: public conference queries only."""
+"""Public conference queries (Phase 0 spike shape; Phase 2 adds the full aggregate)."""
 
 from datetime import datetime
 
 import strawberry
 
 from app import models
-from app.repositories import conferences as repo
+from app.services import conferences as service
 
 
 @strawberry.type
@@ -41,16 +41,13 @@ class Conference:
 
 
 @strawberry.type
-class Query:
+class ConferenceQuery:
     @strawberry.field(description="Published conferences, soonest first.")
     async def conferences(self, first: int = 20) -> list[Conference]:
-        docs = await repo.list_published(limit=max(1, min(first, 50)))
+        docs = await service.list_published(first)
         return [Conference.from_doc(d) for d in docs]
 
     @strawberry.field(description="One published conference by its URL slug.")
     async def conference(self, slug: str) -> Conference | None:
-        doc = await repo.get_published_by_slug(slug)
+        doc = await service.published_by_slug(slug)
         return Conference.from_doc(doc) if doc else None
-
-
-schema = strawberry.Schema(query=Query)

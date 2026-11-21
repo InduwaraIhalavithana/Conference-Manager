@@ -8,9 +8,9 @@ import argparse
 import asyncio
 from datetime import UTC, datetime
 
-from app import db
+from app.core.settings import get_settings
+from app.db import mongo as db
 from app.models import Conference, LocalizedText
-from app.settings import get_settings
 
 
 def spike_conferences() -> list[Conference]:

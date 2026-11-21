@@ -11,6 +11,7 @@ import re
 import shutil
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -137,3 +138,19 @@ async def upload(viewer: Viewer | None, kind: str, content_type: str | None, dat
 
 def max_bytes() -> int:
     return max(rule.max_bytes for rule in RULES.values())
+
+
+async def delete_unused_before(cutoff: datetime) -> int:
+    """Delete stored images older than `cutoff` that no conference uses."""
+    deleted = 0
+    root = ensure_dirs()
+    for rule in RULES.values():
+        for path in (root / rule.folder).glob("*.webp"):
+            if not _NAME.match(path.name):
+                continue
+            modified = datetime.fromtimestamp(path.stat().st_mtime, UTC)
+            url = f"{PUBLIC_PREFIX}/{rule.folder}/{path.name}"
+            if modified < cutoff and not await conference_repo.file_still_used(url):
+                path.unlink(missing_ok=True)
+                deleted += 1
+    return deleted

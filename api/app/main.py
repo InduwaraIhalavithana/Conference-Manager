@@ -15,8 +15,8 @@ from app.api.middleware import RequestContextMiddleware
 from app.api.rest.routes import router as rest_router
 from app.core.logging import configure_logging, get_logger
 from app.core.settings import get_settings
-from app.db import mongo, redis
-from app.services import uploads
+from app.db import mongo, queue, redis
+from app.services import email, uploads
 from app.services.admin_seed import ensure_admin
 
 settings = get_settings()
@@ -29,14 +29,19 @@ if settings.sentry_dsn:
         dsn=settings.sentry_dsn, environment=settings.environment, send_default_pii=False, traces_sample_rate=0.0
     )
 
+# Emails go to the ARQ worker; with EMAIL_DELIVERY=log they are only written to the log (no worker needed).
+email.use_sender(email.QueueEmailSender() if settings.email_delivery == "queue" else email.LogEmailSender())
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await mongo.connect(settings.mongo_url, settings.mongo_db)
     await redis.connect(settings.redis_url, settings.redis_prefix)
+    await queue.connect(settings.redis_url, settings.redis_prefix)
     await ensure_admin(settings)
     log.info("api started", environment=settings.environment, mongo_db=settings.mongo_db)
     yield
+    await queue.disconnect()
     await redis.disconnect()
     await mongo.disconnect()
 

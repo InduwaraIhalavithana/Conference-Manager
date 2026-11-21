@@ -11,6 +11,7 @@ conditional increment, so a conference can never be overbooked.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -118,6 +119,9 @@ async def _send(registration: Registration, conference: Conference, kind: str, *
                 "name": registration.name,
                 "title": getattr(conference.title, registration.lang) or conference.title.en,
                 "link": ticket_link(registration),
+                "date": conference.starts_at.astimezone(ZoneInfo(conference.timezone)).date().isoformat(),
+                "venue": ", ".join(p for p in (conference.venue.name, conference.venue.city) if p) or None,
+                "ticket": registration.ticket_code,
                 **params,
             },
         )
@@ -374,6 +378,36 @@ async def release_expired_holds(now: datetime | None = None) -> int:
     for conference_id in touched:
         await promote_waitlist(conference_id)
     return released
+
+
+async def send_reminders(conference: Conference) -> int:
+    """The day-before reminder to every confirmed attendee, at most once each (safe to run again)."""
+    assert conference.id is not None
+    sent = 0
+    for registration in await repo.confirmed_without_reminder(conference.id):
+        assert registration.id is not None
+        claimed = await repo.set_fields(
+            registration.id, {"reminder_sent_at": utcnow()}, expect={"reminder_sent_at": None, "status": "registered"}
+        )
+        if claimed:
+            await _send(registration, conference, "reminder")
+            sent += 1
+    await conference_repo.mark_reminders_sent(conference.id, utcnow())
+    if sent:
+        await messages.notify(
+            [ActorRef(type="organizer", id=conference.organizer_id)],
+            "reminders_sent",
+            {"count": sent, "title": conference.title.en},
+            f"/dashboard/conferences/{conference.id}/attendees",
+        )
+    return sent
+
+
+async def send_reminders_now(viewer: Viewer | None, conference_id: str) -> int:
+    conference = await _owned_conference(viewer, conference_id)
+    if conference.status != "published":
+        raise DomainError(ErrorCode.INVALID_STATE, "Reminders can only be sent for a published conference")
+    return await send_reminders(conference)
 
 
 async def notify_conference_cancelled(conference: Conference) -> int:

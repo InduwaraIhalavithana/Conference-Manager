@@ -3,6 +3,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -43,8 +44,8 @@ UPSERT_SESSION = """mutation($c: ID!, $s: ID, $input: SessionInput!) {
 
 
 def day(offset: int, hour: int = 9, minute: int = 0) -> str:
-    """An ISO time in Sri Lanka, `offset` days from today."""
-    d = (datetime.now(UTC) + timedelta(days=offset)).date()
+    """An ISO time in Sri Lanka, `offset` days from today in Sri Lanka (which can be a different date than UTC)."""
+    d = datetime.now(ZoneInfo("Asia/Colombo")).date() + timedelta(days=offset)
     return f"{d.isoformat()}T{hour:02d}:{minute:02d}:00{SL}"
 
 

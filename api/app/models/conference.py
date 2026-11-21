@@ -125,6 +125,8 @@ class Conference(Document):
     updated_at: datetime = Field(default_factory=utcnow)
     published_at: datetime | None = None
     cancelled_at: datetime | None = None
+    # Set by the reminder job (atomic update), never by a conference save.
+    reminders_sent_at: datetime | None = None
 
     class Settings:
         name = "conferences"

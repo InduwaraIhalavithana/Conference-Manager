@@ -6,6 +6,9 @@ from typing import Literal
 from beanie import PydanticObjectId
 from pydantic import BaseModel
 
+# Re-exported so layers that may not import Beanie (the API layer) can still name the id type.
+ObjectId = PydanticObjectId
+
 
 def utcnow() -> datetime:
     return datetime.now(UTC)

@@ -12,7 +12,7 @@ from strawberry.extensions import (
 )
 
 from app.api.graphql.auth import AuthMutation, AuthQuery
-from app.api.graphql.conferences import ConferenceQuery
+from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
 from app.api.graphql.extensions import CsrfProtection
 
 
@@ -22,7 +22,7 @@ class Query(ConferenceQuery, AuthQuery):
 
 
 @strawberry.type
-class Mutation(AuthMutation):
+class Mutation(ConferenceMutation, AuthMutation):
     pass
 
 

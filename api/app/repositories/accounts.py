@@ -23,6 +23,10 @@ async def organizer_by_id(organizer_id: PydanticObjectId | str) -> Organizer | N
     return await Organizer.get(oid)
 
 
+async def organizers_by_ids(ids: list[PydanticObjectId]) -> list[Organizer]:
+    return await Organizer.find({"_id": {"$in": ids}}).to_list()
+
+
 async def organizer_by_email(email: str) -> Organizer | None:
     return await Organizer.find_one({"email": normalise_email(email)})
 

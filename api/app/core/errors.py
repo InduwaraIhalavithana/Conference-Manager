@@ -26,6 +26,14 @@ class ErrorCode(StrEnum):
     RESET_INVALID = "reset_invalid"
     RESET_EXPIRED = "reset_expired"
     PASSWORD_UNCHANGED = "password_unchanged"
+    NOT_FOUND = "not_found"
+    CONFLICT = "conflict"
+    NOT_PUBLISHABLE = "not_publishable"
+    INVALID_STATE = "invalid_state"
+    SESSION_CLASH = "session_clash"
+    FILE_TYPE = "file_type"
+    FILE_TOO_LARGE = "file_too_large"
+    FILE_NOT_IMAGE = "file_not_image"
 
 
 class DomainError(Exception):

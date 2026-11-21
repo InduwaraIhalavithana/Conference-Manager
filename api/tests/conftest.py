@@ -3,6 +3,7 @@ Redis key prefix. Environment variables win over api/.env, so a developer's real
 
 import os
 import random
+import tempfile
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any
@@ -24,6 +25,7 @@ os.environ.update(
         "LOG_FORMAT": "console",
         "LOG_LEVEL": "WARNING",
         "SENTRY_DSN": "",
+        "UPLOAD_DIR": tempfile.mkdtemp(prefix="cm3-test-uploads-"),
     }
 )
 
@@ -87,3 +89,21 @@ async def other_api() -> AsyncIterator[Api]:
 
 def unique_email(prefix: str = "org") -> str:
     return f"{prefix}.{uuid.uuid4().hex[:10]}@example.com"
+
+
+REGISTER_MUTATION = """
+mutation($input: RegisterInput!) { register(input: $input) { __typename } }"""
+VERIFY_MUTATION = """
+mutation($email: String!, $code: String!) { verifyEmail(email: $email, code: $code) { __typename } }"""
+
+
+async def sign_in_organizer(api: Api, first_name: str = "Asha") -> str:
+    """Register, verify and sign in a fresh organizer on this client. Returns the email."""
+    email = unique_email(first_name.lower())
+    data = {"firstName": first_name, "lastName": "Perera", "email": email, "password": "Str0ng-enough-pass"}
+    assert (await api.gql(REGISTER_MUTATION, {"input": data}))["data"]["register"]["__typename"] == "CodeSent"
+    code = OUTBOX.last_to(email, "verify_code").params["code"]
+    assert (await api.gql(VERIFY_MUTATION, {"email": email, "code": code}))["data"]["verifyEmail"][
+        "__typename"
+    ] == "SignedIn"
+    return email

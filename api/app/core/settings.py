@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     admin_email: str = "admin@example.com"
     admin_initial_password: SecretStr | None = None
 
+    # Uploaded images (re-encoded to WebP). Mounted as a Docker volume in production so they survive redeploys.
+    upload_dir: str = "uploads"
+
     log_format: Literal["console", "json"] = "console"
     log_level: str = "INFO"
     sentry_dsn: str | None = None

@@ -61,4 +61,16 @@ Patterns in use: **Repository** (`repositories/`), **Strategy** (`services/email
 - The admin is created on first start from `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` (environment only, never logged).
 - Rate limits per IP on sign-in, sign-up, codes and resets (Redis).
 
+## Conferences in short (Phase 2)
+
+- A conference is **one MongoDB document**: text in English, Sinhala and Tamil, category, tags, venue with a GeoJSON point, dates over up to 14 days, and its tracks, speakers and sessions inside it.
+- Organizers create drafts, edit, publish (refused with the reasons until it is complete), unpublish, cancel, delete and duplicate them. Only the owner can see a draft or change anything; someone else's conference answers like a missing one.
+- Agenda rules: sessions fall on a conference day, start and end on the same day, use existing speakers and tracks, and never share a room at the same time. Removing a speaker or track updates the sessions that used it.
+- Saves use a revision check, so two editors cannot silently overwrite each other.
+- Public queries: `conferences(filter, first, after)` with Relay cursors (soonest first, or nearest first with `near`), `conference(slug)`. Text search covers all three languages. Organizer names come through a **DataLoader**, one query per page instead of one per conference.
+- Search sits behind a **Strategy** (`repositories/conference_search.py`): MongoDB's text and 2dsphere indexes now, Atlas Search can slot in later.
+- Images: `POST /upload?kind=cover|speaker` (signed in, CSRF header), re-encoded to WebP without metadata, served from `/uploads`. Replaced or deleted images are removed; duplicated conferences get their own copies.
+
+Sample data: `uv run python -m scripts.seed_spike` adds two published conferences with agendas and one draft; `--remove` deletes them.
+
 See [`../docs/security-checklist.md`](../docs/security-checklist.md) for the OWASP Top 10 mapping and [`../docs/adr`](../docs/adr) for the decision records.

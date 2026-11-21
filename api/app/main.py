@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from strawberry.fastapi import GraphQLRouter
 
 from app.api.graphql.context import get_context
@@ -15,6 +16,7 @@ from app.api.rest.routes import router as rest_router
 from app.core.logging import configure_logging, get_logger
 from app.core.settings import get_settings
 from app.db import mongo, redis
+from app.services import uploads
 from app.services.admin_seed import ensure_admin
 
 settings = get_settings()
@@ -56,6 +58,8 @@ app.add_middleware(
 )
 app.add_middleware(RequestContextMiddleware)
 app.include_router(rest_router)
+# Only re-encoded .webp files ever land here (see app/services/uploads.py).
+app.mount("/uploads", StaticFiles(directory=str(uploads.ensure_dirs()), check_dir=False), name="uploads")
 app.include_router(
     GraphQLRouter(
         build_schema(settings.is_production),

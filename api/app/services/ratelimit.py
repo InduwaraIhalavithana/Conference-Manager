@@ -22,6 +22,7 @@ RESEND = Limit("resend", 3)
 FORGOT = Limit("forgot", 5)
 RESET = Limit("reset", 10)
 REFRESH = Limit("refresh", 30)
+UPLOAD = Limit("upload", 30)
 
 
 async def enforce(limit: Limit, ident: str) -> None:

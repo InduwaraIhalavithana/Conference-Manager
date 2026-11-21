@@ -92,8 +92,19 @@ jobs:
 
   # ── v3 (api/ and web/) ────────────────────────────────────────────────────
   api:
-    name: v3 API (ruff + mypy + pytest on MongoDB)
+    name: v3 API (ruff + mypy + architecture + audit + pytest)
     runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     defaults:
       run:
@@ -133,11 +144,19 @@ jobs:
       - name: Mypy
         run: uv run mypy app scripts tests
 
+      - name: Architecture rules (import-linter)
+        run: uv run lint-imports
+
+      - name: Dependency audit (pip-audit)
+        run: |
+          uv export --frozen --no-hashes --no-emit-project --format requirements.txt -o /tmp/requirements.txt
+          uv run pip-audit --strict --progress-spinner off -r /tmp/requirements.txt
+
       - name: Pytest
         run: uv run pytest -q
 
   web:
-    name: v3 Web (eslint + tsc + next build)
+    name: v3 Web (eslint + tsc + audit + next build)
     runs-on: ubuntu-latest
 
     defaults:
@@ -161,6 +180,9 @@ jobs:
 
       - name: Type check
         run: npm run typecheck
+
+      - name: Dependency audit (runtime packages)
+        run: npm audit --omit=dev
 
       - name: Production build
         run: npm run build

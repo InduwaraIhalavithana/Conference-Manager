@@ -3,15 +3,20 @@ import { Suspense } from "react";
 import { gql } from "@/lib/graphql";
 
 type LocalizedText = { en: string; si: string | null; ta: string | null };
-type Conference = { slug: string; city: string; startsAt: string; title: LocalizedText };
+type Conference = { slug: string; city: string | null; startsAt: string; title: LocalizedText };
+type Connection = { edges: { node: Conference }[] };
 
 const CONFERENCES = /* GraphQL */ `
   query Conferences {
     conferences(first: 20) {
-      slug
-      city
-      startsAt
-      title { en si ta }
+      edges {
+        node {
+          slug
+          city
+          startsAt
+          title { en si ta }
+        }
+      }
     }
   }
 `;
@@ -20,7 +25,8 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeZon
 
 // A server component: it runs on the server, calls the API over GraphQL and sends finished HTML to the browser.
 async function ConferenceList() {
-  const { conferences } = await gql<{ conferences: Conference[] }>(CONFERENCES);
+  const { conferences: connection } = await gql<{ conferences: Connection }>(CONFERENCES);
+  const conferences = connection.edges.map((edge) => edge.node);
   if (conferences.length === 0) return <p className="text-slate-400">No published conferences yet.</p>;
   return (
     <ul className="grid gap-4 sm:grid-cols-2" data-testid="conference-list">

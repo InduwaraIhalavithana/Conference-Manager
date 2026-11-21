@@ -46,3 +46,4 @@ api/.env
 api/.mypy_cache/
 api/.ruff_cache/
 api/.pytest_cache/
+api/uploads/

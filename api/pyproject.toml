@@ -5,16 +5,24 @@ description = "ConferenceHub v3 API: async FastAPI + Strawberry GraphQL + MongoD
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "beanie>=2.2.0",
+    "email-validator>=2.4.0",
     "fastapi>=0.165.0",
+    "pwdlib[argon2]>=0.4.2",
     "pydantic-settings>=2.16.3",
+    "pyjwt>=2.15.1",
+    "redis>=8.1.0",
+    "sentry-sdk[fastapi]>=2.75.0",
     "strawberry-graphql>=0.341.2",
+    "structlog>=26.1.0",
     "uvicorn[standard]>=0.54.0",
 ]
 
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "import-linter>=2.17",
     "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "ruff>=0.17.6",
@@ -40,8 +48,32 @@ plugins = ["pydantic.mypy", "strawberry.ext.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 # @strawberry.field(...) with arguments is not typed for mypy; the resolvers themselves are fully annotated.
-module = "app.graphql.*"
+module = "app.api.graphql.*"
 disable_error_code = ["untyped-decorator"]
+
+# Architecture rules, checked in CI with `uv run lint-imports`.
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layers: api -> services -> repositories -> db -> models -> core"
+type = "layers"
+layers = ["app.main", "app.api", "app.services", "app.repositories", "app.db", "app.models", "app.core"]
+
+[[tool.importlinter.contracts]]
+name = "The API layer never touches the database directly"
+type = "forbidden"
+source_modules = ["app.api"]
+forbidden_modules = ["app.repositories", "app.db", "beanie", "pymongo", "redis"]
+# Going through app.services (which uses the database) is the intended path.
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Business rules do not depend on the web framework"
+type = "forbidden"
+source_modules = ["app.services", "app.repositories", "app.db", "app.models", "app.core"]
+forbidden_modules = ["fastapi", "starlette", "strawberry"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

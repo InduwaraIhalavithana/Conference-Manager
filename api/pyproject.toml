@@ -1,0 +1,50 @@
+[project]
+name = "conferencehub-api"
+version = "3.0.0a0"
+description = "ConferenceHub v3 API: async FastAPI + Strawberry GraphQL + MongoDB (Beanie)"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "beanie>=2.2.0",
+    "fastapi>=0.165.0",
+    "pydantic-settings>=2.16.3",
+    "strawberry-graphql>=0.341.2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "SIM", "ASYNC"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "scripts", "tests"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy", "strawberry.ext.mypy_plugin"]
+
+[[tool.mypy.overrides]]
+# @strawberry.field(...) with arguments is not typed for mypy; the resolvers themselves are fully annotated.
+module = "app.graphql.*"
+disable_error_code = ["untyped-decorator"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]

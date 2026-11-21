@@ -1,0 +1,31 @@
+# v3 local services: MongoDB (single-node replica set, so transactions work) and Redis.
+#   docker compose -f docker-compose.dev.yml up -d
+services:
+  mongo:
+    image: mongo:7
+    container_name: cm3-mongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - cm3-mongo:/data/db
+    healthcheck:
+      # Initiates the replica set on first start, then reports healthy once it is primary.
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}).ok }\""]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: cm3-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cm3-mongo:

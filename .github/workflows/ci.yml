@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, v3]
   pull_request:
-    branches: [master, main]
+    branches: [master, main, v3]
 
 jobs:
   backend:
@@ -86,6 +86,81 @@ jobs:
 
       - name: Vitest
         run: npm test
+
+      - name: Production build
+        run: npm run build
+
+  # ── v3 (api/ and web/) ────────────────────────────────────────────────────
+  api:
+    name: v3 API (ruff + mypy + pytest on MongoDB)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # A single-node replica set, so MongoDB transactions work like in production.
+      - name: Start MongoDB 7
+        working-directory: .
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            docker exec mongo mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok" && break
+            sleep 2
+          done
+          for i in $(seq 1 30); do
+            [ "$(docker exec mongo mongosh --quiet --eval 'rs.status().myState')" = "1" ] && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Mypy
+        run: uv run mypy app scripts tests
+
+      - name: Pytest
+        run: uv run pytest -q
+
+  web:
+    name: v3 Web (eslint + tsc + next build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
 
       - name: Production build
         run: npm run build

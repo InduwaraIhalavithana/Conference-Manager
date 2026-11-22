@@ -1,0 +1,68 @@
+/* eslint-disable */
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type Category =
+  | 'ARTS'
+  | 'BUSINESS'
+  | 'EDUCATION'
+  | 'HEALTH'
+  | 'OTHER'
+  | 'SCIENCE'
+  | 'TECH';
+
+export type ConferenceFilter = {
+  category?: Category | null | undefined;
+  city?: string | null | undefined;
+  near?: NearInput | null | undefined;
+  q?: string | null | undefined;
+  startsFrom?: string | null | undefined;
+  startsTo?: string | null | undefined;
+  timeframe?: Timeframe;
+};
+
+export type ConferenceStatus =
+  | 'ARCHIVED'
+  | 'CANCELLED'
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+export type NearInput = {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+};
+
+/** Which conferences to list when no date range is given. */
+export type Timeframe =
+  | 'ALL'
+  | 'PAST'
+  | 'UPCOMING';
+
+export type BrowseCitiesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type BrowseCitiesQuery = { upcomingCities: Array<{ city: string }> };
+
+export type HomeDataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HomeDataQuery = { platformStats: { upcomingConferences: number, heldConferences: number, registeredAttendees: number, checkedIn: number, speakers: number, organizers: number, registrationsThisWeek: number }, upcomingCategories: Array<{ category: Category, count: number }>, upcomingCities: Array<{ city: string, count: number }>, conferences: { edges: Array<{ node: { id: string, slug: string, status: ConferenceStatus, category: Category, coverUrl: string | null, city: string | null, onlineUrl: string | null, timezone: string, startsAt: string, endsAt: string, capacity: number | null, seatsLeft: number | null, distanceKm: number | null, title: { en: string, si: string | null, ta: string | null }, summary: { en: string, si: string | null, ta: string | null } | null, venue: { name: string | null } } }> } };
+
+export type BrowseConferencesQueryVariables = Exact<{
+  filter?: ConferenceFilter | null | undefined;
+  first: number;
+  after?: string | null | undefined;
+}>;
+
+
+export type BrowseConferencesQuery = { conferences: { edges: Array<{ node: { id: string, slug: string, status: ConferenceStatus, category: Category, coverUrl: string | null, city: string | null, onlineUrl: string | null, timezone: string, startsAt: string, endsAt: string, capacity: number | null, seatsLeft: number | null, distanceKm: number | null, venue: { name: string | null, location: { latitude: number, longitude: number } | null }, title: { en: string, si: string | null, ta: string | null }, summary: { en: string, si: string | null, ta: string | null } | null } }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } };
+
+export type ConferenceCardFieldsFragment = { id: string, slug: string, status: ConferenceStatus, category: Category, coverUrl: string | null, city: string | null, onlineUrl: string | null, timezone: string, startsAt: string, endsAt: string, capacity: number | null, seatsLeft: number | null, distanceKm: number | null, title: { en: string, si: string | null, ta: string | null }, summary: { en: string, si: string | null, ta: string | null } | null, venue: { name: string | null } };
+
+export const ConferenceCardFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ConferenceCardFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Conference"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"title"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"summary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"onlineUrl"}},{"kind":"Field","name":{"kind":"Name","value":"timezone"}},{"kind":"Field","name":{"kind":"Name","value":"startsAt"}},{"kind":"Field","name":{"kind":"Name","value":"endsAt"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"seatsLeft"}},{"kind":"Field","name":{"kind":"Name","value":"distanceKm"}},{"kind":"Field","name":{"kind":"Name","value":"venue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<ConferenceCardFieldsFragment, unknown>;
+export const BrowseCitiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BrowseCities"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upcomingCities"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"50"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"city"}}]}}]}}]} as unknown as DocumentNode<BrowseCitiesQuery, BrowseCitiesQueryVariables>;
+export const HomeDataDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"HomeData"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platformStats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"upcomingConferences"}},{"kind":"Field","name":{"kind":"Name","value":"heldConferences"}},{"kind":"Field","name":{"kind":"Name","value":"registeredAttendees"}},{"kind":"Field","name":{"kind":"Name","value":"checkedIn"}},{"kind":"Field","name":{"kind":"Name","value":"speakers"}},{"kind":"Field","name":{"kind":"Name","value":"organizers"}},{"kind":"Field","name":{"kind":"Name","value":"registrationsThisWeek"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcomingCategories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}},{"kind":"Field","name":{"kind":"Name","value":"upcomingCities"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"10"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}},{"kind":"Field","name":{"kind":"Name","value":"conferences"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"7"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ConferenceCardFields"}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ConferenceCardFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Conference"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"title"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"summary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"onlineUrl"}},{"kind":"Field","name":{"kind":"Name","value":"timezone"}},{"kind":"Field","name":{"kind":"Name","value":"startsAt"}},{"kind":"Field","name":{"kind":"Name","value":"endsAt"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"seatsLeft"}},{"kind":"Field","name":{"kind":"Name","value":"distanceKm"}},{"kind":"Field","name":{"kind":"Name","value":"venue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<HomeDataQuery, HomeDataQueryVariables>;
+export const BrowseConferencesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BrowseConferences"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filter"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ConferenceFilter"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"conferences"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filter"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ConferenceCardFields"}},{"kind":"Field","name":{"kind":"Name","value":"venue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"location"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"latitude"}},{"kind":"Field","name":{"kind":"Name","value":"longitude"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"endCursor"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ConferenceCardFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Conference"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"title"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"summary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"en"}},{"kind":"Field","name":{"kind":"Name","value":"si"}},{"kind":"Field","name":{"kind":"Name","value":"ta"}}]}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"coverUrl"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"onlineUrl"}},{"kind":"Field","name":{"kind":"Name","value":"timezone"}},{"kind":"Field","name":{"kind":"Name","value":"startsAt"}},{"kind":"Field","name":{"kind":"Name","value":"endsAt"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"seatsLeft"}},{"kind":"Field","name":{"kind":"Name","value":"distanceKm"}},{"kind":"Field","name":{"kind":"Name","value":"venue"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<BrowseConferencesQuery, BrowseConferencesQueryVariables>;

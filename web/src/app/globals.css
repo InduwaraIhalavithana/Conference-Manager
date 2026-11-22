@@ -1,26 +1,185 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ConferenceHub colours, carried over from v2: one accent family (sky + indigo); other colours only where they
+   mean something: green = done/checked in, amber = waitlist/draft, red = danger, category colours = topics. */
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), var(--font-sinhala), var(--font-tamil), system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-band: var(--band);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-cat-tech: var(--cat-tech);
+  --color-cat-health: var(--cat-health);
+  --color-cat-education: var(--cat-education);
+  --color-cat-business: var(--cat-business);
+  --color-cat-science: var(--cat-science);
+  --color-cat-arts: var(--cat-arts);
+  --color-cat-other: var(--cat-other);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Light: soft blue-grey, never plain white. */
+:root {
+  --radius: 0.875rem;
+  --background: #dbe4f1;
+  --band: #cfdaec;
+  --foreground: #0b1628;
+  --card: #edf2fa;
+  --card-foreground: #0b1628;
+  --popover: #f5f8fd;
+  --popover-foreground: #0b1628;
+  --primary: #0369a1;
+  --primary-foreground: #ffffff;
+  --brand: #0284c7;
+  --brand-2: #4338ca;
+  --secondary: #e3eaf6;
+  --secondary-foreground: #0b1628;
+  --muted: #d6e0f0;
+  --muted-foreground: #3d5175;
+  --accent: rgba(3, 105, 161, 0.12);
+  --accent-foreground: #075985;
+  --destructive: #b91c1c;
+  --success: #065f46;
+  --warning: #92400e;
+  --border: rgba(30, 58, 110, 0.16);
+  --input: rgba(30, 58, 110, 0.22);
+  --ring: #0284c7;
+  --cat-tech: #075985;
+  --cat-health: #065f46;
+  --cat-education: #5b21b6;
+  --cat-business: #9a3412;
+  --cat-science: #115e59;
+  --cat-arts: #9d174d;
+  --cat-other: #334155;
+  --hero: radial-gradient(1200px 520px at 12% -10%, rgba(14, 165, 233, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 92% 10%, rgba(99, 102, 241, 0.2), transparent 60%);
+}
+
+/* Dark: deep navy. */
+.dark {
+  --background: #050c1d;
+  --band: #0a1430;
+  --foreground: #eef3ff;
+  --card: #0f1a36;
+  --card-foreground: #eef3ff;
+  --popover: #142246;
+  --popover-foreground: #eef3ff;
+  --primary: #38bdf8;
+  --primary-foreground: #04121f;
+  --brand: #0ea5e9;
+  --brand-2: #818cf8;
+  --secondary: #142246;
+  --secondary-foreground: #eef3ff;
+  --muted: #1a2a55;
+  --muted-foreground: #9fb0d2;
+  --accent: rgba(56, 189, 248, 0.14);
+  --accent-foreground: #7dd3fc;
+  --destructive: #f87171;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --border: rgba(148, 178, 230, 0.16);
+  --input: rgba(148, 178, 230, 0.24);
+  --ring: #38bdf8;
+  --cat-tech: #38bdf8;
+  --cat-health: #34d399;
+  --cat-education: #a78bfa;
+  --cat-business: #fb923c;
+  --cat-science: #2dd4bf;
+  --cat-arts: #f472b6;
+  --cat-other: #94a3b8;
+  --hero: radial-gradient(1200px 520px at 12% -10%, rgba(56, 189, 248, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 92% 10%, rgba(129, 140, 248, 0.22), transparent 60%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  /* Sinhala and Tamil script need more line height than Latin to stay readable. */
+  html:lang(si),
+  html:lang(ta) {
+    line-height: 1.7;
+  }
+}
+
+@utility bg-hero {
+  background-image: var(--hero);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }

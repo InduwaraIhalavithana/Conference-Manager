@@ -30,7 +30,11 @@ npm run build
 | `/[locale]/dashboard/conferences/[id]/check-in` | Check-in desk: camera QR scanning (BarcodeDetector, or jsQR in browsers without it) or a typed code; live numbers and arrivals from every desk (server-sent events); scans made offline wait in IndexedDB with their time and sync when the connection returns; installable (`manifest.webmanifest`, `public/sw.js`) |
 | `/[locale]/dashboard/analytics` | Analytics: sign-ups over 30 days and each conference's fill, or one conference's sign-ups by day, 15-minute arrivals, status and languages (Recharts) |
 | `/[locale]/dashboard/conferences/[id]/attendees` | Attendees: status filters, search, remove (the waitlist moves up), undo check-in, reminders, CSV |
-| `/[locale]/admin` | Admin landing page (notifications); the full admin area arrives in Phase 5d |
+| `/[locale]/dashboard/help` | Help: searchable questions and answers, feedback to the admin team, and the admin team's replies |
+| `/[locale]/admin` | Admin dashboard: platform numbers linking to each section, system status, notifications |
+| `/[locale]/admin/organizers`, `/admin/conferences` | Organizers (search, filters, suspend, restore, delete with attendee emails) and every conference (filters, hide from the public, show again) |
+| `/[locale]/admin/inbox` | Contact messages and organizer feedback: reply by email, resolve, close, reopen |
+| `/[locale]/admin/activity`, `/admin/system` | Activity log filtered by person and action; system status (database, cache, worker, scheduled jobs, emails, errors) |
 | `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |
 
 ## Settings
@@ -41,5 +45,6 @@ npm run build
 | `SITE_URL` | `http://localhost:3100` | Absolute links in metadata, the sitemap and share images |
 | `E2E_BASE_URL` | `http://localhost:3100` | The site Playwright tests |
 | `E2E_ORGANIZER_EMAIL`, `E2E_ORGANIZER_PASSWORD` | `e2e.organizer@example.com`, none | The test organizer Playwright signs in as; create it with `uv run python -m scripts.e2e_account` in `../api` (refuses to run in production). Without a password the organizer tests are skipped. |
+| `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD` | `e2e.admin@example.com`, none | A throw-away test admin, made by the same script when `E2E_ADMIN_PASSWORD` is set (never the real admin). Without it the admin tests are skipped. |
 
 Security headers (CSP, frame, referrer, permissions, HSTS in production) are set in `next.config.ts`; see `../docs/security-checklist.md`.

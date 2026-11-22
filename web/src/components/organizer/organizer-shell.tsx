@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, CalendarDays, LayoutDashboard, Loader2, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, CircleHelp, LayoutDashboard, Loader2, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, createContext, use, useEffect } from "react";
 import { useQuery } from "urql";
@@ -27,6 +27,7 @@ const NAV = [
   { href: "/dashboard/conferences", key: "nav_my_conferences", icon: CalendarDays, exact: false },
   { href: "/dashboard/analytics", key: "nav_analytics", icon: BarChart3, exact: false },
   { href: "/dashboard/settings", key: "nav_settings", icon: Settings, exact: false },
+  { href: "/dashboard/help", key: "nav_help", icon: CircleHelp, exact: false },
 ] as const;
 
 /** Sidebar and account check for every /dashboard page. Signed-out visitors go to sign in, admins to /admin. */

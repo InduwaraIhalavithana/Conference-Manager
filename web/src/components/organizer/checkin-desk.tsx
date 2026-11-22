@@ -100,9 +100,15 @@ export function CheckinDesk({ id }: { id: string }) {
     if (sent) toast.success(t("ci_synced", { count: sent }));
   }, [id, refreshQueue, submit, t]);
 
-  // The desk can be reopened offline (public/sw.js keeps this page and its files).
+  // The desk can be reopened offline (public/sw.js keeps this page and its files). Production only: in
+  // development the built files keep the same names between edits, so a cached copy would hide new code.
   useEffect(() => {
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV === "production") {
+      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    } else {
+      void navigator.serviceWorker.getRegistrations().then((all) => all.forEach((r) => void r.unregister()));
+    }
   }, []);
 
   // Online/offline, and syncing whatever waited while offline.

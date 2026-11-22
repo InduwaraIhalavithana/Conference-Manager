@@ -413,3 +413,28 @@ async def test_concurrent_cancellations_promote_exactly_as_many(api: Api, other_
     assert await counters(conf["id"]) == {"registered": 10, "confirmed": 10, "waitlisted": 9, "checked_in": 0}
     await no_drift(conf["id"])
     assert await Notification.find({"kind": "new_waitlister", "params.title": "Galle Literary Days"}).count() >= 15
+
+
+async def test_organizer_hears_about_full_cancelled_and_promoted(api: Api, other_api: Api) -> None:
+    from app.models import Notification
+
+    await sign_in_organizer(api)
+    conf = await conference(api, capacity=1)
+
+    async def kinds() -> list[str]:
+        found = (
+            await Notification.find({"link": f"/dashboard/conferences/{conf['id']}/attendees"}).sort("+_id").to_list()
+        )
+        return [n.kind for n in found]
+
+    holder = await confirmed(other_api, conf["slug"])
+    waiter = unique_email("wait")
+    w = await register(other_api, conf["slug"], waiter, name="Kasun Perera")
+    code = OUTBOX.last_to(waiter).params["code"]
+    await other_api.gql(CONFIRM, {"t": w["ticketCode"], "c": code})
+    assert await kinds() == ["new_registration", "conference_full", "new_waitlister"]
+
+    await other_api.gql(CANCEL_REG, {"t": holder})
+    assert (await kinds())[-2:] == ["attendee_cancelled", "waitlist_promoted"]
+    promoted = await Notification.find_one({"kind": "waitlist_promoted", "params.name": "Kasun Perera"})
+    assert promoted is not None and promoted.params["title"]

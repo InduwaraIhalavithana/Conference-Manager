@@ -361,14 +361,22 @@ async def update(viewer: Viewer | None, conference_id: str, **data: object) -> C
     return conference
 
 
+PUBLISH_PROBLEMS = {
+    "STARTS_IN_PAST": "the start date is in the past",
+    "NEEDS_PLACE": "add a city or an online link",
+    "NEEDS_CAPACITY": "set how many people can attend",
+}
+
+
 def publish_problems(conference: Conference) -> list[str]:
+    """Stable codes (the web app translates them) for what still blocks publishing."""
     problems = []
     if conference.starts_at < datetime.now(UTC):
-        problems.append("the start date is in the past")
+        problems.append("STARTS_IN_PAST")
     if not conference.venue.city and not conference.online_url:
-        problems.append("add a city or an online link")
+        problems.append("NEEDS_PLACE")
     if conference.capacity is None:
-        problems.append("set how many people can attend")
+        problems.append("NEEDS_CAPACITY")
     return problems
 
 
@@ -379,7 +387,9 @@ async def publish(viewer: Viewer | None, conference_id: str) -> Conference:
         raise DomainError(ErrorCode.INVALID_STATE, "Only a draft can be published")
     problems = publish_problems(conference)
     if problems:
-        raise DomainError(ErrorCode.NOT_PUBLISHABLE, "Before publishing: " + "; ".join(problems))
+        raise DomainError(
+            ErrorCode.NOT_PUBLISHABLE, "Before publishing: " + "; ".join(PUBLISH_PROBLEMS[p] for p in problems)
+        )
     conference.status = "published"
     conference.published_at = conference.published_at or utcnow()
     await _save(conference)

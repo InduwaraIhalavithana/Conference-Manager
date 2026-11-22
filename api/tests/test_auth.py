@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 
 from app.core.passwords import hash_password
+from app.core.settings import get_settings
 from app.core.tokens import hash_link_token
 from app.models import ActivityLog, Admin, AuthSession, Notification, Organizer, PasswordReset
 from app.repositories import accounts
@@ -362,6 +363,21 @@ async def test_login_is_rate_limited_per_ip(api: Api) -> None:
         codes.append(res["code"])
     assert codes[:10] == ["INVALID_CREDENTIALS"] * 10
     assert codes[10] == "RATE_LIMITED"
+
+
+async def test_rate_limit_scale_multiplies_the_allowance(api: Api) -> None:
+    # The end-to-end tests run with RATE_LIMIT_SCALE so their many sign-ins from one address are not refused.
+    settings = get_settings()
+    settings.rate_limit_scale = 2
+    try:
+        codes = [
+            (await api.gql(LOGIN, {"email": unique_email(), "password": PASSWORD}))["data"]["login"]["code"]
+            for _ in range(21)
+        ]
+    finally:
+        settings.rate_limit_scale = 1
+    assert codes[:20] == ["INVALID_CREDENTIALS"] * 20
+    assert codes[20] == "RATE_LIMITED"
 
 
 async def test_queries_with_too_many_aliases_are_refused(api: Api) -> None:

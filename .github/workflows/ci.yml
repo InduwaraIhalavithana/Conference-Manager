@@ -224,6 +224,8 @@ jobs:
       E2E_ORGANIZER_PASSWORD: ci-only-e2e-organizer-pass
       E2E_ADMIN_EMAIL: e2e.admin@example.com
       E2E_ADMIN_PASSWORD: ci-only-e2e-admin-pass
+      # The tests sign in many times a minute from one address; allow 10x the normal limits (refused in production).
+      RATE_LIMIT_SCALE: "10"
 
     steps:
       - uses: actions/checkout@v4

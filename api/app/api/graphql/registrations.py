@@ -12,6 +12,8 @@ from app.api.graphql.context import Context
 from app.api.graphql.types import UserError, guarded
 from app.models import Conference as ConferenceDoc
 from app.models import Registration as RegistrationDoc
+from app.models import SessionRating as SessionRatingDoc
+from app.services import feedback as feedback_service
 from app.services import registrations as service
 
 
@@ -22,6 +24,23 @@ class RegistrationStatus(Enum):
     WAITLISTED = "waitlisted"
     CANCELLED = "cancelled"
     RELEASED = "released"
+
+
+@strawberry.type(description="One of the ticket holder's ratings: a session, or the conference when sessionId is null.")
+class MyRating:
+    session_id: strawberry.ID | None
+    score: int
+    comment: str | None
+    updated_at: datetime
+
+    @classmethod
+    def from_doc(cls, doc: SessionRatingDoc) -> "MyRating":
+        return cls(
+            session_id=strawberry.ID(doc.session_id) if doc.session_id else None,
+            score=doc.score,
+            comment=doc.comment,
+            updated_at=doc.updated_at,
+        )
 
 
 @strawberry.type(description="What the ticket holder sees, by the code from their email.")
@@ -37,9 +56,16 @@ class Ticket:
     checked_in_at: datetime | None
     created_at: datetime
     conference: Conference
+    bookmarked_session_ids: list[strawberry.ID]
+    ratings: list[MyRating]
+    feedback_closes_at: datetime = strawberry.field(
+        description="Ratings can be given (by checked-in attendees) until this time."
+    )
 
     @classmethod
-    def build(cls, doc: RegistrationDoc, conference: ConferenceDoc, position: int | None) -> "Ticket":
+    def build(
+        cls, doc: RegistrationDoc, conference: ConferenceDoc, position: int | None, ratings: list[SessionRatingDoc]
+    ) -> "Ticket":
         return cls(
             code=doc.ticket_code,
             name=doc.name,
@@ -52,6 +78,9 @@ class Ticket:
             checked_in_at=doc.checked_in_at,
             created_at=doc.created_at,
             conference=Conference.from_doc(conference),
+            bookmarked_session_ids=[strawberry.ID(s) for s in doc.bookmarked_session_ids],
+            ratings=[MyRating.from_doc(r) for r in ratings],
+            feedback_closes_at=feedback_service.closes_at(conference),
         )
 
 
@@ -169,16 +198,16 @@ class AttendeeFilter:
     checked_in: bool | None = None
 
 
-async def _ticket(code: str) -> Ticket:
+async def ticket_by_code(code: str) -> Ticket:
     registration, conference, position = await service.ticket(code)
-    return Ticket.build(registration, conference, position)
+    return Ticket.build(registration, conference, position, await feedback_service.ratings_for(registration))
 
 
 @strawberry.type
 class RegistrationQuery:
     @strawberry.field(description="A ticket by the code from the email (the code is the only key to it).")
     async def ticket(self, code: str) -> Ticket | None:
-        result = await guarded(lambda: _ticket(code))
+        result = await guarded(lambda: ticket_by_code(code))
         return result if isinstance(result, Ticket) else None
 
     @strawberry.field(description="The attendees of one of the signed-in organizer's conferences.")
@@ -236,7 +265,7 @@ class RegistrationMutation:
     async def confirm_registration(self, info: Info[Context, None], ticket_code: str, code: str) -> TicketResult:
         async def run() -> Ticket:
             registration = await service.confirm(info.context.ip, ticket_code, code)
-            return await _ticket(registration.ticket_code)
+            return await ticket_by_code(registration.ticket_code)
 
         return await guarded(run)
 
@@ -253,7 +282,7 @@ class RegistrationMutation:
     async def cancel_registration(self, info: Info[Context, None], ticket_code: str) -> TicketResult:
         async def run() -> Ticket:
             registration = await service.cancel(info.context.ip, ticket_code)
-            return await _ticket(registration.ticket_code)
+            return await ticket_by_code(registration.ticket_code)
 
         return await guarded(run)
 

@@ -112,6 +112,7 @@ def test_worker_schedules_every_job() -> None:
         "cron:heartbeat",
         "cron:release_holds",
         "cron:send_reminders",
+        "cron:send_feedback_requests",
         "cron:recount_counters",
         "cron:purge_unverified",
         "cron:delete_orphan_uploads",

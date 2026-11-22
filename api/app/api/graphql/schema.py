@@ -16,18 +16,29 @@ from app.api.graphql.analytics import AnalyticsQuery
 from app.api.graphql.auth import AuthMutation, AuthQuery
 from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
 from app.api.graphql.extensions import CsrfProtection
+from app.api.graphql.feedback import FeedbackMutation, FeedbackQuery
 from app.api.graphql.profile import ProfileMutation, ProfileQuery
 from app.api.graphql.registrations import RegistrationMutation, RegistrationQuery
 from app.api.graphql.stats import PublicMutation, StatsQuery
 
 
 @strawberry.type
-class Query(AdminQuery, AnalyticsQuery, ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
+class Query(
+    AdminQuery, AnalyticsQuery, FeedbackQuery, ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery
+):
     pass
 
 
 @strawberry.type
-class Mutation(AdminMutation, ProfileMutation, PublicMutation, RegistrationMutation, ConferenceMutation, AuthMutation):
+class Mutation(
+    AdminMutation,
+    FeedbackMutation,
+    ProfileMutation,
+    PublicMutation,
+    RegistrationMutation,
+    ConferenceMutation,
+    AuthMutation,
+):
     pass
 
 

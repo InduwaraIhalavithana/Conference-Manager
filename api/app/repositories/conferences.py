@@ -138,6 +138,11 @@ async def starting_between(start: datetime, end: datetime) -> list[Conference]:
     ).to_list()
 
 
+async def ended_between(start: datetime, end: datetime) -> list[Conference]:
+    """Published conferences that ended in [start, end): the after-the-event feedback email goes to these."""
+    return await Conference.find({"status": "published", "ends_at": {"$gte": start, "$lt": end}}).to_list()
+
+
 async def running_or_recent(since: datetime) -> list[Conference]:
     return await Conference.find({"status": {"$in": ["published", "cancelled"]}, "ends_at": {"$gte": since}}).to_list()
 

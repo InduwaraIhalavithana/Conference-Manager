@@ -65,6 +65,7 @@ KINDS: dict[str, KindSpec] = {
     "ticket_link": KindSpec("link_subject", "link_heading", "link_intro", "btn_ticket"),
     "promoted": KindSpec("promo_subject", "promo_heading", "promo_intro", "btn_ticket"),
     "reminder": KindSpec("remind_subject", "remind_heading", "remind_intro", "btn_ticket"),
+    "feedback_request": KindSpec("fbreq_subject", "fbreq_heading", "fbreq_intro", "btn_feedback"),
     "conference_cancelled": KindSpec("cancel_subject", "cancel_heading", "cancel_intro", "btn_ticket"),
     "removed_by_organizer": KindSpec("removed_subject", "removed_heading", "removed_intro"),
     "feedback_reply": KindSpec("fb_subject", "fb_heading", "fb_intro", shows_quote=True),

@@ -22,14 +22,14 @@ export const TOURS = {
   editor: ["ed-tabs", "ed-venue", "ed-capacity", "ed-save"],
   attendees: ["at-stats", "at-filters", "at-tools", "at-actions"],
   checkIn: ["ci-pick", "ci-scan", "ci-typed", "ci-progress", "ci-recent"],
-  analytics: ["an-pick", "an-chart", "an-table"],
+  analytics: ["an-pick", "an-chart", "an-table", "an-feedback"],
   settings: ["set-photo", "set-profile", "set-security"],
   admin: ["adm-stats", "adm-system", "adm-notes", "adm-nav"],
   adminOrganizers: ["ao-filters", "ao-actions"],
   adminConferences: ["ac-filters", "ac-hide"],
   adminInbox: ["ai-tabs", "ai-status", "ai-reply"],
   conference: ["cd-register", "cd-calendar", "cd-agenda", "cd-map"],
-  ticket: ["tk-qr", "tk-calendar", "tk-cancel"],
+  ticket: ["tk-qr", "tk-calendar", "tk-agenda", "tk-feedback", "tk-cancel"],
 } as const;
 
 export type TourName = keyof typeof TOURS;

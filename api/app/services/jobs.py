@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from app.core.logging import get_logger
 from app.repositories import accounts
 from app.repositories import conferences as conference_repo
-from app.services import registrations, uploads
+from app.services import feedback, registrations, uploads
 
 log = get_logger("jobs")
 
@@ -34,6 +34,11 @@ async def send_due_reminders(now: datetime | None = None) -> int:
     if sent:
         log.info("sent reminders", count=sent)
     return sent
+
+
+async def send_feedback_requests(now: datetime | None = None) -> int:
+    """The day after a conference ends, ask the people who came for feedback (once each)."""
+    return await feedback.send_feedback_requests(now)
 
 
 async def recount_counters(now: datetime | None = None) -> int:

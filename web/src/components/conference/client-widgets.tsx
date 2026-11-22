@@ -3,7 +3,7 @@
 import { CalendarPlus, Check, Link2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +13,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export const VenueMapLazy = dynamic(() => import("@/components/conference/venue-map"), {
+const VenueMap = dynamic(() => import("@/components/conference/venue-map"), {
   ssr: false,
   loading: () => <div className="h-72 animate-pulse bg-muted" />,
 });
+
+/**
+ * The venue map, loaded only when it is about to scroll into view: Leaflet and its tiles are the
+ * heaviest thing on the conference page and sit far below the fold on a phone.
+ */
+export function VenueMapLazy({ latitude, longitude }: { latitude: number; longitude: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || visible) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return <div ref={ref}>{visible ? <VenueMap latitude={latitude} longitude={longitude} /> : <div className="h-72 bg-muted" />}</div>;
+}
 
 function googleDate(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");

@@ -6,6 +6,7 @@ import { type ReactNode, useEffect } from "react";
 import { useQuery } from "urql";
 
 import { AdminOverviewQuery } from "@/components/admin/admin-queries";
+import { HelpButton, type TourName } from "@/components/tour/tour";
 import { MeQuery } from "@/components/organizer/queries";
 import { Button } from "@/components/ui/button";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
@@ -19,6 +20,8 @@ const NAV = [
   { href: "/admin/activity", key: "nav_activity", icon: Activity, exact: false },
   { href: "/admin/system", key: "nav_system", icon: ServerCog, exact: false },
 ] as const;
+
+const TOURS: Record<string, TourName> = { "/admin": "admin", "/admin/organizers": "adminOrganizers", "/admin/conferences": "adminConferences", "/admin/inbox": "adminInbox" };
 
 const OVERVIEW_CONTEXT = { additionalTypenames: ["ContactMessage", "FeedbackItem", "AdminOrganizer", "AdminConference"] };
 
@@ -52,6 +55,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
   const o = overview?.adminOverview.__typename === "AdminOverview" ? overview.adminOverview : null;
   const waiting = o ? o.contactsOpen + o.feedbackOpen : 0;
+  const tour = TOURS[pathname] ?? null;
 
   return (
     <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[230px_1fr]">
@@ -63,7 +67,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <p className="truncate text-xs text-white/75">{me.email}</p>
           </div>
         </div>
-        <nav aria-label={t("admin_area")} className="flex gap-1 overflow-x-auto lg:flex-col">
+        <nav aria-label={t("admin_area")} className="flex gap-1 overflow-x-auto lg:flex-col" data-tour="adm-nav">
           {NAV.map((item) => {
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             return (
@@ -84,8 +88,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+        {tour && <HelpButton key={tour} tour={tour} className="mt-4 hidden w-full justify-start lg:flex" />}
       </aside>
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0">
+        {tour && (
+          <div className="mb-4 flex justify-end lg:hidden">
+            <HelpButton key={tour} tour={tour} />
+          </div>
+        )}
+        {children}
+      </div>
     </div>
   );
 }

@@ -33,9 +33,9 @@ function useWhen() {
   return (iso: string) => `${formatDate(iso, locale, "short")}, ${formatTime(iso, locale)}`;
 }
 
-function Pills<T extends string>({ value, options, onChange, label }: { value: T; options: { key: T; label: string }[]; onChange: (v: T) => void; label: string }) {
+function Pills<T extends string>({ value, options, onChange, label, tour }: { value: T; options: { key: T; label: string }[]; onChange: (v: T) => void; label: string; tour?: string }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-xl bg-muted p-1" role="tablist" aria-label={label}>
+    <div className="flex flex-wrap gap-1 rounded-xl bg-muted p-1" role="tablist" aria-label={label} data-tour={tour}>
       {options.map((o) => (
         <button key={o.key} role="tab" aria-selected={value === o.key} onClick={() => onChange(o.key)} className={cn("rounded-lg px-3 py-1.5 text-sm font-medium transition", value === o.key ? "bg-background shadow" : "text-muted-foreground hover:text-foreground")}>
           {o.label}
@@ -90,6 +90,7 @@ export function AdminInbox() {
           value={tab}
           onChange={setTab}
           label={t("nav_inbox")}
+          tour="ai-tabs"
           options={[
             { key: "contacts", label: t("tab_contact_messages") },
             { key: "feedback", label: t("tab_organizer_feedback") },
@@ -122,6 +123,7 @@ function Contacts() {
       <Pills
         value={status}
         label={t("field_status")}
+        tour="ai-status"
         onChange={(v) => {
           setStatus(v);
           setOffset(0);
@@ -176,7 +178,7 @@ function Contacts() {
                   />
                 ) : (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button size="sm" className="rounded-lg" onClick={() => setReplying(m.id)}>
+                    <Button size="sm" className="rounded-lg" data-tour="ai-reply" onClick={() => setReplying(m.id)}>
                       <MessageSquareReply className="size-4" aria-hidden /> {t("reply")}
                     </Button>
                     <Button
@@ -231,6 +233,7 @@ function FeedbackList() {
       <Pills
         value={status}
         label={t("field_status")}
+        tour="ai-status"
         onChange={(v) => {
           setStatus(v);
           setOffset(0);
@@ -289,7 +292,7 @@ function FeedbackList() {
                 ) : (
                   f.status !== "CLOSED" && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Button size="sm" className="rounded-lg" onClick={() => setReplying(f.id)}>
+                      <Button size="sm" className="rounded-lg" data-tour="ai-reply" onClick={() => setReplying(f.id)}>
                         <MessageSquareReply className="size-4" aria-hidden /> {t("reply")}
                       </Button>
                       <Button

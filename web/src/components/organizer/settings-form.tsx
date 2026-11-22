@@ -119,9 +119,9 @@ function ProfileSection() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 rounded-2xl border bg-card p-6" noValidate>
+    <form onSubmit={submit} className="space-y-5 rounded-2xl border bg-card p-6" noValidate data-tour="set-profile">
       <h2 className="text-lg font-bold">{t("tab_profile")}</h2>
-      <div className="flex flex-wrap items-center gap-5">
+      <div className="flex flex-wrap items-center gap-5" data-tour="set-photo">
         <div className="relative">
           <Avatar name={`${me.firstName} ${me.lastName}`} url={avatar} className="size-24 text-2xl ring-4 ring-primary/15" />
           {uploading && (
@@ -251,7 +251,7 @@ function SecuritySection() {
   }
 
   return (
-    <section className="grid gap-6 rounded-2xl border bg-card p-6 lg:grid-cols-[1.3fr_1fr]" aria-labelledby="security-h">
+    <section className="grid gap-6 rounded-2xl border bg-card p-6 lg:grid-cols-[1.3fr_1fr]" aria-labelledby="security-h" data-tour="set-security">
       <form onSubmit={submit} className="space-y-4" noValidate>
         <h2 id="security-h" className="text-lg font-bold">
           {t("tab_security")}

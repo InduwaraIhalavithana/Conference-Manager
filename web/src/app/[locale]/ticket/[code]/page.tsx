@@ -7,6 +7,7 @@ import { Suspense } from "react";
 
 import { AddToCalendar } from "@/components/conference/client-widgets";
 import { PrintButton, TicketActions } from "@/components/conference/ticket-actions";
+import { HelpButton } from "@/components/tour/tour";
 import { Button } from "@/components/ui/button";
 import { graphql } from "@/graphql/generated";
 import { Link } from "@/i18n/navigation";
@@ -111,7 +112,7 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
       </header>
 
       <div className="grid gap-0 md:grid-cols-[minmax(0,340px)_1fr]">
-        <section aria-label={t("ticket_code")} className="flex flex-col items-center gap-3 border-b border-dashed p-6 text-center md:border-b-0 md:border-r sm:p-8">
+        <section data-tour="tk-qr" aria-label={t("ticket_code")} className="flex flex-col items-center gap-3 border-b border-dashed p-6 text-center md:border-b-0 md:border-r sm:p-8">
           {qr ? (
             <div className="w-full max-w-[250px] rounded-2xl bg-white p-3 shadow-inner [&_svg]:h-auto [&_svg]:w-full" role="img" aria-label={t("ticket_show_at_door")} dangerouslySetInnerHTML={{ __html: qr }} />
           ) : pending ? (
@@ -149,7 +150,7 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
           {!gone && <p className="rounded-xl bg-primary/8 p-3 text-sm">{t("ticket_keep_link")}</p>}
           <div className="flex flex-wrap gap-2 print:hidden">
             {!gone && (
-              <div className="w-full sm:w-auto">
+              <div className="w-full sm:w-auto" data-tour="tk-calendar">
                 <AddToCalendar slug={c.slug} title={title} details={localized(c.summary, locale)} location={place} startsAt={c.startsAt} endsAt={c.endsAt} />
               </div>
             )}
@@ -159,9 +160,10 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
               </Link>
             </Button>
             {showQr && <PrintButton />}
+            <HelpButton tour="ticket" />
           </div>
           {canCancel && (
-            <div className="border-t pt-4 print:hidden">
+            <div className="border-t pt-4 print:hidden" data-tour="tk-cancel">
               <TicketActions
                 mode="cancel"
                 ticketCode={ticket.code}

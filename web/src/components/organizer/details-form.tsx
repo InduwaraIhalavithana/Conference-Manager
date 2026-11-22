@@ -165,7 +165,7 @@ export function DetailsForm({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border bg-card p-5">
+      <section className="space-y-4 rounded-2xl border bg-card p-5" data-tour="ed-venue">
         <h2 className="text-lg font-bold">{t("venue")}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("field_venue_name")}>
@@ -188,7 +188,7 @@ export function DetailsForm({
         </Field>
       </section>
 
-      <section className="space-y-4 rounded-2xl border bg-card p-5">
+      <section className="space-y-4 rounded-2xl border bg-card p-5" data-tour="ed-capacity">
         <h2 className="text-lg font-bold">{t("capacity_and_status")}</h2>
         <div className="grid items-start gap-4 sm:grid-cols-2">
           <Field label={t("field_capacity")} hint={t("capacity_help")}>
@@ -207,7 +207,7 @@ export function DetailsForm({
         <ImagePicker kind="cover" value={state.coverUrl} onChange={(url) => set("coverUrl", url)} label={t("tab_cover")} help={t("cover_help")} />
       </section>
 
-      <div className="sticky bottom-4 z-10 space-y-3 rounded-2xl border bg-background/90 p-4 shadow-lg backdrop-blur">
+      <div data-tour="ed-save" className="sticky bottom-4 z-10 space-y-3 rounded-2xl border bg-background/90 p-4 shadow-lg backdrop-blur">
         <ErrorNote error={error} />
         <SubmitButton busy={busy} className="w-auto px-8">
           <Save className="size-4" aria-hidden /> {conference ? t("save_changes") : t("create_conference")}

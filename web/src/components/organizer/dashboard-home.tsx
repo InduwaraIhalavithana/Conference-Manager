@@ -91,7 +91,7 @@ export function DashboardHome() {
         </Button>
       </header>
 
-      <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4" data-tour="dash-stats">
         {stats.map((s, i) => (
           <div key={s.label} className="flex animate-rise flex-col-reverse rounded-2xl border bg-card p-4 shadow-sm" style={{ animationDelay: `${i * 60}ms` }}>
             <dt className="text-sm text-muted-foreground">{s.label}</dt>
@@ -106,7 +106,7 @@ export function DashboardHome() {
       </dl>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-        <section aria-labelledby="upcoming-h" className="rounded-2xl border bg-card p-5">
+        <section data-tour="dash-upcoming" aria-labelledby="upcoming-h" className="rounded-2xl border bg-card p-5">
           <h2 id="upcoming-h" className="mb-4 text-lg font-bold">
             {t("upcoming_conferences")}
           </h2>
@@ -199,7 +199,7 @@ export function DashboardHome() {
         </div>
       </div>
 
-      <section aria-labelledby="quick-h">
+      <section aria-labelledby="quick-h" data-tour="dash-quick">
         <h2 id="quick-h" className="mb-3 text-lg font-bold">
           {t("quick_actions")}
         </h2>

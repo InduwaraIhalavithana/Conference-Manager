@@ -48,6 +48,7 @@ def _signed_in(info: Info[Context, None], result: auth_service.SignedIn) -> Sign
         access_expires=result.access_expires_at,
         refresh=result.refresh_token,
         refresh_expires=result.refresh_expires_at,
+        who=result.subject_type,
     )
     info.context.viewer = auth_service.Viewer(result.subject_type, result.subject, result.session_id)
     return SignedIn(viewer=viewer_from(result.subject), access_expires_at=result.access_expires_at)

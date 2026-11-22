@@ -48,7 +48,8 @@ async def csrf(request: Request, response: Response) -> dict[str, str]:
 
 @router.post("/upload", response_model=None)
 async def upload(request: Request, kind: str, file: UploadFile) -> dict[str, str] | JSONResponse:
-    """Upload a cover (`kind=cover`) or speaker photo (`kind=speaker`) as multipart field `file`.
+    """Upload a cover (`kind=cover`), speaker photo (`kind=speaker`) or profile photo (`kind=avatar`) as multipart
+    field `file`.
 
     Needs the sign-in cookie and the X-CSRF-Token header. Returns `{"url": "/uploads/..."}`.
     """

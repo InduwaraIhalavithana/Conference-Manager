@@ -81,5 +81,9 @@ async def save_admin(admin: Admin) -> None:
     await admin.save()
 
 
+async def avatar_in_use(url: str) -> bool:
+    return await Organizer.find({"avatar_url": url}).count() > 0
+
+
 async def all_admin_ids() -> list[PydanticObjectId]:
     return [a.id for a in await Admin.find_all().to_list() if a.id is not None]

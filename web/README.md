@@ -27,6 +27,7 @@ npm run build
 | `/[locale]/dashboard`, `/dashboard/settings` | Organizer dashboard and settings (profile, photo, password, other devices); signed-out visitors are sent to sign in |
 | `/[locale]/dashboard/conferences` | My conferences: status tabs, search, duplicate, delete drafts |
 | `/[locale]/dashboard/conferences/new`, `/[id]` | Conference editor: details in three languages, dates, venue with a map pin, cover, seats and waitlist; agenda (tracks, day names, sessions); speakers with photos; publish checklist, move back to draft, cancel |
+| `/[locale]/dashboard/check-in` | Check-in: choose one of your published, upcoming conferences and open its desk (also in the sidebar) |
 | `/[locale]/dashboard/conferences/[id]/check-in` | Check-in desk: camera QR scanning (BarcodeDetector, or jsQR in browsers without it) or a typed code; live numbers and arrivals from every desk (server-sent events); scans made offline wait in IndexedDB with their time and sync when the connection returns; installable (`manifest.webmanifest`, `public/sw.js`) |
 | `/[locale]/dashboard/analytics` | Analytics: sign-ups over 30 days and each conference's fill, or one conference's sign-ups by day, 15-minute arrivals, status and languages (Recharts) |
 | `/[locale]/dashboard/conferences/[id]/attendees` | Attendees: status filters, search, remove (the waitlist moves up), undo check-in, reminders, CSV |
@@ -36,6 +37,10 @@ npm run build
 | `/[locale]/admin/inbox` | Contact messages and organizer feedback: reply by email, resolve, close, reopen |
 | `/[locale]/admin/activity`, `/admin/system` | Activity log filtered by person and action; system status (database, cache, worker, scheduled jobs, emails, errors) |
 | `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |
+
+## Guided tours
+
+Organizer, admin, conference and ticket pages have a **Need help?** button that walks through the page one highlighted spot at a time (`src/components/tour/tour.tsx`). It never starts by itself. Each step points at an element with `data-tour="..."` and is skipped when that element is not on screen; the text is `tour_<page>_<n>_title` / `_body` in every language. When a page changes, update its steps and texts in the same pull request.
 
 ## Settings
 

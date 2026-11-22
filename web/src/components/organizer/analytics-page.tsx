@@ -36,7 +36,7 @@ export function AnalyticsPage({ initialConference }: { initialConference: string
         </h1>
         <p className="mt-1 text-muted-foreground">{t("analytics_sub")}</p>
       </header>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" data-tour="an-pick">
         <label htmlFor={selectId} className="text-sm font-medium">
           {t("an_conference")}
         </label>
@@ -74,7 +74,7 @@ function Tile({ label, value, sub, icon: Icon, tone }: { label: string; value: s
 function ChartCard({ title, sub, children, empty }: { title: string; sub?: string; children: React.ReactNode; empty: boolean }) {
   const t = useTranslations();
   return (
-    <section className="rounded-2xl border bg-card p-5" aria-label={title}>
+    <section className="rounded-2xl border bg-card p-5" aria-label={title} data-tour="an-chart">
       <h2 className="font-bold">{title}</h2>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
       <div className="mt-4 h-64">{empty ? <p className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("an_no_data")}</p> : children}</div>
@@ -116,7 +116,7 @@ function OverviewView({ overview }: { overview: { byDay: { day: string; register
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
-      <section className="overflow-hidden rounded-2xl border bg-card" aria-labelledby="fill-h">
+      <section className="overflow-hidden rounded-2xl border bg-card" aria-labelledby="fill-h" data-tour="an-table">
         <h2 id="fill-h" className="border-b px-5 py-3 font-bold">
           {t("an_fill")}
         </h2>

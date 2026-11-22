@@ -54,14 +54,14 @@ export function ConferenceList() {
           <h1 className="text-3xl font-extrabold tracking-tight">{t("nav_my_conferences")}</h1>
           <p className="mt-1 text-muted-foreground">{t("my_conferences_sub")}</p>
         </div>
-        <Button asChild className="rounded-xl">
+        <Button asChild className="rounded-xl" data-tour="mc-create">
           <Link href="/dashboard/conferences/new">
             <Plus className="size-4" aria-hidden /> {t("new_conference")}
           </Link>
         </Button>
       </header>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3" data-tour="mc-filters">
         <div className="flex gap-1 rounded-xl bg-muted p-1" role="tablist" aria-label={t("nav_my_conferences")}>
           {tabs.map((item) => (
             <button
@@ -159,7 +159,7 @@ function ConferenceRow({ conference: c, locale, onChanged }: { conference: Item;
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`${t("actions")}: ${title}`}>
+              <Button variant="ghost" size="icon" data-tour="mc-actions" aria-label={`${t("actions")}: ${title}`}>
                 <MoreHorizontal className="size-4" aria-hidden />
               </Button>
             </DropdownMenuTrigger>

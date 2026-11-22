@@ -73,7 +73,7 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader title={t("admin_home_title")} sub={t("admin_dashboard_sub")} />
-      <ul className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-4 xl:grid-cols-4" data-tour="adm-stats">
         {tiles.map((tile, i) => (
           <li key={tile.label} className="flex">
             <Link
@@ -108,7 +108,7 @@ export function AdminDashboard() {
       )}
       <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
         <SystemCard compact />
-        <section aria-labelledby="admin-notes" className="rounded-2xl border bg-card">
+        <section data-tour="adm-notes" aria-labelledby="admin-notes" className="rounded-2xl border bg-card">
           <h2 id="admin-notes" className="border-b px-5 py-3 text-lg font-bold">
             {t("notifications")}
           </h2>
@@ -158,7 +158,7 @@ export function SystemCard({ compact = false }: { compact?: boolean }) {
   const allOk = s ? s.mongo && s.redis && s.workerRunning && s.jobs.every((j) => j.ok) : false;
 
   return (
-    <section aria-labelledby="system-h" className="rounded-2xl border bg-card p-5">
+    <section aria-labelledby="system-h" className="rounded-2xl border bg-card p-5" data-tour="adm-system">
       <div className="flex items-center justify-between gap-3">
         <h2 id="system-h" className="flex items-center gap-2 text-lg font-bold">
           <ServerCog className="size-5 text-primary" aria-hidden /> {t("sys_title")}

@@ -9,6 +9,7 @@ import { Agenda, Avatar } from "@/components/conference/agenda";
 import { CategoryChip } from "@/components/conference/conference-card";
 import { AddToCalendar, CopyLink, VenueMapLazy } from "@/components/conference/client-widgets";
 import { RegisterPanel } from "@/components/conference/register-panel";
+import { HelpButton } from "@/components/tour/tour";
 import { graphql } from "@/graphql/generated";
 import type { Locale } from "@/i18n/routing";
 import { CATEGORIES } from "@/lib/categories";
@@ -180,7 +181,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
             </section>
           )}
 
-          <section aria-labelledby="agenda">
+          <section aria-labelledby="agenda" data-tour="cd-agenda">
             <h2 id="agenda" className="mb-4 text-2xl font-extrabold">
               {t("agenda")}
             </h2>
@@ -219,7 +220,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
             </section>
           )}
 
-          <section aria-labelledby="venue">
+          <section aria-labelledby="venue" data-tour="cd-map">
             <h2 id="venue" className="mb-4 text-2xl font-extrabold">
               {t("venue")}
             </h2>
@@ -247,7 +248,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="space-y-4 rounded-3xl border bg-card p-5 shadow-xl shadow-primary/5">
+          <div className="space-y-4 rounded-3xl border bg-card p-5 shadow-xl shadow-primary/5" data-tour="cd-register">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-primary">{t("register_to_attend")}</p>
               <p className="mt-1 text-lg font-bold">{formatDate(c.startsAt, locale, "long", c.timezone)}</p>
@@ -261,7 +262,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
               waitlistEnabled={c.waitlistEnabled}
               closedReason={cancelled ? t("conference_cancelled_banner") : ended ? t("conference_ended") : null}
             />
-            <div className="grid gap-2 border-t pt-4">
+            <div className="grid gap-2 border-t pt-4" data-tour="cd-calendar">
               <AddToCalendar
                 slug={c.slug}
                 title={title}
@@ -271,6 +272,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
                 endsAt={c.endsAt}
               />
               <CopyLink />
+              <HelpButton tour="conference" className="w-full" />
             </div>
           </div>
         </aside>

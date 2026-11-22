@@ -205,7 +205,7 @@ export function CheckinDesk({ id }: { id: string }) {
       <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
         <div className="space-y-4">
           <Scanner onCode={onCode} disabled={Boolean(notOpen)} />
-          <form onSubmit={typed} className="space-y-1.5 rounded-2xl border bg-card p-4">
+          <form onSubmit={typed} className="space-y-1.5 rounded-2xl border bg-card p-4" data-tour="ci-typed">
             <Label htmlFor="ci-code">{t("ci_manual")}</Label>
             <div className="flex gap-2">
               <Input
@@ -231,7 +231,7 @@ export function CheckinDesk({ id }: { id: string }) {
 
         <div className="space-y-4">
           <ResultCard outcome={outcome} timezone={timezone} />
-          <section aria-labelledby="ci-progress" className="rounded-2xl border bg-card p-5">
+          <section data-tour="ci-progress" aria-labelledby="ci-progress" className="rounded-2xl border bg-card p-5">
             <h2 id="ci-progress" className="sr-only">
               {t("stat_checked_in")}
             </h2>
@@ -246,7 +246,7 @@ export function CheckinDesk({ id }: { id: string }) {
               <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </section>
-          <section aria-labelledby="ci-recent" className="rounded-2xl border bg-card">
+          <section data-tour="ci-recent" aria-labelledby="ci-recent" className="rounded-2xl border bg-card">
             <h2 id="ci-recent" className="border-b px-5 py-3 font-bold">
               {t("ci_recent")}
             </h2>
@@ -340,7 +340,7 @@ function Scanner({ onCode, disabled }: { onCode: (code: string) => void; disable
   }, [on, onCode]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card">
+    <div className="overflow-hidden rounded-2xl border bg-card" data-tour="ci-scan">
       <div className="relative flex aspect-video items-center justify-center bg-black">
         <video ref={video} className={cn("size-full object-cover", !on && "hidden")} muted playsInline aria-label={t("ci_scan")} />
         {on && <div className="pointer-events-none absolute inset-[18%] rounded-3xl border-4 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" aria-hidden />}

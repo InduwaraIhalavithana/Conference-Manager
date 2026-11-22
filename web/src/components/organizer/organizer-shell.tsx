@@ -1,12 +1,13 @@
 "use client";
 
-import { BarChart3, CalendarDays, CircleHelp, LayoutDashboard, Loader2, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, CircleHelp, LayoutDashboard, Loader2, ScanLine, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, createContext, use, useEffect } from "react";
 import { useQuery } from "urql";
 
 import { MeQuery } from "@/components/organizer/queries";
 import { Avatar } from "@/components/site/account-menu";
+import { HelpButton, type TourName } from "@/components/tour/tour";
 import type { MeQuery as MeQueryResult } from "@/graphql/generated/graphql";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -25,10 +26,33 @@ export function useOrganizer(): OrganizerMe {
 const NAV = [
   { href: "/dashboard", key: "nav_my_dashboard", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/conferences", key: "nav_my_conferences", icon: CalendarDays, exact: false },
+  { href: "/dashboard/check-in", key: "nav_check_in", icon: ScanLine, exact: false },
   { href: "/dashboard/analytics", key: "nav_analytics", icon: BarChart3, exact: false },
   { href: "/dashboard/settings", key: "nav_settings", icon: Settings, exact: false },
   { href: "/dashboard/help", key: "nav_help", icon: CircleHelp, exact: false },
 ] as const;
+
+/** The sidebar item for a path; a conference's check-in desk counts as Check-in, not My conferences. */
+function activeItem(pathname: string): string | undefined {
+  if (pathname.endsWith("/check-in")) return "/dashboard/check-in";
+  return NAV.find((item) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)))?.href;
+}
+
+/** The guided tour for a page, if it has one. */
+function tourFor(pathname: string): TourName | null {
+  const parts = pathname.split("/").filter(Boolean); // ["dashboard", ...]
+  if (parts.length === 1) return "dashboard";
+  const [, section, id, sub] = parts;
+  if (section === "check-in" || sub === "check-in") return "checkIn";
+  if (section === "analytics") return "analytics";
+  if (section === "settings") return "settings";
+  if (section === "conferences") {
+    if (!id) return "myConferences";
+    if (sub === "attendees") return "attendees";
+    if (!sub) return "editor";
+  }
+  return null;
+}
 
 /** Sidebar and account check for every /dashboard page. Signed-out visitors go to sign in, admins to /admin. */
 export function OrganizerShell({ children }: { children: ReactNode }) {
@@ -52,6 +76,9 @@ export function OrganizerShell({ children }: { children: ReactNode }) {
     );
   }
 
+  const current = activeItem(pathname);
+  const tour = tourFor(pathname);
+
   return (
     <OrganizerContext value={me}>
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr]">
@@ -67,7 +94,7 @@ export function OrganizerShell({ children }: { children: ReactNode }) {
           </div>
           <nav aria-label={t("nav_my_dashboard")} className="flex gap-1 overflow-x-auto lg:flex-col">
             {NAV.map((item) => {
-              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+              const active = item.href === current;
               return (
                 <Link
                   key={item.href}
@@ -83,8 +110,16 @@ export function OrganizerShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
+          {tour && <HelpButton key={tour} tour={tour} className="mt-4 hidden w-full justify-start lg:flex" />}
         </aside>
-        <div className="min-w-0">{children}</div>
+        <div className="min-w-0">
+          {tour && (
+            <div className="mb-4 flex justify-end lg:hidden">
+              <HelpButton key={tour} tour={tour} />
+            </div>
+          )}
+          {children}
+        </div>
       </div>
     </OrganizerContext>
   );

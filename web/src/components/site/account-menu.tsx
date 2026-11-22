@@ -81,7 +81,7 @@ function AccountDropdown({ area }: { area: "dashboard" | "admin" }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("open_menu_account")}>
+        <Button variant="ghost" size="icon" className="rounded-full" data-tour="nav-account" aria-label={t("open_menu_account")}>
           <Initials name={name} url={avatar} className="size-8 text-xs" />
         </Button>
       </DropdownMenuTrigger>
@@ -140,7 +140,7 @@ function NotificationBell() {
   return (
     <DropdownMenu onOpenChange={(open) => open && refetchList({ requestPolicy: "network-only" })}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label={unread ? t("notifications_unread", { count: unread }) : t("notifications")}>
+        <Button variant="ghost" size="icon" className="relative" data-tour="nav-bell" aria-label={unread ? t("notifications_unread", { count: unread }) : t("notifications")}>
           <Bell className="size-5" aria-hidden />
           {unread > 0 && (
             <span className="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[0.65rem] font-bold leading-4 text-white">

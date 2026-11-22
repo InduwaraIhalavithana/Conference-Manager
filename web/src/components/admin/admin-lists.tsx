@@ -87,7 +87,7 @@ export function AdminOrganizers() {
   return (
     <div>
       <PageHeader title={t("nav_organizers")} sub={t("admin_organizers_sub")} />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3" data-tour="ao-filters">
         <Tabs
           value={status}
           label={t("field_status")}
@@ -165,7 +165,7 @@ function OrganizerRow({ item, onChanged }: { item: OrgItem; onChanged: () => voi
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={`${t("actions")}: ${name}`}>
+          <Button variant="ghost" size="icon" data-tour="ao-actions" aria-label={`${t("actions")}: ${name}`}>
             <MoreHorizontal className="size-4" aria-hidden />
           </Button>
         </DropdownMenuTrigger>
@@ -229,7 +229,7 @@ export function AdminConferences() {
   return (
     <div>
       <PageHeader title={t("nav_conferences")} sub={t("admin_conferences_sub")} />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3" data-tour="ac-filters">
         <Tabs
           value={status}
           label={t("field_status")}
@@ -288,7 +288,7 @@ export function AdminConferences() {
                     <Eye className="size-4" aria-hidden /> {t("show_conference")}
                   </Button>
                 ) : (
-                  <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setHiding({ id: c.id, title: c.title })}>
+                  <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setHiding({ id: c.id, title: c.title })} data-tour="ac-hide">
                     <EyeOff className="size-4" aria-hidden /> {t("hide_conference")}
                   </Button>
                 )}

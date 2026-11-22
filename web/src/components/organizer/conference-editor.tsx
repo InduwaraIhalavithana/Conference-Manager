@@ -104,7 +104,7 @@ export function ConferenceEditor({ id }: { id: string }) {
         </p>
       )}
 
-      <div className="flex gap-1 overflow-x-auto rounded-xl bg-muted p-1" role="tablist" aria-label={t("edit_conference")}>
+      <div className="flex gap-1 overflow-x-auto rounded-xl bg-muted p-1" role="tablist" aria-label={t("edit_conference")} data-tour="ed-tabs">
         {tabs.map((item) => (
           <button
             key={item.key}

@@ -110,7 +110,7 @@ export function AttendeesPage({ id }: { id: string }) {
             <h1 className="text-3xl font-extrabold tracking-tight">{t("attendees")}</h1>
             {conf && <p className="mt-1 text-muted-foreground">{localized(conf.title, locale)}</p>}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-tour="at-tools">
             {conf?.status === "PUBLISHED" && !conf.ended && (
               <Button asChild variant="outline" className="rounded-xl">
                 <Link href={`/dashboard/conferences/${id}/check-in`}>
@@ -147,7 +147,7 @@ export function AttendeesPage({ id }: { id: string }) {
       </header>
 
       {counters && (
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-tour="at-stats">
           {[
             { label: t("stat_seats_taken"), value: counters.registered, tone: "text-sky-500" },
             { label: t("stat_confirmed"), value: counters.confirmed, tone: "text-success" },
@@ -162,7 +162,7 @@ export function AttendeesPage({ id }: { id: string }) {
         </dl>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3" data-tour="at-filters">
         <div className="flex flex-wrap gap-1 rounded-xl bg-muted p-1" role="tablist" aria-label={t("field_status")}>
           {filters.map((f) => (
             <button
@@ -311,7 +311,7 @@ function AttendeeRow({ attendee: a, conferenceId, timezone, onChanged }: { atten
         {(active || a.checkedInAt) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={`${t("actions")}: ${a.name}`}>
+              <Button variant="ghost" size="icon" data-tour="at-actions" aria-label={`${t("actions")}: ${a.name}`}>
                 <MoreHorizontal className="size-4" aria-hidden />
               </Button>
             </DropdownMenuTrigger>

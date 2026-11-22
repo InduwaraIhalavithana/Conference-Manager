@@ -141,6 +141,11 @@ type Conference {
   """Seats not yet taken; null when there is no limit."""
   seatsLeft: Int
 
+  """
+  True once the conference's end time has passed (registration is then closed).
+  """
+  ended: Boolean!
+
   """Shortcut for venue.city."""
   city: String
 

@@ -1,4 +1,14 @@
-import { LanguageSwitcher, MobileMenu, NavLinks, ThemeToggle } from "@/components/site/header-controls";
+import { Suspense } from "react";
+
+import {
+  LanguageSwitcher,
+  LanguageSwitcherFallback,
+  MobileMenu,
+  MobileMenuFallback,
+  NavLinks,
+  NavLinksFallback,
+  ThemeToggle,
+} from "@/components/site/header-controls";
 import { Link } from "@/i18n/navigation";
 
 export function Header() {
@@ -13,11 +23,18 @@ export function Header() {
           </span>
         </Link>
         <div className="flex-1" />
-        <NavLinks />
+        {/* These read the current address, which some pages only know at request time. */}
+        <Suspense fallback={<NavLinksFallback />}>
+          <NavLinks />
+        </Suspense>
         <div className="flex items-center gap-1">
-          <LanguageSwitcher />
+          <Suspense fallback={<LanguageSwitcherFallback />}>
+            <LanguageSwitcher />
+          </Suspense>
           <ThemeToggle />
-          <MobileMenu />
+          <Suspense fallback={<MobileMenuFallback />}>
+            <MobileMenu />
+          </Suspense>
         </div>
       </div>
     </header>

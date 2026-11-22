@@ -28,19 +28,28 @@ function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** The nav links, highlighting the current page. */
 export function NavLinks() {
+  return <NavLinksFor pathname={usePathname()} />;
+}
+
+/** Shown until the current address is known (pages whose address is only known at request time). */
+export function NavLinksFallback() {
+  return <NavLinksFor pathname={null} />;
+}
+
+function NavLinksFor({ pathname }: { pathname: string | null }) {
   const t = useTranslations();
-  const pathname = usePathname();
   return (
     <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
       {NAV.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          aria-current={isActive(pathname, item.href) ? "page" : undefined}
+          aria-current={pathname && isActive(pathname, item.href) ? "page" : undefined}
           className={cn(
             "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-            isActive(pathname, item.href) && "bg-accent text-accent-foreground",
+            pathname && isActive(pathname, item.href) && "bg-accent text-accent-foreground",
           )}
         >
           {t(item.key)}
@@ -128,5 +137,23 @@ export function MobileMenu() {
         </nav>
       </SheetContent>
     </Sheet>
+  );
+}
+
+export function LanguageSwitcherFallback() {
+  const locale = useLocale();
+  return (
+    <Button variant="ghost" size="sm" disabled className="gap-1.5">
+      <Languages className="size-4" aria-hidden />
+      <span className="uppercase">{locale}</span>
+    </Button>
+  );
+}
+
+export function MobileMenuFallback() {
+  return (
+    <Button variant="ghost" size="icon" className="md:hidden" disabled>
+      <Menu className="size-5" aria-hidden />
+    </Button>
   );
 }

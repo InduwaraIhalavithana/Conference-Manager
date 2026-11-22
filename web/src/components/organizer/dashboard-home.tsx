@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, Plus, Circle, CircleHelp, Clock, Hourglass, ScanLine, Settings, Ticket, Users } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, Plus, Circle, Clock, Hourglass, ScanLine, Settings, Ticket, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "urql";
 
@@ -71,9 +71,9 @@ export function DashboardHome() {
   ];
   const quick = [
     { href: "/dashboard/settings", label: t("nav_settings"), sub: t("qa_settings_sub"), icon: Settings },
-    { href: "/contact", label: t("nav_help"), sub: t("qa_help_sub"), icon: CircleHelp },
     { href: "/dashboard/conferences", label: t("nav_my_conferences"), sub: t("qa_manage_sub"), icon: Ticket },
     { href: "/dashboard/conferences/new", label: t("new_conference"), sub: t("qa_new_sub"), icon: Plus },
+    { href: "/dashboard/analytics", label: t("nav_analytics"), sub: t("qa_analytics_sub"), icon: BarChart3 },
   ];
   const items = notes?.notifications.__typename === "NotificationPage" ? notes.notifications.items : [];
 

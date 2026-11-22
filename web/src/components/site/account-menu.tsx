@@ -143,7 +143,7 @@ function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative" aria-label={unread ? t("notifications_unread", { count: unread }) : t("notifications")}>
           <Bell className="size-5" aria-hidden />
           {unread > 0 && (
-            <span className="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[0.65rem] font-bold leading-4 text-white">
+            <span className="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[0.65rem] font-bold leading-4 text-white">
               {unread > 9 ? "9+" : unread}
             </span>
           )}

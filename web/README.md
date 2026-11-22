@@ -27,6 +27,8 @@ npm run build
 | `/[locale]/dashboard`, `/dashboard/settings` | Organizer dashboard and settings (profile, photo, password, other devices); signed-out visitors are sent to sign in |
 | `/[locale]/dashboard/conferences` | My conferences: status tabs, search, duplicate, delete drafts |
 | `/[locale]/dashboard/conferences/new`, `/[id]` | Conference editor: details in three languages, dates, venue with a map pin, cover, seats and waitlist; agenda (tracks, day names, sessions); speakers with photos; publish checklist, move back to draft, cancel |
+| `/[locale]/dashboard/conferences/[id]/check-in` | Check-in desk: camera QR scanning (BarcodeDetector, or jsQR in browsers without it) or a typed code; live numbers and arrivals from every desk (server-sent events); scans made offline wait in IndexedDB with their time and sync when the connection returns; installable (`manifest.webmanifest`, `public/sw.js`) |
+| `/[locale]/dashboard/analytics` | Analytics: sign-ups over 30 days and each conference's fill, or one conference's sign-ups by day, 15-minute arrivals, status and languages (Recharts) |
 | `/[locale]/dashboard/conferences/[id]/attendees` | Attendees: status filters, search, remove (the waitlist moves up), undo check-in, reminders, CSV |
 | `/[locale]/admin` | Admin landing page (notifications); the full admin area arrives in Phase 5d |
 | `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |

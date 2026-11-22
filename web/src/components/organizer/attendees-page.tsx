@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BellRing, Download, Loader2, MoreHorizontal, Search, Trash2, Undo2, UserCheck } from "lucide-react";
+import { ArrowLeft, BellRing, Download, Loader2, MoreHorizontal, ScanLine, Search, Trash2, Undo2, UserCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -111,6 +111,13 @@ export function AttendeesPage({ id }: { id: string }) {
             {conf && <p className="mt-1 text-muted-foreground">{localized(conf.title, locale)}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
+            {conf?.status === "PUBLISHED" && !conf.ended && (
+              <Button asChild variant="outline" className="rounded-xl">
+                <Link href={`/dashboard/conferences/${id}/check-in`}>
+                  <ScanLine className="size-4" aria-hidden /> {t("ci_open_desk")}
+                </Link>
+              </Button>
+            )}
             <Button asChild variant="outline" className="rounded-xl">
               <a href={`/api/conferences/${id}/attendees.csv`} download>
                 <Download className="size-4" aria-hidden /> {t("export_csv")}

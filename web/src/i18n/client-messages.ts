@@ -11,6 +11,8 @@ export const CLIENT_PREFIXES = [
   // The conference editor and attendees page (Phase 5b).
   "add_", "delete_", "edit_", "remove_", "reminders_", "conf_", "pub_problem_", "speakers_", "track", "cancel_",
   "publish", "pin_", "no_conferences_yet", "duplicate", "unpublish", "attendee",
+  // The check-in desk and analytics (Phase 5c).
+  "ci_", "an_", "analytics_", "avg_fill",
 ] as const;
 
 /** Single keys used by client components. */

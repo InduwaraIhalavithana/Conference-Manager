@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, Ban, CheckCircle2, Copy, ExternalLink, Rocket, Undo2, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Ban, BarChart3, CheckCircle2, ScanLine, Copy, ExternalLink, Rocket, Undo2, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -73,6 +73,18 @@ export function ConferenceEditor({ id }: { id: string }) {
             <Button asChild variant="outline" className="rounded-xl">
               <Link href={`/dashboard/conferences/${c.id}/attendees`}>
                 <Users className="size-4" aria-hidden /> {t("attendees")} · {formatNumber(c.counters.registered + c.counters.waitlisted, locale)}
+              </Link>
+            </Button>
+            {c.status === "PUBLISHED" && !c.ended && (
+              <Button asChild className="rounded-xl">
+                <Link href={`/dashboard/conferences/${c.id}/check-in`}>
+                  <ScanLine className="size-4" aria-hidden /> {t("ci_open_desk")}
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link href={`/dashboard/analytics?conference=${c.id}`}>
+                <BarChart3 className="size-4" aria-hidden /> {t("nav_analytics")}
               </Link>
             </Button>
             {c.status !== "DRAFT" && (

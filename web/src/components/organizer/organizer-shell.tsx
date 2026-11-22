@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, LayoutDashboard, Loader2, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, LayoutDashboard, Loader2, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, createContext, use, useEffect } from "react";
 import { useQuery } from "urql";
@@ -25,6 +25,7 @@ export function useOrganizer(): OrganizerMe {
 const NAV = [
   { href: "/dashboard", key: "nav_my_dashboard", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/conferences", key: "nav_my_conferences", icon: CalendarDays, exact: false },
+  { href: "/dashboard/analytics", key: "nav_analytics", icon: BarChart3, exact: false },
   { href: "/dashboard/settings", key: "nav_settings", icon: Settings, exact: false },
 ] as const;
 

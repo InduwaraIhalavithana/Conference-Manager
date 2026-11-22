@@ -252,3 +252,49 @@ export const SendReminders = graphql(`
     }
   }
 `);
+
+export const CheckIn = graphql(`
+  mutation CheckIn($conferenceId: ID!, $code: String!, $scannedAt: DateTime) {
+    checkIn(conferenceId: $conferenceId, code: $code, scannedAt: $scannedAt) {
+      __typename
+      ... on CheckedIn { attendee { id name checkedInAt } }
+      ... on AlreadyCheckedIn { checkedInAt attendee { id name } }
+      ... on UserError { code }
+    }
+  }
+`);
+
+export const ConferenceAnalyticsQuery = graphql(`
+  query ConferenceAnalytics($conferenceId: ID!) {
+    conferenceAnalytics(conferenceId: $conferenceId) {
+      __typename
+      ... on ConferenceAnalytics {
+        registered
+        confirmed
+        waitlisted
+        checkedIn
+        capacity
+        everConfirmed
+        totalSignups
+        byDay { day registered left waitlisted }
+        arrivals { at count }
+        byStatus { key count }
+        byLanguage { key count }
+      }
+      ... on UserError { code }
+    }
+  }
+`);
+
+export const AnalyticsOverviewQuery = graphql(`
+  query AnalyticsOverview($days: Int!) {
+    analyticsOverview(days: $days) {
+      __typename
+      ... on AnalyticsOverview {
+        byDay { day registered left waitlisted }
+        conferences { id title startsAt capacity registered checkedIn }
+      }
+      ... on UserError { code }
+    }
+  }
+`);

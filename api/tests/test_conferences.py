@@ -392,3 +392,14 @@ async def test_past_conferences_are_listed_latest_first(api: Api, other_api: Api
     rest = await browse(other_api, f={"q": word, "timeframe": "PAST"}, first=2, after=first["pageInfo"]["endCursor"])
     assert slugs(rest) == [made[0]["slug"]]
     assert len(slugs(await browse(other_api, f={"q": word, "timeframe": "ALL"}))) == 3
+
+
+async def test_conference_reports_whether_it_has_ended(api: Api, other_api: Api) -> None:
+    await sign_in_organizer(api)
+    conf = await create_published(api)
+    ended = "query($s: String!) { conference(slug: $s) { ended } }"
+    assert (await other_api.gql(ended, {"s": conf["slug"]}))["data"]["conference"]["ended"] is False
+    await Conference.get_pymongo_collection().update_one(
+        {"slug": conf["slug"]}, {"$set": {"ends_at": datetime.now(UTC) - timedelta(minutes=1)}}
+    )
+    assert (await other_api.gql(ended, {"s": conf["slug"]}))["data"]["conference"]["ended"] is True

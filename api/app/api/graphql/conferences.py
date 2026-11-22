@@ -1,7 +1,7 @@
 """Conference queries and mutations. Thin: rules live in app.services.conferences; this file maps GraphQL
 shapes to service calls and documents back to GraphQL types."""
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from enum import Enum
 from typing import Annotated
 
@@ -213,6 +213,10 @@ class Conference:
     @strawberry.field(description="Seats not yet taken; null when there is no limit.")
     def seats_left(self) -> int | None:
         return None if self.capacity is None else max(0, self.capacity - self.counters.registered)
+
+    @strawberry.field(description="True once the conference's end time has passed (registration is then closed).")
+    def ended(self) -> bool:
+        return self.ends_at < datetime.now(UTC)
 
     @strawberry.field(description="Shortcut for venue.city.")
     def city(self) -> str | None:

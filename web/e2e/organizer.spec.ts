@@ -14,7 +14,8 @@ async function signIn(page: Page, next = "/en/dashboard") {
 }
 
 async function seriousAxeIssues(page: Page): Promise<string[]> {
-  await page.waitForLoadState("networkidle");
+  // "load", not "networkidle": the notification bell keeps checking in the background.
+  await page.waitForLoadState("load");
   // Let entrance animations finish so colours are measured at full opacity (looping ones never end).
   await page.evaluate(() =>
     Promise.all(
@@ -69,6 +70,9 @@ test.describe("sign-in pages", () => {
 test.describe("organizer area", () => {
   test.skip(!PASSWORD, "Set E2E_ORGANIZER_PASSWORD (see scripts/e2e_account.py)");
 
+  // Several pages and accessibility scans each: slower than one page on a CI machine.
+  test.slow();
+
   test("an organizer signs in, updates their profile and signs out", async ({ page }) => {
     await signIn(page, "/en/dashboard/settings");
     await expect(page).toHaveURL(/\/en\/dashboard\/settings$/);
@@ -85,20 +89,22 @@ test.describe("organizer area", () => {
     await expect(page.getByText(organization).first()).toBeVisible();
     expect(await seriousAxeIssues(page)).toEqual([]);
 
-    // Both private pages in the light theme too.
-    await page.evaluate(() => localStorage.setItem("cm_theme", "light"));
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
+    await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
+    await page.goto("/en/dashboard");
+    await expect(page).toHaveURL(/\/en\/login/);
+  });
+
+  test("the organizer pages have no serious accessibility problems in the light theme", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("cm_theme", "light"));
+    await signIn(page);
+    await expect(page).toHaveURL(/\/en\/dashboard$/);
     for (const path of ["/en/dashboard", "/en/dashboard/settings"]) {
       await page.goto(path);
       await expect(page.locator("html")).not.toHaveClass(/dark/);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       expect(await seriousAxeIssues(page)).toEqual([]);
     }
-    await page.goto("/en/dashboard");
-
-    await page.getByRole("button", { name: "Account menu" }).click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
-    await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
-    await page.goto("/en/dashboard");
-    await expect(page).toHaveURL(/\/en\/login/);
   });
 });

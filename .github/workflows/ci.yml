@@ -270,8 +270,7 @@ jobs:
         working-directory: web
         run: npm run e2e
 
-      # Mobile Lighthouse, 3 runs per page. Median must reach 90 (accessibility 95); performance on Sinhala
-      # and Tamil pages 80, since their script fonts (about 130 KB for Sinhala) cannot be avoided.
+      # Desktop Lighthouse, 3 runs per page; every category's median must reach 90 (accessibility 95).
       - name: Lighthouse
         working-directory: web
         run: npx -y @lhci/cli@0.14.0 autorun

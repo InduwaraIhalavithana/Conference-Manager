@@ -1,4 +1,4 @@
-"""The three cookies v3 uses. Tokens live only in httpOnly cookies, so page scripts can never read them."""
+"""The cookies v3 uses. Tokens live only in httpOnly cookies, so page scripts can never read them."""
 
 import secrets
 from datetime import UTC, datetime
@@ -13,6 +13,9 @@ REFRESH = "cm_refresh"
 # Readable by the web app, which copies it into the X-CSRF-Token header on every mutation (double submit).
 CSRF = "cm_csrf"
 CSRF_HEADER = "x-csrf-token"
+# Not a secret: "organizer" or "admin", readable by page scripts so the header can show the account menu (or
+# "Sign in") without asking the API on every page. It grants nothing; the httpOnly tokens do.
+WHO = "cm_who"
 
 
 def _max_age(expires_at: datetime) -> int:
@@ -20,7 +23,13 @@ def _max_age(expires_at: datetime) -> int:
 
 
 def set_session(
-    response: Response, *, access: str, access_expires: datetime, refresh: str, refresh_expires: datetime
+    response: Response,
+    *,
+    access: str,
+    access_expires: datetime,
+    refresh: str,
+    refresh_expires: datetime,
+    who: str,
 ) -> None:
     secure = get_settings().cookie_secure
     response.set_cookie(
@@ -29,12 +38,16 @@ def set_session(
     response.set_cookie(
         REFRESH, refresh, max_age=_max_age(refresh_expires), httponly=True, secure=secure, samesite="lax", path="/"
     )
+    response.set_cookie(
+        WHO, who, max_age=_max_age(refresh_expires), httponly=False, secure=secure, samesite="lax", path="/"
+    )
 
 
 def clear_session(response: Response) -> None:
     secure = get_settings().cookie_secure
     for name in (ACCESS, REFRESH):
         response.delete_cookie(name, httponly=True, secure=secure, samesite="lax", path="/")
+    response.delete_cookie(WHO, httponly=False, secure=secure, samesite="lax", path="/")
 
 
 def ensure_csrf(request: Request, response: Response) -> str:

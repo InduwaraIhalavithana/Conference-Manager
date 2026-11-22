@@ -33,6 +33,13 @@ class UserError:
         )
 
 
+@strawberry.type(description="Text in the three app languages (English always present).")
+class ProfileBio:
+    en: str
+    si: str | None
+    ta: str | None
+
+
 @strawberry.type
 class Organizer:
     id: strawberry.ID
@@ -41,6 +48,8 @@ class Organizer:
     email: str
     phone: str | None
     organization: str | None
+    bio: ProfileBio | None
+    avatar_url: str | None
     lang: str
     email_verified: bool
     created_at: datetime
@@ -54,6 +63,8 @@ class Organizer:
             email=doc.email,
             phone=doc.phone,
             organization=doc.organization,
+            bio=ProfileBio(en=doc.bio.en, si=doc.bio.si, ta=doc.bio.ta) if doc.bio else None,
+            avatar_url=doc.avatar_url,
             lang=doc.lang,
             email_verified=doc.email_verified_at is not None,
             created_at=doc.created_at,

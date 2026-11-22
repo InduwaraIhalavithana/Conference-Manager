@@ -19,11 +19,12 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.core.errors import DomainError, ErrorCode
 from app.core.settings import get_settings
+from app.repositories import accounts as account_repo
 from app.repositories import conferences as conference_repo
 from app.services import ratelimit
 from app.services.auth import Viewer
 
-Kind = Literal["cover", "speaker"]
+Kind = Literal["cover", "speaker", "avatar"]
 PUBLIC_PREFIX = "/uploads"
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 _NAME = re.compile(r"^[0-9a-f]{32}\.webp$")
@@ -41,7 +42,11 @@ class KindRule:
 RULES: dict[Kind, KindRule] = {
     "cover": KindRule("covers", 5 * 1024 * 1024, (1600, 900), square=False),
     "speaker": KindRule("speakers", 2 * 1024 * 1024, (400, 400), square=True),
+    "avatar": KindRule("avatars", 2 * 1024 * 1024, (400, 400), square=True),
 }
+
+
+_KINDS: dict[str, Kind] = {"cover": "cover", "speaker": "speaker", "avatar": "avatar"}
 
 
 def upload_root() -> Path:
@@ -129,9 +134,9 @@ async def upload(viewer: Viewer | None, kind: str, content_type: str | None, dat
         raise DomainError(ErrorCode.NOT_AUTHENTICATED, "Sign in first")
     if viewer.organizer is None:
         raise DomainError(ErrorCode.FORBIDDEN, "Only organizers can upload images")
-    if kind != "cover" and kind != "speaker":
+    checked = _KINDS.get(kind)
+    if checked is None:
         raise DomainError(ErrorCode.VALIDATION, "Unknown image kind", field="kind")
-    checked: Kind = "cover" if kind == "cover" else "speaker"
     await ratelimit.enforce(ratelimit.UPLOAD, str(viewer.subject.id))
     return await save_image(checked, content_type, data)
 
@@ -141,7 +146,7 @@ def max_bytes() -> int:
 
 
 async def delete_unused_before(cutoff: datetime) -> int:
-    """Delete stored images older than `cutoff` that no conference uses."""
+    """Delete stored images older than `cutoff` that no conference or profile uses."""
     deleted = 0
     root = ensure_dirs()
     for rule in RULES.values():
@@ -150,7 +155,12 @@ async def delete_unused_before(cutoff: datetime) -> int:
                 continue
             modified = datetime.fromtimestamp(path.stat().st_mtime, UTC)
             url = f"{PUBLIC_PREFIX}/{rule.folder}/{path.name}"
-            if modified < cutoff and not await conference_repo.file_still_used(url):
+            in_use = (
+                await account_repo.avatar_in_use(url)
+                if rule.folder == RULES["avatar"].folder
+                else await conference_repo.file_still_used(url)
+            )
+            if modified < cutoff and not in_use:
                 path.unlink(missing_ok=True)
                 deleted += 1
     return deleted

@@ -65,7 +65,7 @@ async def test_uploads_are_refused_when_not_allowed(api: Api, other_api: Api) ->
     assert (await upload(api, "cover", b"<script>alert(1)</script>", "image/png"))[1]["code"] == "file_not_image"
     too_big = await upload(api, "speaker", image_bytes("BMP", (1100, 1100)), "image/png")
     assert too_big[0] == 413 and too_big[1]["maxMb"] == 2
-    assert (await upload(api, "avatar", image_bytes()))[1]["code"] == "validation"
+    assert (await upload(api, "banner", image_bytes()))[1]["code"] == "validation"
 
     admin = "mutation($e: String!, $p: String!) { adminLogin(email: $e, password: $p) { __typename } }"
     await other_api.gql(admin, {"e": "admin", "p": ADMIN_PASSWORD})

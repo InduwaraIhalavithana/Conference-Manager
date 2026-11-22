@@ -78,6 +78,12 @@ union AttendeesResult = AttendeeConnection | UserError
 
 union AuthResult = SignedIn | UserError
 
+input BioInput {
+  en: String = null
+  si: String = null
+  ta: String = null
+}
+
 enum Category {
   TECH
   HEALTH
@@ -298,6 +304,11 @@ type GeoLocation {
   longitude: Float!
 }
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
 enum Lang {
   EN
   SI
@@ -317,6 +328,17 @@ input LocalizedTextInput {
 }
 
 type Mutation {
+  """Update the signed-in organizer's profile."""
+  updateProfile(input: ProfileInput!): ProfileResult!
+
+  """Sign out every other device; this one stays signed in."""
+  signOutOtherDevices: DoneResult!
+
+  """
+  Mark notifications read: the given ids, or all of them when `ids` is left out.
+  """
+  markNotificationsRead(ids: [ID!] = null): UnreadCountResult!
+
   """The public contact form (5 messages per 10 minutes per address)."""
   sendContactMessage(input: ContactInput!): DoneResult!
 
@@ -431,6 +453,27 @@ input NearInput {
   radiusKm: Float! = 25
 }
 
+"""
+Translated in the web app from `kind` and `params`, so it reads in the viewer's language.
+"""
+type Notification {
+  id: ID!
+  kind: String!
+  params: JSON!
+  link: String
+  read: Boolean!
+  createdAt: DateTime!
+}
+
+type NotificationPage {
+  items: [Notification!]!
+  hasNextPage: Boolean!
+  endCursor: String
+  unread: Int!
+}
+
+union NotificationPageResult = NotificationPage | UserError
+
 type Organizer {
   id: ID!
   firstName: String!
@@ -438,6 +481,8 @@ type Organizer {
   email: String!
   phone: String
   organization: String
+  bio: ProfileBio
+  avatarUrl: String
   lang: String!
   emailVerified: Boolean!
   createdAt: DateTime!
@@ -465,7 +510,32 @@ type PlatformStats {
   registrationsThisWeek: Int!
 }
 
+"""Text in the three app languages (English always present)."""
+type ProfileBio {
+  en: String!
+  si: String
+  ta: String
+}
+
+input ProfileInput {
+  firstName: String!
+  lastName: String!
+  phone: String = null
+  organization: String = null
+  bio: BioInput = null
+  avatarUrl: String = null
+  lang: String! = "en"
+}
+
+union ProfileResult = Organizer | UserError
+
 type Query {
+  """The signed-in person's notifications, newest first."""
+  notifications(first: Int! = 30, after: String = null): NotificationPageResult!
+
+  """How many notifications are unread (for the bell in the header)."""
+  unreadNotifications: UnreadCountResult!
+
   """Platform-wide numbers, refreshed every minute."""
   platformStats: PlatformStats!
 
@@ -620,6 +690,12 @@ input TrackInput {
 }
 
 union TrackResult = Track | UserError
+
+type UnreadCount {
+  unread: Int!
+}
+
+union UnreadCountResult = UnreadCount | UserError
 
 """Something the user can fix or retry, returned instead of a result."""
 type UserError {

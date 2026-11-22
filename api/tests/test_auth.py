@@ -6,7 +6,7 @@ from app.core.passwords import hash_password
 from app.core.tokens import hash_link_token
 from app.models import ActivityLog, Admin, AuthSession, Notification, Organizer, PasswordReset
 from app.repositories import accounts
-from tests.conftest import ADMIN_PASSWORD, OUTBOX, Api, unique_email
+from tests.conftest import ADMIN_PASSWORD, OUTBOX, Api, sign_in_organizer, unique_email
 
 REGISTER = """
 mutation($input: RegisterInput!) {
@@ -95,6 +95,16 @@ async def test_session_cookies_are_httponly_and_lax(api: Api) -> None:
     for name in ("cm_access", "cm_refresh"):
         line = next(c for c in set_cookies if c.startswith(f"{name}="))
         assert "HttpOnly" in line and "SameSite=lax" in line and "Path=/" in line
+    # The page-readable hint says only who is signed in; it carries no token.
+    who = next(c for c in set_cookies if c.startswith("cm_who="))
+    assert who.startswith("cm_who=organizer;") and "HttpOnly" not in who
+
+
+async def test_signing_out_clears_the_who_cookie(api: Api) -> None:
+    await sign_in_organizer(api)
+    assert api.http.cookies.get("cm_who") == "organizer"
+    await api.gql("mutation { logout { ok } }")
+    assert api.http.cookies.get("cm_who") is None and api.http.cookies.get("cm_access") is None
 
 
 async def test_register_rejects_a_taken_email_and_bad_input(api: Api) -> None:

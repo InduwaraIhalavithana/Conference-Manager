@@ -13,6 +13,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, cache } from "react";
 
@@ -26,6 +27,7 @@ import type { Locale } from "@/i18n/routing";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/categories";
 import { formatDate, formatNumber, localized } from "@/lib/format";
 import { query } from "@/lib/graphql/server";
+import { alternates } from "@/lib/seo";
 
 const HomeData = graphql(`
   query HomeData {
@@ -48,6 +50,11 @@ const HomeData = graphql(`
 
 // One request for the whole page, shared by every section below (React's per-request memoization).
 const homeData = cache(() => query(HomeData));
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = (await getLocale()) as Locale;
+  return { alternates: alternates(locale, "/") };
+}
 
 export default async function HomePage() {
   const t = await getTranslations();

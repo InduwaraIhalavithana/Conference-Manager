@@ -118,12 +118,12 @@ export function dateBadge(iso: string, locale: Locale, timeZone = DEFAULT_TZ): {
   return { month: NAMES[locale].monthsShort[p.month], day: p.day };
 }
 
-/** A date range: one date for one-day events, otherwise "12 Feb – 13 Feb 2027" style. */
+/** A date range: one date for one-day events, otherwise "12 Feb – 13 Feb 2027" (both years when they differ). */
 export function formatRange(startIso: string, endIso: string, locale: Locale, timeZone = DEFAULT_TZ): string {
   const a = partsIn(startIso, timeZone);
   const b = partsIn(endIso, timeZone);
   if (a.year === b.year && a.month === b.month && a.day === b.day) return render(a, locale, "medium");
-  return `${render(a, locale, "month-day")} – ${render(b, locale, "short")}`;
+  return `${render(a, locale, a.year === b.year ? "month-day" : "short")} – ${render(b, locale, "short")}`;
 }
 
 export function formatNumber(n: number, locale: Locale): string {

@@ -1,8 +1,14 @@
-"""Public numbers for the home page."""
+"""Public numbers for the home page, and the contact form."""
+
+from enum import Enum
 
 import strawberry
+from strawberry.types import Info
 
 from app.api.graphql.conferences import Category
+from app.api.graphql.context import Context
+from app.api.graphql.types import Done, DoneResult, guarded
+from app.services import contact
 from app.services import stats as service
 
 
@@ -53,3 +59,33 @@ class StatsQuery:
     @strawberry.field(description="Cities with upcoming conferences, most first.")
     async def upcoming_cities(self, first: int = 12) -> list[CityCount]:
         return [CityCount(city=c, count=n) for c, n in await service.upcoming_cities(first)]
+
+
+@strawberry.enum
+class ContactTopic(Enum):
+    GENERAL = "general"
+    ATTENDING = "attending"
+    ORGANIZING = "organizing"
+    TECHNICAL = "technical"
+    PARTNERSHIP = "partnership"
+
+
+@strawberry.input
+class ContactInput:
+    name: str
+    email: str
+    message: str
+    topic: ContactTopic = ContactTopic.GENERAL
+
+
+@strawberry.type
+class PublicMutation:
+    @strawberry.mutation(description="The public contact form (5 messages per 10 minutes per address).")
+    async def send_contact_message(self, info: Info[Context, None], input: ContactInput) -> DoneResult:
+        async def run() -> Done:
+            await contact.send(
+                info.context.ip, name=input.name, email=input.email, topic=input.topic.value, message=input.message
+            )
+            return Done()
+
+        return await guarded(run)

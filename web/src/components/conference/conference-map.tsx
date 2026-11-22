@@ -45,7 +45,7 @@ export default function ConferenceMap({ conferences }: { conferences: BrowseItem
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {placed.map((c) => (
-          <Marker key={c.id} position={[c.venue.location!.latitude, c.venue.location!.longitude]} icon={pin}>
+          <Marker key={c.id} position={[c.venue.location!.latitude, c.venue.location!.longitude]} icon={pin} title={localized(c.title, locale)} alt={localized(c.title, locale)}>
             <Popup>
               <div className="space-y-1">
                 <Link href={`/c/${c.slug}`} className="font-bold">

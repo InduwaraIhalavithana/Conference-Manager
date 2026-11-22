@@ -13,6 +13,7 @@ import type { Locale } from "@/i18n/routing";
 import { CATEGORIES } from "@/lib/categories";
 import { formatDate, formatRange, formatTime, localized } from "@/lib/format";
 import { query } from "@/lib/graphql/server";
+import { alternates } from "@/lib/seo";
 
 const ConferencePageQuery = graphql(`
   query ConferencePage($slug: String!) {
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/c/[slug]
   if (!conference) return {};
   const title = localized(conference.title, locale);
   const description = localized(conference.summary, locale) || title;
-  return { title, description, openGraph: { title, description, type: "website" } };
+  return { title, description, alternates: alternates(locale, `/c/${slug}`), openGraph: { title, description, type: "website", siteName: "ConferenceHub" } };
 }
 
 export default function ConferencePage({ params }: PageProps<"/[locale]/c/[slug]">) {

@@ -10,25 +10,30 @@ import { Providers } from "@/components/providers";
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
 import { routing } from "@/i18n/routing";
+import { SITE_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const sinhala = Noto_Sans_Sinhala({ subsets: ["sinhala"], variable: "--font-sinhala", display: "swap" });
 const tamil = Noto_Sans_Tamil({ subsets: ["tamil"], variable: "--font-tamil", display: "swap" });
 
-const SITE_URL = process.env.SITE_URL ?? "http://localhost:3100";
-
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+const OG_LOCALE = { en: "en_LK", si: "si_LK", ta: "ta_LK" } as const;
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
+  const locale = (await getLocale()) as keyof typeof OG_LOCALE;
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: "ConferenceHub", template: "%s · ConferenceHub" },
     description: t("home_meta_description"),
+    applicationName: "ConferenceHub",
     icons: { icon: "/logo.svg", apple: "/apple-touch-icon.png" },
+    openGraph: { siteName: "ConferenceHub", locale: OG_LOCALE[locale], type: "website" },
+    twitter: { card: "summary_large_image" },
   };
 }
 

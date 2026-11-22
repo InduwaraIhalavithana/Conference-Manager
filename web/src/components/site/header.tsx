@@ -19,7 +19,7 @@ export function Header() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={32} height={32} className="size-8 rounded-lg" />
           <span className="text-lg">
-            Conference<span className="text-brand">Hub</span>
+            Conference<span className="text-primary">Hub</span>
           </span>
         </Link>
         <div className="flex-1" />

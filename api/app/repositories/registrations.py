@@ -209,9 +209,11 @@ async def counts_by_status(conference_id: PydanticObjectId) -> dict[str, int]:
     return {k: int(row.get(k, 0)) for k in ("registered", "confirmed", "waitlisted", "checked_in")}
 
 
-async def record_check_in(conference_id: PydanticObjectId, registration_id: PydanticObjectId, gate: str) -> None:
+async def record_check_in(
+    conference_id: PydanticObjectId, registration_id: PydanticObjectId, gate: str, at: datetime | None = None
+) -> None:
     await CheckInEvent(
-        meta=CheckInMeta(conference_id=conference_id, gate=gate), registration_id=registration_id
+        at=at or utcnow(), meta=CheckInMeta(conference_id=conference_id, gate=gate), registration_id=registration_id
     ).insert()
 
 

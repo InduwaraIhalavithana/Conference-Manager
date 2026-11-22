@@ -1,14 +1,16 @@
 """The few REST endpoints: health, the CSRF token, image uploads, calendar files and the attendee CSV."""
 
+import json
+from collections.abc import AsyncIterator
 from typing import Any
 
 from fastapi import APIRouter, Request, Response, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.responses import Response as RawResponse
 
 from app.api import cookies
 from app.core.errors import DomainError, ErrorCode
-from app.services import exports, uploads
+from app.services import exports, live, uploads
 from app.services import health as health_service
 from app.services.auth import resolve_viewer
 
@@ -90,4 +92,30 @@ async def attendees_csv(request: Request, conference_id: str) -> RawResponse | J
         body,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store"},
+    )
+
+
+@router.get("/conferences/{conference_id}/live", response_model=None)
+async def live_checkins(request: Request, conference_id: str) -> StreamingResponse | JSONResponse:
+    """Server-sent events for the conference's owner: current check-in numbers, then one event per check-in or
+    undo, and a ping every 20 seconds. Used by the check-in desk; other desks' scans show up within a moment."""
+    try:
+        viewer = await resolve_viewer(request.cookies.get(cookies.ACCESS))
+        first = await live.snapshot(viewer, conference_id)
+    except DomainError as err:
+        return _error(err)
+
+    async def stream() -> AsyncIterator[str]:
+        yield "retry: 3000\n\n"
+        yield f"data: {json.dumps(first)}\n\n"
+        async for event in live.events(conference_id):
+            if await request.is_disconnected():
+                break
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        # No buffering anywhere on the way (Next.js proxy, nginx), so each event arrives at once.
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )

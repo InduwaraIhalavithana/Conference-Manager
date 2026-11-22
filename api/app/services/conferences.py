@@ -208,6 +208,9 @@ def _require_organizer(viewer: Viewer | None) -> PydanticObjectId:
     return organizer.id
 
 
+require_organizer = _require_organizer  # shared with the analytics service
+
+
 async def _owned(viewer: Viewer | None, conference_id: str) -> Conference:
     """The viewer's own conference. Someone else's looks exactly like a missing one (no existence leak)."""
     owner_id = _require_organizer(viewer)

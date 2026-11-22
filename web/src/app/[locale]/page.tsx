@@ -294,7 +294,7 @@ async function Topics() {
           >
             <Icon className="size-6" aria-hidden />
             <span className="font-semibold text-foreground">{t(style.label)}</span>
-            <span className="text-sm opacity-80">{formatNumber(counts.get(category) ?? 0, locale)}</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(counts.get(category) ?? 0, locale)}</span>
           </Link>
         );
       })}

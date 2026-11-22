@@ -33,6 +33,13 @@ type AlreadyRegistered {
   email: String!
 }
 
+type AnalyticsOverview {
+  byDay: [DayCount!]!
+  conferences: [ConferenceFill!]!
+}
+
+union AnalyticsOverviewResult = AnalyticsOverview | UserError
+
 """An attendee as the conference's organizer sees them."""
 type Attendee {
   id: ID!
@@ -162,6 +169,26 @@ type Conference {
   organizer: OrganizerSummary
 }
 
+type ConferenceAnalytics {
+  byDay: [DayCount!]!
+  arrivals: [SlotCount!]!
+  byStatus: [KeyCount!]!
+  byLanguage: [KeyCount!]!
+  registered: Int!
+  confirmed: Int!
+  waitlisted: Int!
+  checkedIn: Int!
+  capacity: Int
+
+  """Registrations that entered their email code, ever."""
+  everConfirmed: Int!
+
+  """Every registration, including cancelled and released ones."""
+  totalSignups: Int!
+}
+
+union ConferenceAnalyticsResult = ConferenceAnalytics | UserError
+
 type ConferenceConnection {
   edges: [ConferenceEdge!]!
   pageInfo: PageInfo!
@@ -175,6 +202,15 @@ type ConferenceDay {
 type ConferenceEdge {
   cursor: String!
   node: Conference!
+}
+
+type ConferenceFill {
+  id: ID!
+  title: String!
+  startsAt: DateTime!
+  capacity: Int
+  registered: Int!
+  checkedIn: Int!
 }
 
 input ConferenceFilter {
@@ -261,6 +297,16 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+"""
+Sign-ups on one day (in the conference's time zone): how many, and how many later left.
+"""
+type DayCount {
+  day: String!
+  registered: Int!
+  left: Int!
+  waitlisted: Int!
+}
+
 type Done {
   ok: Boolean!
 }
@@ -311,6 +357,11 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 """
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
+type KeyCount {
+  key: String!
+  count: Int!
+}
+
 enum Lang {
   EN
   SI
@@ -356,8 +407,10 @@ type Mutation {
   """Cancel by ticket code; the seat goes to the next confirmed waitlister."""
   cancelRegistration(ticketCode: String!): TicketResult!
 
-  """Check someone in by the code on their ticket (QR or typed)."""
-  checkIn(conferenceId: ID!, code: String!, gate: String! = "main"): CheckInResult!
+  """
+  Check someone in by the code on their ticket (QR or typed). An offline desk sends `scannedAt` when it syncs (ignored if in the future or over a day old).
+  """
+  checkIn(conferenceId: ID!, code: String!, gate: String! = "main", scannedAt: DateTime = null): CheckInResult!
   undoCheckIn(conferenceId: ID!, attendeeId: ID!): AttendeeResult!
 
   """
@@ -532,6 +585,16 @@ input ProfileInput {
 union ProfileResult = Organizer | UserError
 
 type Query {
+  """
+  Registrations over time, arrivals, and breakdowns for one of your conferences.
+  """
+  conferenceAnalytics(conferenceId: ID!): ConferenceAnalyticsResult!
+
+  """
+  Sign-ups per day over the last `days` across your conferences, and how full each one is.
+  """
+  analyticsOverview(days: Int! = 30): AnalyticsOverviewResult!
+
   """The signed-in person's notifications, newest first."""
   notifications(first: Int! = 30, after: String = null): NotificationPageResult!
 
@@ -633,6 +696,14 @@ union SessionResult = AgendaSession | UserError
 type SignedIn {
   viewer: Viewer!
   accessExpiresAt: DateTime!
+}
+
+"""
+Net arrivals (check-ins minus undone ones) in a 15-minute slot starting at `at`.
+"""
+type SlotCount {
+  at: DateTime!
+  count: Int!
 }
 
 type Speaker {

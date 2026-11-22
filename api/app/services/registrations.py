@@ -24,7 +24,7 @@ from app.models import ActorRef, Conference, Registration
 from app.models.common import Lang, utcnow
 from app.models.registration import RegistrationStatus
 from app.repositories import conferences as conference_repo
-from app.repositories import messages, unit_of_work
+from app.repositories import live, messages, unit_of_work
 from app.repositories import registrations as repo
 from app.repositories.unit_of_work import Rollback, Session
 from app.services import email, ratelimit
@@ -457,6 +457,9 @@ async def _owned_conference(viewer: Viewer | None, conference_id: str) -> Confer
     return conference
 
 
+owned_conference = _owned_conference  # shared with the live and analytics services
+
+
 async def attendees(
     viewer: Viewer | None,
     conference_id: str,
@@ -486,7 +489,42 @@ async def _registration_in(conference: Conference, registration_id: str) -> Regi
     return registration
 
 
-async def check_in(viewer: Viewer | None, conference_id: str, code: str, gate: str = "main") -> CheckInOutcome:
+OFFLINE_SCAN_WINDOW = timedelta(hours=24)
+
+
+def _scan_time(scanned_at: datetime | None) -> datetime:
+    """When the desk scanned the ticket. Offline desks send the original time when they sync; anything in the
+    future or older than a day is ignored (clock trouble), and the server time is used instead."""
+    now = utcnow()
+    if scanned_at is None:
+        return now
+    at = scanned_at if scanned_at.tzinfo else scanned_at.replace(tzinfo=UTC)
+    return at if now - OFFLINE_SCAN_WINDOW <= at <= now + timedelta(minutes=1) else now
+
+
+async def _publish_counts(conference_id: PydanticObjectId, event: dict[str, object]) -> None:
+    """Tells every open check-in desk and dashboard for this conference (live updates; best effort)."""
+    fresh = await conference_repo.by_id(conference_id)
+    if fresh is None:
+        return
+    counters = fresh.counters
+    try:
+        await live.publish(
+            conference_id,
+            {
+                **event,
+                "checkedIn": counters.checked_in,
+                "confirmed": counters.confirmed,
+                "registered": counters.registered,
+            },
+        )
+    except Exception:  # noqa: BLE001 - a lost live update never fails a check-in
+        log.warning("live update not sent", conference_id=str(conference_id))
+
+
+async def check_in(
+    viewer: Viewer | None, conference_id: str, code: str, gate: str = "main", scanned_at: datetime | None = None
+) -> CheckInOutcome:
     conference = await _owned_conference(viewer, conference_id)
     assert viewer is not None and conference.id is not None
     await ratelimit.enforce(CHECK_IN, str(viewer.subject.id))
@@ -502,9 +540,10 @@ async def check_in(viewer: Viewer | None, conference_id: str, code: str, gate: s
     if registration.checked_in_at is not None:
         return CheckInOutcome(registration=registration, already=True)
     assert registration.id is not None
+    at = _scan_time(scanned_at)
     marked = await repo.set_fields(
         registration.id,
-        {"checked_in_at": utcnow(), "checked_in_by": viewer.subject.id},
+        {"checked_in_at": at, "checked_in_by": viewer.subject.id},
         expect={"checked_in_at": None, "status": "registered"},
     )
     fresh = await repo.by_id(registration.id)
@@ -512,7 +551,8 @@ async def check_in(viewer: Viewer | None, conference_id: str, code: str, gate: s
     if not marked:
         return CheckInOutcome(registration=fresh, already=True)
     await repo.bump(conference.id, checked_in=1)
-    await repo.record_check_in(conference.id, registration.id, gate[:40] or "main")
+    await repo.record_check_in(conference.id, registration.id, gate[:40] or "main", at)
+    await _publish_counts(conference.id, {"type": "checked_in", "name": fresh.name, "at": at.isoformat()})
     return CheckInOutcome(registration=fresh, already=False)
 
 
@@ -525,6 +565,7 @@ async def undo_check_in(viewer: Viewer | None, conference_id: str, registration_
     ):
         await repo.bump(conference.id, checked_in=-1)
         await repo.record_undo(conference.id, registration.id, "main")
+        await _publish_counts(conference.id, {"type": "undone", "name": registration.name})
     fresh = await repo.by_id(registration.id)
     assert fresh is not None
     return fresh

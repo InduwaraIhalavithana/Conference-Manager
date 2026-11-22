@@ -43,6 +43,7 @@ export function CheckinDesk({ id }: { id: string }) {
   const [code, setCode] = useState("");
   const lastScan = useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const busy = useRef(false);
+  const [sending, setSending] = useState(false);
 
   const conf = data?.myConference.__typename === "Conference" ? data.myConference : null;
   const timezone = conf?.timezone;
@@ -143,18 +144,22 @@ export function CheckinDesk({ id }: { id: string }) {
     return () => source.close();
   }, [id]);
 
+  /** Handles one scanned or typed code; false when it was ignored (a check still running, or the same QR again). */
   const onCode = useCallback(
-    async (raw: string) => {
+    async (raw: string): Promise<boolean> => {
       const ticket = ticketCodeFrom(raw);
       const now = Date.now();
-      if (busy.current || (ticket === lastScan.current.code && now - lastScan.current.at < SAME_CODE_MS)) return;
+      if (busy.current || (ticket === lastScan.current.code && now - lastScan.current.at < SAME_CODE_MS)) return false;
       lastScan.current = { code: ticket, at: now };
       busy.current = true;
+      setSending(true);
       try {
         await submit(ticket);
       } finally {
         busy.current = false;
+        setSending(false);
       }
+      return true;
     },
     [submit],
   );
@@ -162,8 +167,8 @@ export function CheckinDesk({ id }: { id: string }) {
   async function typed(event: FormEvent) {
     event.preventDefault();
     lastScan.current = { code: "", at: 0 };
-    await onCode(code);
-    setCode("");
+    // Keep what was typed if it could not be sent yet, so a code typed during another check is never lost.
+    if (await onCode(code)) setCode("");
   }
 
   if (data?.myConference.__typename === "UserError") {
@@ -219,7 +224,7 @@ export function CheckinDesk({ id }: { id: string }) {
                 className="h-12 font-mono text-lg tracking-widest"
                 disabled={Boolean(notOpen)}
               />
-              <Button type="submit" className="h-12 rounded-xl px-5" disabled={!code.trim() || Boolean(notOpen)}>
+              <Button type="submit" className="h-12 rounded-xl px-5" disabled={!code.trim() || sending || Boolean(notOpen)}>
                 <Keyboard className="size-4" aria-hidden /> {t("check_in")}
               </Button>
             </div>

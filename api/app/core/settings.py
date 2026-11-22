@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PLACEHOLDERS = {"change-me", "replace-with-a-long-random-string-at-least-32-chars", "choose-a-strong-password"}
@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     verify_code_minutes: int = 15
     password_reset_hours: int = 2
+    # Multiplies every rate limit. Only for the end-to-end tests, which sign in far more than 10 times a minute
+    # from one address; refused in production, where the real limits always apply.
+    rate_limit_scale: int = Field(default=1, ge=1, le=100)
 
     # The admin account is created once, on first start, from these two values. The password is never logged.
     admin_email: str = "admin@example.com"
@@ -71,6 +74,8 @@ class Settings(BaseSettings):
     def production_is_locked_down(self) -> "Settings":
         if self.environment == "production" and not self.cookie_secure:
             raise ValueError("COOKIE_SECURE must be true in production")
+        if self.environment == "production" and self.rate_limit_scale != 1:
+            raise ValueError("RATE_LIMIT_SCALE is for tests only and must stay 1 in production")
         return self
 
     @property

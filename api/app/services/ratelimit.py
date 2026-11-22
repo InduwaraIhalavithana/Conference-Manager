@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from app.core.errors import DomainError, ErrorCode
+from app.core.settings import get_settings
 from app.repositories import ratelimits
 
 
@@ -27,7 +28,8 @@ UPLOAD = Limit("upload", 30)
 
 async def enforce(limit: Limit, ident: str) -> None:
     count, reset_in = await ratelimits.hit(limit.name, ident, limit.window_seconds)
-    if count > limit.requests:
+    # RATE_LIMIT_SCALE (end-to-end tests only; always 1 in production) multiplies the allowance.
+    if count > limit.requests * get_settings().rate_limit_scale:
         raise DomainError(
             ErrorCode.RATE_LIMITED, "Too many attempts: wait a moment and try again", retry_after=reset_in
         )

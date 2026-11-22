@@ -68,7 +68,8 @@ test.describe("check-in desk and analytics", () => {
 
     await field.fill("NOSUCHTICKET");
     await field.press("Enter");
-    await expect(page.getByRole("status").filter({ hasText: "Ticket not accepted" })).toBeVisible();
+    // Wait for this code's own answer: the previous refusal is still on screen and would match too early.
+    await expect(page.getByRole("status").filter({ hasText: "could not be found" })).toBeVisible();
 
     // Offline: the scan waits on the device, then goes through when the connection is back.
     await context.setOffline(true);

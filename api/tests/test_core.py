@@ -88,3 +88,14 @@ def test_resend_waits_a_minute() -> None:
     earlier = stored.model_copy(update={"sent_at": datetime.now(UTC) - timedelta(seconds=61)})
     assert codes.resend_wait(earlier) == 0
     assert codes.resend_wait(None) == 0
+
+
+def test_rate_limit_scale_is_refused_in_production() -> None:
+    from pydantic import ValidationError
+
+    from app.core.settings import Settings
+
+    base = {"secret_key": "a-long-enough-secret-key-for-tests-123", "cookie_secure": True, "environment": "production"}
+    assert Settings(**base).rate_limit_scale == 1  # type: ignore[arg-type]
+    with pytest.raises(ValidationError, match="RATE_LIMIT_SCALE"):
+        Settings(**base, rate_limit_scale=10)  # type: ignore[arg-type]

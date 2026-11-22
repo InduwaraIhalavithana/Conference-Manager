@@ -76,12 +76,9 @@ async def test_suspending_hides_conferences_until_restored(api: Api, other_api: 
     assert (await Conference.get(shown["id"])).hidden is False  # type: ignore[union-attr]
     # The one hidden by hand stays hidden: restoring only undoes what the suspension did.
     assert (await Conference.get(by_hand["id"])).hidden is True  # type: ignore[union-attr]
-    assert (
-        await Notification.find_one(
-            {"kind": "account_restored", "recipient.id": (await Conference.get(shown["id"])).organizer_id}
-        )
-        is not None
-    )  # type: ignore[union-attr]
+    owner = await Conference.get(shown["id"])
+    assert owner is not None
+    assert await Notification.find_one({"kind": "account_restored", "recipient.id": owner.organizer_id}) is not None
     assert await Notification.find_one({"kind": "conference_removed"}) is not None
 
 

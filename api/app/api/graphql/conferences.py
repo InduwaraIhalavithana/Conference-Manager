@@ -48,6 +48,13 @@ class ConferenceStatus(Enum):
     ARCHIVED = "archived"
 
 
+@strawberry.enum(description="Which conferences to list when no date range is given.")
+class Timeframe(Enum):
+    UPCOMING = "upcoming"
+    PAST = "past"
+    ALL = "all"
+
+
 @strawberry.enum
 class Lang(Enum):
     EN = "en"
@@ -388,6 +395,7 @@ class ConferenceFilter:
     near: NearInput | None = None
     starts_from: datetime | None = None
     starts_to: datetime | None = None
+    timeframe: Timeframe = Timeframe.UPCOMING
 
 
 # ── Queries ──────────────────────────────────────────────────────────────────────────────────────────
@@ -411,6 +419,7 @@ class ConferenceQuery:
             near=service.NearInput(near.latitude, near.longitude, near.radius_km) if near else None,
             starts_from=f.starts_from,
             starts_to=f.starts_to,
+            timeframe=f.timeframe.value,
             first=first,
             after=after,
         )

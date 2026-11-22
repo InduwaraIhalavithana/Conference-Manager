@@ -11,7 +11,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from beanie import SortDirection
 from bson import ObjectId
@@ -36,8 +36,9 @@ class SearchCriteria:
     near: Near | None = None
     starts_from: datetime | None = None
     starts_to: datetime | None = None
-    # Without an explicit range, only conferences that have not ended yet.
-    upcoming_after: datetime | None = None
+    # Without an explicit date range: upcoming (not ended yet, soonest first), past (ended, latest first) or all.
+    timeframe: Literal["upcoming", "past", "all"] = "upcoming"
+    now: datetime | None = None
     first: int = 20
     after: str | None = None
 
@@ -97,10 +98,14 @@ class TextIndexSearch:
             starts["$gte"] = criteria.starts_from
         if criteria.starts_to:
             starts["$lte"] = criteria.starts_to
+        past = False
         if starts:
             query["starts_at"] = starts
-        elif criteria.upcoming_after:
-            query["ends_at"] = {"$gte": criteria.upcoming_after}
+        elif criteria.timeframe == "upcoming" and criteria.now:
+            query["ends_at"] = {"$gte": criteria.now}
+        elif criteria.timeframe == "past" and criteria.now:
+            query["ends_at"] = {"$lt": criteria.now}
+            past = True
 
         near = criteria.near
         if near and not criteria.q:
@@ -117,14 +122,14 @@ class TextIndexSearch:
                 "$geoWithin": {"$centerSphere": [[near.lng, near.lat], near.radius_km / EARTH_RADIUS_KM]}
             }
 
+        # Past conferences read latest first; everything else soonest first. The cursor follows the same order.
+        beyond, direction = ("$lt", SortDirection.DESCENDING) if past else ("$gt", SortDirection.ASCENDING)
         if cursor and cursor.starts_at and cursor.id:
             query["$or"] = [
-                {"starts_at": {"$gt": cursor.starts_at}},
-                {"starts_at": cursor.starts_at, "_id": {"$gt": ObjectId(cursor.id)}},
+                {"starts_at": {beyond: cursor.starts_at}},
+                {"starts_at": cursor.starts_at, "_id": {beyond: ObjectId(cursor.id)}},
             ]
-        return MongoSearch(
-            filter=query, sort=[("starts_at", SortDirection.ASCENDING), ("_id", SortDirection.ASCENDING)]
-        )
+        return MongoSearch(filter=query, sort=[("starts_at", direction), ("_id", direction)])
 
 
 def _escape(text: str) -> str:

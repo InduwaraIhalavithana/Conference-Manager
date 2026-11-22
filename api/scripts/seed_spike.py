@@ -1,4 +1,5 @@
-"""Sample data for local development: two published conferences with agendas and one hidden draft,
+"""Sample data for local development: a dozen published conferences across topics and cities (two with agendas),
+one past conference and one hidden draft,
 owned by a sample organizer who cannot sign in (random password, demo domain that is never emailed).
 
     uv run python -m scripts.seed_spike            # insert or refresh
@@ -10,7 +11,7 @@ Phase 8 replaces this with the full demo seed.
 import argparse
 import asyncio
 import secrets
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from app.core.passwords import hash_password
 from app.core.settings import get_settings
@@ -19,6 +20,139 @@ from app.models import Conference, LocalizedText, Organizer
 from app.models.conference import AgendaSession, ConferenceDay, GeoPoint, Speaker, Track, Venue
 
 SLUGS = ["spike-colombo-tech-summit", "spike-kandy-health-forum", "spike-draft-hidden"]
+# (slug, English, Sinhala, Tamil, category, city, venue, lng, lat, days from now, capacity)
+EXTRA = [
+    (
+        "spike-galle-literature-festival",
+        "Galle Literature Festival",
+        "ගාල්ල සාහිත්‍ය උළෙල",
+        "காலி இலக்கிய விழா",
+        "arts",
+        "Galle",
+        "Galle Fort Hall",
+        80.2168,
+        6.0269,
+        18,
+        400,
+    ),
+    (
+        "spike-jaffna-education-expo",
+        "Jaffna Education Expo",
+        "යාපනය අධ්‍යාපන ප්‍රදර්ශනය",
+        "யாழ்ப்பாணம் கல்விக் கண்காட்சி",
+        "education",
+        "Jaffna",
+        "Jaffna Public Library",
+        80.0089,
+        9.6615,
+        26,
+        250,
+    ),
+    (
+        "spike-colombo-startup-night",
+        "Colombo Startup Night",
+        "කොළඹ ආරම්භක ව්‍යාපාර රාත්‍රිය",
+        "கொழும்பு புத்தொழில் இரவு",
+        "business",
+        "Colombo",
+        "Hatch Works",
+        79.8489,
+        6.9344,
+        9,
+        120,
+    ),
+    (
+        "spike-peradeniya-science-week",
+        "Peradeniya Science Week",
+        "පේරාදෙණිය විද්‍යා සතිය",
+        "பேராதனை அறிவியல் வாரம்",
+        "science",
+        "Kandy",
+        "University of Peradeniya",
+        80.5986,
+        7.2546,
+        33,
+        600,
+    ),
+    (
+        "spike-matara-coastal-health",
+        "Matara Coastal Health Day",
+        "මාතර වෙරළබඩ සෞඛ්‍ය දිනය",
+        "மாத்தறை கடலோர சுகாதார நாள்",
+        "health",
+        "Matara",
+        "Matara Town Hall",
+        80.5353,
+        5.9485,
+        14,
+        80,
+    ),
+    (
+        "spike-negombo-tourism-forum",
+        "Negombo Tourism Forum",
+        "මීගමුව සංචාරක සංසදය",
+        "நீர்கொழும்பு சுற்றுலா மன்றம்",
+        "business",
+        "Negombo",
+        "Negombo Beach Hotel",
+        79.8358,
+        7.2083,
+        40,
+        150,
+    ),
+    (
+        "spike-kurunegala-ai-day",
+        "Kurunegala AI Day",
+        "කුරුණෑගල AI දිනය",
+        "குருநாகல் AI நாள்",
+        "tech",
+        "Kurunegala",
+        "Wayamba Hall",
+        80.3647,
+        7.4818,
+        22,
+        200,
+    ),
+    (
+        "spike-trincomalee-arts-weekend",
+        "Trincomalee Arts Weekend",
+        "ත්‍රිකුණාමලය කලා සති අන්තය",
+        "திருகோணமலை கலை வார இறுதி",
+        "arts",
+        "Trincomalee",
+        "Fort Frederick Grounds",
+        81.2335,
+        8.5711,
+        47,
+        300,
+    ),
+    (
+        "spike-anuradhapura-heritage-talks",
+        "Anuradhapura Heritage Talks",
+        "අනුරාධපුර උරුම දේශන",
+        "அனுராதபுரம் பாரம்பரிய உரைகள்",
+        "other",
+        "Anuradhapura",
+        "Sacred City Centre",
+        80.3964,
+        8.3114,
+        55,
+        90,
+    ),
+    (
+        "spike-colombo-past-devfest",
+        "Colombo DevFest (last year)",
+        "කොළඹ DevFest (පසුගිය වසර)",
+        "கொழும்பு DevFest (கடந்த ஆண்டு)",
+        "tech",
+        "Colombo",
+        "BMICH",
+        79.8726,
+        6.9022,
+        -60,
+        500,
+    ),
+]
 ORGANIZER_EMAIL = "sample.organizer@demo.conferencehub.lk"
 
 
@@ -90,11 +224,37 @@ def conferences(organizer: Organizer) -> list[Conference]:
     return [tech, health, draft]
 
 
+def extra_conferences(organizer: Organizer) -> list[Conference]:
+    assert organizer.id is not None
+    now = datetime.now(UTC).replace(hour=3, minute=30, second=0, microsecond=0)  # 09:00 in Sri Lanka
+    out = []
+    for slug, en, si, ta, category, city, venue, lng, lat, days, capacity in EXTRA:
+        starts = now + timedelta(days=days)
+        out.append(
+            Conference(
+                organizer_id=organizer.id,
+                slug=slug,
+                status="published",
+                published_at=datetime.now(UTC),
+                title=t(en, si, ta),
+                summary=t(f"Sample: a day of talks, workshops and people in {city}."),
+                category=category,
+                tags=[category, city.lower()],
+                venue=Venue(name=venue, city=city, location=GeoPoint(coordinates=(lng, lat))),
+                starts_at=starts,
+                ends_at=starts + timedelta(hours=7),
+                days=[ConferenceDay(date=(starts + timedelta(hours=5, minutes=30)).date())],
+                capacity=capacity,
+            )
+        )
+    return out
+
+
 async def main(remove: bool) -> None:
     settings = get_settings()
     await db.connect(settings.mongo_url, settings.mongo_db)
     try:
-        await Conference.get_pymongo_collection().delete_many({"slug": {"$in": SLUGS}})
+        await Conference.get_pymongo_collection().delete_many({"slug": {"$in": SLUGS + [e[0] for e in EXTRA]}})
         await Organizer.get_pymongo_collection().delete_many({"email": ORGANIZER_EMAIL})
         if remove:
             print("Removed the sample conferences and organizer.")
@@ -108,8 +268,9 @@ async def main(remove: bool) -> None:
             email_verified_at=datetime.now(UTC),
         )
         await organizer.insert()
-        await Conference.insert_many(conferences(organizer))
-        print(f"Inserted 3 sample conferences into '{settings.mongo_db}'.")
+        docs = conferences(organizer) + extra_conferences(organizer)
+        await Conference.insert_many(docs)
+        print(f"Inserted {len(docs)} sample conferences into '{settings.mongo_db}'.")
     finally:
         await db.disconnect()
 

@@ -11,7 +11,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from beanie import PydanticObjectId
@@ -619,6 +619,7 @@ async def browse(
     near: NearInput | None = None,
     starts_from: datetime | None = None,
     starts_to: datetime | None = None,
+    timeframe: Literal["upcoming", "past", "all"] = "upcoming",
     first: int = 20,
     after: str | None = None,
 ) -> repo.SearchPage:
@@ -634,7 +635,8 @@ async def browse(
         else None,
         starts_from=starts_from,
         starts_to=starts_to,
-        upcoming_after=None if (starts_from or starts_to) else datetime.now(UTC),
+        timeframe=timeframe,
+        now=datetime.now(UTC),
         first=max(1, min(first, MAX_PAGE)),
         after=after,
     )

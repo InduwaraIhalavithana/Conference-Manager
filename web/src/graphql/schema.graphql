@@ -1,0 +1,624 @@
+type Admin {
+  id: ID!
+  username: String!
+  email: String!
+}
+
+type AgendaSession {
+  id: ID!
+  day: Date!
+  title: LocalizedText!
+  description: LocalizedText
+  kind: SessionKind!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  room: String
+  capacity: Int
+  track: Track
+  speakers: [Speaker!]!
+}
+
+"""
+This ticket was already used: show when, so the desk can spot a copied ticket.
+"""
+type AlreadyCheckedIn {
+  attendee: Attendee!
+  checkedInAt: DateTime!
+}
+
+"""
+This email already has a registration; the ticket link was emailed to it again.
+"""
+type AlreadyRegistered {
+  email: String!
+}
+
+"""An attendee as the conference's organizer sees them."""
+type Attendee {
+  id: ID!
+  name: String!
+  email: String!
+  lang: Lang!
+  status: RegistrationStatus!
+  ticketCode: String!
+  confirmedAt: DateTime
+  promotedAt: DateTime
+  checkedInAt: DateTime
+  cancelledAt: DateTime
+  cancelledBy: String
+  createdAt: DateTime!
+}
+
+type AttendeeConnection {
+  edges: [AttendeeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type AttendeeEdge {
+  cursor: String!
+  node: Attendee!
+}
+
+input AttendeeFilter {
+  statuses: [RegistrationStatus!] = null
+  q: String = null
+  checkedIn: Boolean = null
+}
+
+input AttendeeInput {
+  name: String!
+  email: String!
+  lang: Lang! = EN
+}
+
+union AttendeeResult = Attendee | UserError
+
+union AttendeesResult = AttendeeConnection | UserError
+
+union AuthResult = SignedIn | UserError
+
+enum Category {
+  TECH
+  HEALTH
+  EDUCATION
+  BUSINESS
+  SCIENCE
+  ARTS
+  OTHER
+}
+
+type CategoryCount {
+  category: Category!
+  count: Int!
+}
+
+union CheckInResult = CheckedIn | AlreadyCheckedIn | UserError
+
+type CheckedIn {
+  attendee: Attendee!
+}
+
+type CityCount {
+  city: String!
+  count: Int!
+}
+
+type CodeSent {
+  email: String!
+  resendAfterSeconds: Int!
+}
+
+union CodeSentResult = CodeSent | UserError
+
+type Conference {
+  id: ID!
+  slug: String!
+  status: ConferenceStatus!
+  title: LocalizedText!
+  summary: LocalizedText
+  description: LocalizedText
+  sourceLang: Lang!
+  category: Category!
+  tags: [String!]!
+  coverUrl: String
+  venue: Venue!
+  onlineUrl: String
+  timezone: String!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  days: [ConferenceDay!]!
+  tracks: [Track!]!
+  speakers: [Speaker!]!
+  sessions: [AgendaSession!]!
+  capacity: Int
+  waitlistEnabled: Boolean!
+  counters: Counters!
+  publishedAt: DateTime
+  cancelledAt: DateTime
+  distanceKm: Float
+
+  """Seats not yet taken; null when there is no limit."""
+  seatsLeft: Int
+
+  """Shortcut for venue.city."""
+  city: String
+
+  """What still blocks publishing (empty when it can be published)."""
+  publishProblems: [String!]!
+  organizer: OrganizerSummary
+}
+
+type ConferenceConnection {
+  edges: [ConferenceEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ConferenceDay {
+  date: Date!
+  label: LocalizedText
+}
+
+type ConferenceEdge {
+  cursor: String!
+  node: Conference!
+}
+
+input ConferenceFilter {
+  q: String = null
+  category: Category = null
+  city: String = null
+  near: NearInput = null
+  startsFrom: DateTime = null
+  startsTo: DateTime = null
+  timeframe: Timeframe! = UPCOMING
+}
+
+type ConferenceFull {
+  capacity: Int!
+}
+
+input ConferenceInput {
+  title: LocalizedTextInput!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  summary: LocalizedTextInput = null
+  description: LocalizedTextInput = null
+  sourceLang: Lang! = EN
+  category: Category! = OTHER
+  tags: [String!]! = []
+  venueName: String = null
+  venueAddress: String = null
+  city: String = null
+  latitude: Float = null
+  longitude: Float = null
+  onlineUrl: String = null
+  timezone: String! = "Asia/Colombo"
+  capacity: Int = null
+  waitlistEnabled: Boolean! = true
+  coverUrl: String = null
+}
+
+type ConferenceList {
+  items: [Conference!]!
+}
+
+union ConferenceListResult = ConferenceList | UserError
+
+union ConferenceResult = Conference | UserError
+
+enum ConferenceStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  ARCHIVED
+}
+
+union ConfirmationResult = ConfirmationSent | UserError
+
+type ConfirmationSent {
+  resendAfterSeconds: Int!
+}
+
+type Counters {
+  registered: Int!
+  confirmed: Int!
+  waitlisted: Int!
+  checkedIn: Int!
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+type Done {
+  ok: Boolean!
+}
+
+union DoneResult = Done | UserError
+
+"""Stable error codes; the web app translates each one."""
+enum ErrorCode {
+  VALIDATION
+  NOT_AUTHENTICATED
+  FORBIDDEN
+  CSRF_FAILED
+  RATE_LIMITED
+  EMAIL_TAKEN
+  INVALID_CREDENTIALS
+  ACCOUNT_SUSPENDED
+  EMAIL_NOT_VERIFIED
+  CODE_INVALID
+  CODE_EXPIRED
+  CODE_LOCKED
+  SESSION_EXPIRED
+  SESSION_REUSED
+  RESET_INVALID
+  RESET_EXPIRED
+  PASSWORD_UNCHANGED
+  NOT_FOUND
+  CONFLICT
+  NOT_PUBLISHABLE
+  INVALID_STATE
+  SESSION_CLASH
+  FILE_TYPE
+  FILE_TOO_LARGE
+  FILE_NOT_IMAGE
+  REGISTRATION_CLOSED
+  REGISTRATION_INACTIVE
+  CHECKIN_UNCONFIRMED
+  CHECKIN_WAITLISTED
+  CAPACITY_BELOW_TAKEN
+}
+
+type GeoLocation {
+  latitude: Float!
+  longitude: Float!
+}
+
+enum Lang {
+  EN
+  SI
+  TA
+}
+
+type LocalizedText {
+  en: String!
+  si: String
+  ta: String
+}
+
+input LocalizedTextInput {
+  en: String = null
+  si: String = null
+  ta: String = null
+}
+
+type Mutation {
+  """Register for a conference (no account needed). Emails a 6-digit code."""
+  registerForConference(slug: String!, input: AttendeeInput!): RegisterResult!
+
+  """Enter the emailed code: confirms the seat (or the waitlist place)."""
+  confirmRegistration(ticketCode: String!, code: String!): TicketResult!
+
+  """Email a new confirmation code (once a minute)."""
+  resendConfirmation(ticketCode: String!): ConfirmationResult!
+
+  """Cancel by ticket code; the seat goes to the next confirmed waitlister."""
+  cancelRegistration(ticketCode: String!): TicketResult!
+
+  """Check someone in by the code on their ticket (QR or typed)."""
+  checkIn(conferenceId: ID!, code: String!, gate: String! = "main"): CheckInResult!
+  undoCheckIn(conferenceId: ID!, attendeeId: ID!): AttendeeResult!
+
+  """
+  Cancel someone's registration as the organizer; they are told by email.
+  """
+  removeAttendee(conferenceId: ID!, attendeeId: ID!): AttendeeResult!
+
+  """
+  Email the day-before reminder now to confirmed attendees who have not had it.
+  """
+  sendRemindersNow(conferenceId: ID!): RemindersResult!
+
+  """Create a draft conference owned by the signed-in organizer."""
+  createConference(input: ConferenceInput!): ConferenceResult!
+  updateConference(id: ID!, input: ConferenceInput!): ConferenceResult!
+
+  """
+  Make a draft public. Fails with NOT_PUBLISHABLE and the reasons when incomplete.
+  """
+  publishConference(id: ID!): ConferenceResult!
+
+  """Back to draft; only while nobody has registered."""
+  unpublishConference(id: ID!): ConferenceResult!
+
+  """Cancel a published conference; it stays visible, marked as cancelled."""
+  cancelConference(id: ID!): ConferenceResult!
+
+  """Delete a conference and its images; only while nobody has registered."""
+  deleteConference(id: ID!): DoneResult!
+
+  """Copy a conference (details, agenda and images) into a new draft."""
+  duplicateConference(id: ID!): ConferenceResult!
+
+  """Add a track (no trackId) or change one."""
+  upsertTrack(conferenceId: ID!, input: TrackInput!, trackId: ID = null): TrackResult!
+
+  """Remove a track; its sessions keep their place without a track."""
+  removeTrack(conferenceId: ID!, trackId: ID!): DoneResult!
+
+  """Add a speaker (no speakerId) or change one."""
+  upsertSpeaker(conferenceId: ID!, input: SpeakerInput!, speakerId: ID = null): SpeakerResult!
+
+  """Remove a speaker; they are also taken off every session."""
+  removeSpeaker(conferenceId: ID!, speakerId: ID!): DoneResult!
+
+  """Add a session (no sessionId) or change one. Refuses room clashes."""
+  upsertSession(conferenceId: ID!, input: SessionInput!, sessionId: ID = null): SessionResult!
+  removeSession(conferenceId: ID!, sessionId: ID!): DoneResult!
+
+  """Name a day, e.g. 'Workshop day'. Send no label to clear it."""
+  setDayLabel(conferenceId: ID!, day: Date!, label: LocalizedTextInput = null): ConferenceResult!
+
+  """
+  Organizer sign-up. Emails a 6-digit code; the account works once it is entered.
+  """
+  register(input: RegisterInput!): CodeSentResult!
+
+  """
+  Enter the emailed code: verifies the address and signs the organizer in.
+  """
+  verifyEmail(email: String!, code: String!): AuthResult!
+
+  """
+  Send a new code. The answer is the same whether or not the email exists.
+  """
+  resendCode(email: String!): CodeSentResult!
+  login(email: String!, password: String!): AuthResult!
+
+  """Administrator sign-in, by email (or the username 'admin')."""
+  adminLogin(email: String!, password: String!): AuthResult!
+
+  """
+  Swap the refresh cookie for new tokens. A reused refresh token ends the session.
+  """
+  refresh: AuthResult!
+  logout: Done!
+
+  """
+  Emails a reset link when the address is registered. Same answer either way.
+  """
+  forgotPassword(email: String!): DoneResult!
+
+  """Set a new password from an emailed link. Signs out every device."""
+  resetPassword(token: String!, newPassword: String!): DoneResult!
+
+  """
+  Change the password. Keeps this device signed in, signs out the others.
+  """
+  changePassword(currentPassword: String!, newPassword: String!): DoneResult!
+}
+
+input NearInput {
+  latitude: Float!
+  longitude: Float!
+  radiusKm: Float! = 25
+}
+
+type Organizer {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String
+  organization: String
+  lang: String!
+  emailVerified: Boolean!
+  createdAt: DateTime!
+}
+
+"""The public face of an organizer: no email or phone."""
+type OrganizerSummary {
+  name: String!
+  organization: String
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type PlatformStats {
+  upcomingConferences: Int!
+  heldConferences: Int!
+  registeredAttendees: Int!
+  checkedIn: Int!
+  speakers: Int!
+  sessions: Int!
+  organizers: Int!
+  registrationsThisWeek: Int!
+}
+
+type Query {
+  """Platform-wide numbers, refreshed every minute."""
+  platformStats: PlatformStats!
+
+  """
+  How many upcoming conferences each topic has (topics with none are left out).
+  """
+  upcomingCategories: [CategoryCount!]!
+
+  """Cities with upcoming conferences, most first."""
+  upcomingCities(first: Int! = 12): [CityCount!]!
+
+  """A ticket by the code from the email (the code is the only key to it)."""
+  ticket(code: String!): Ticket
+
+  """The attendees of one of the signed-in organizer's conferences."""
+  attendees(conferenceId: ID!, filter: AttendeeFilter = null, first: Int! = 50, after: String = null): AttendeesResult!
+
+  """
+  Published (and cancelled) conferences: soonest first, or nearest first with `near`. Without a date range, only conferences that have not ended.
+  """
+  conferences(filter: ConferenceFilter = null, first: Int! = 20, after: String = null): ConferenceConnection!
+
+  """One public conference by its web address."""
+  conference(slug: String!): Conference
+
+  """The signed-in organizer's conferences, newest first, in every status."""
+  myConferences: ConferenceListResult!
+
+  """
+  One of the signed-in organizer's conferences, for editing (drafts included).
+  """
+  myConference(id: ID!): ConferenceResult!
+  categories: [Category!]!
+
+  """The signed-in organizer or admin, or null."""
+  me: Viewer
+}
+
+input RegisterInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  phone: String = null
+  organization: String = null
+  lang: String! = "en"
+}
+
+union RegisterResult = Registered | Waitlisted | AlreadyRegistered | ConferenceFull | UserError
+
+"""A seat is held; enter the emailed code before it is released."""
+type Registered {
+  ticketCode: String!
+  holdExpiresAt: DateTime
+}
+
+enum RegistrationStatus {
+  HELD
+  REGISTERED
+  WAITLISTED
+  CANCELLED
+  RELEASED
+}
+
+union RemindersResult = RemindersSent | UserError
+
+type RemindersSent {
+  count: Int!
+}
+
+input SessionInput {
+  title: LocalizedTextInput!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  description: LocalizedTextInput = null
+  kind: SessionKind! = TALK
+  room: String = null
+  trackId: ID = null
+  speakerIds: [ID!]! = []
+  capacity: Int = null
+}
+
+enum SessionKind {
+  KEYNOTE
+  TALK
+  WORKSHOP
+  PANEL
+  BREAK
+}
+
+union SessionResult = AgendaSession | UserError
+
+type SignedIn {
+  viewer: Viewer!
+  accessExpiresAt: DateTime!
+}
+
+type Speaker {
+  id: ID!
+  name: String!
+  jobTitle: String
+  organization: String
+  bio: LocalizedText
+  photoUrl: String
+  links: [String!]!
+}
+
+input SpeakerInput {
+  name: String!
+  jobTitle: String = null
+  organization: String = null
+  bio: LocalizedTextInput = null
+  photoUrl: String = null
+  links: [String!]! = []
+}
+
+union SpeakerResult = Speaker | UserError
+
+"""What the ticket holder sees, by the code from their email."""
+type Ticket {
+  code: String!
+  name: String!
+  email: String!
+  lang: Lang!
+  status: RegistrationStatus!
+  confirmed: Boolean!
+  holdExpiresAt: DateTime
+  waitlistPosition: Int
+  checkedInAt: DateTime
+  createdAt: DateTime!
+  conference: Conference!
+}
+
+union TicketResult = Ticket | UserError
+
+"""Which conferences to list when no date range is given."""
+enum Timeframe {
+  UPCOMING
+  PAST
+  ALL
+}
+
+type Track {
+  id: ID!
+  name: LocalizedText!
+  color: String!
+}
+
+input TrackInput {
+  name: LocalizedTextInput!
+  color: String! = "#0ea5e9"
+}
+
+union TrackResult = Track | UserError
+
+"""Something the user can fix or retry, returned instead of a result."""
+type UserError {
+  code: ErrorCode!
+  message: String!
+  field: String
+  retryAfterSeconds: Int
+  remainingAttempts: Int
+}
+
+type Venue {
+  name: String
+  address: String
+  city: String
+  location: GeoLocation
+}
+
+"""Whoever is signed in."""
+union Viewer = Organizer | Admin
+
+"""The conference is full; this person is on the waitlist."""
+type Waitlisted {
+  ticketCode: String!
+  position: Int!
+}

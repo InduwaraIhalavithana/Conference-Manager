@@ -257,12 +257,20 @@ class RegistrationMutation:
 
         return await guarded(run)
 
-    @strawberry.mutation(description="Check someone in by the code on their ticket (QR or typed).")
+    @strawberry.mutation(
+        description="Check someone in by the code on their ticket (QR or typed). An offline desk sends `scannedAt` "
+        "when it syncs (ignored if in the future or over a day old)."
+    )
     async def check_in(
-        self, info: Info[Context, None], conference_id: strawberry.ID, code: str, gate: str = "main"
+        self,
+        info: Info[Context, None],
+        conference_id: strawberry.ID,
+        code: str,
+        gate: str = "main",
+        scanned_at: datetime | None = None,
     ) -> CheckInResult:
         async def run() -> CheckedIn | AlreadyCheckedIn:
-            outcome = await service.check_in(info.context.viewer, str(conference_id), code, gate)
+            outcome = await service.check_in(info.context.viewer, str(conference_id), code, gate, scanned_at)
             attendee = Attendee.from_doc(outcome.registration)
             if outcome.already and outcome.registration.checked_in_at is not None:
                 return AlreadyCheckedIn(attendee=attendee, checked_in_at=outcome.registration.checked_in_at)

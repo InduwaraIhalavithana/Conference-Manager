@@ -11,6 +11,7 @@ from strawberry.extensions import (
     SchemaExtension,
 )
 
+from app.api.graphql.analytics import AnalyticsQuery
 from app.api.graphql.auth import AuthMutation, AuthQuery
 from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
 from app.api.graphql.extensions import CsrfProtection
@@ -20,7 +21,7 @@ from app.api.graphql.stats import PublicMutation, StatsQuery
 
 
 @strawberry.type
-class Query(ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
+class Query(AnalyticsQuery, ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
     pass
 
 

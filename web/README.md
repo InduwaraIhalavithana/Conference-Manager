@@ -1,13 +1,36 @@
 # ConferenceHub v3 web app
 
-Next.js 16 (App Router, server components) + TypeScript + Tailwind CSS. Work in progress on the `v3` branch; v2 lives in `../frontend`.
+Next.js 16 (App Router, server components, `cacheComponents`) + TypeScript + Tailwind CSS v4 + shadcn/ui, with
+next-intl for English, Sinhala and Tamil (`/en`, `/si`, `/ta`). Work in progress on the `v3` branch; v2 lives in `../frontend`.
 
 ```bash
 npm install
 npm run dev          # http://localhost:3100 (needs the API on :8003, see ../api/README.md)
+npm run codegen      # GraphQL types from src/graphql/schema.graphql (export it with `uv run python -m scripts.export_schema` in ../api)
 npm run lint
 npm run typecheck
+npm test             # Vitest: translations complete in all three languages, date and number formatting
+npm run e2e          # Playwright + axe against the running site (uses your installed Chrome locally)
 npm run build
 ```
 
-`GRAPHQL_URL` sets where server components send GraphQL queries (default `http://localhost:8003/graphql`).
+## Pages
+
+| Path | What it is |
+|---|---|
+| `/[locale]` | Home: next conference, live numbers, upcoming, topics, cities |
+| `/[locale]/conferences` | Browse: search, topic, city, dates, past, near me, list or map; filters live in the URL |
+| `/[locale]/c/[slug]` | A conference: agenda, speakers, venue map, registration with email code, calendar, share image |
+| `/[locale]/ticket/[code]` | An attendee's ticket: QR code, confirm the email code, cancel (never indexed) |
+| `/[locale]/about`, `/contact`, `/privacy`, `/terms` | About, contact form, privacy policy, terms of use |
+| `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |
+
+## Settings
+
+| Variable | Default | Used for |
+|---|---|---|
+| `API_URL` | `http://127.0.0.1:8003` | Where server components send GraphQL, and where `/api/*` is proxied (so cookies are first-party) |
+| `SITE_URL` | `http://localhost:3100` | Absolute links in metadata, the sitemap and share images |
+| `E2E_BASE_URL` | `http://localhost:3100` | The site Playwright tests |
+
+Security headers (CSP, frame, referrer, permissions, HSTS in production) are set in `next.config.ts`; see `../docs/security-checklist.md`.

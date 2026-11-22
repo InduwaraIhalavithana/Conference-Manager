@@ -69,7 +69,8 @@ export function Agenda({ data }: { data: AgendaData }) {
           ))}
         </div>
       )}
-      <ol className="relative space-y-3 border-l-2 border-primary/25 pl-6" role="tabpanel">
+      <div role="tabpanel">
+      <ol className="relative space-y-3 border-l-2 border-primary/25 pl-6">
         {sessions.map((s) => (
           <li key={s.id} className="relative animate-rise">
             <span
@@ -87,8 +88,8 @@ export function Agenda({ data }: { data: AgendaData }) {
                   {t(`kind_${s.kind.toLowerCase()}`)}
                 </span>
                 {s.track && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: s.track.color }}>
-                    <span className="size-2 rounded-full" style={{ background: s.track.color }} aria-hidden />
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <span className="size-2.5 rounded-full" style={{ background: s.track.color }} aria-hidden />
                     {localized(s.track.name, locale)}
                   </span>
                 )}
@@ -118,6 +119,7 @@ export function Agenda({ data }: { data: AgendaData }) {
           </li>
         ))}
       </ol>
+      </div>
     </div>
   );
 }

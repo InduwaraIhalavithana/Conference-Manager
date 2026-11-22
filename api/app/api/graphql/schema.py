@@ -15,7 +15,7 @@ from app.api.graphql.auth import AuthMutation, AuthQuery
 from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
 from app.api.graphql.extensions import CsrfProtection
 from app.api.graphql.registrations import RegistrationMutation, RegistrationQuery
-from app.api.graphql.stats import StatsQuery
+from app.api.graphql.stats import PublicMutation, StatsQuery
 
 
 @strawberry.type
@@ -24,7 +24,7 @@ class Query(StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
 
 
 @strawberry.type
-class Mutation(RegistrationMutation, ConferenceMutation, AuthMutation):
+class Mutation(PublicMutation, RegistrationMutation, ConferenceMutation, AuthMutation):
     pass
 
 

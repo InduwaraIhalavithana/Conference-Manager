@@ -159,7 +159,7 @@ jobs:
         run: uv run pytest -q
 
   web:
-    name: v3 Web (eslint + tsc + audit + next build)
+    name: v3 Web (eslint + tsc + vitest + audit + next build)
     runs-on: ubuntu-latest
 
     defaults:
@@ -189,8 +189,99 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Vitest (translations, formatting)
+        run: npm test
+
       - name: Dependency audit (runtime packages)
         run: npm audit --omit=dev
 
       - name: Production build
         run: npm run build
+
+  e2e:
+    name: v3 End-to-end (Playwright + axe)
+    runs-on: ubuntu-latest
+    needs: [api, web]
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SECRET_KEY: ci-e2e-secret-key-that-is-long-enough-123
+      EMAIL_DELIVERY: log
+      API_URL: http://127.0.0.1:8003
+      SITE_URL: http://localhost:3100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start MongoDB 7 (single-node replica set)
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            docker exec mongo mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok" && break
+            sleep 2
+          done
+          for i in $(seq 1 30); do
+            [ "$(docker exec mongo mongosh --quiet --eval 'rs.status().myState')" = "1" ] && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - name: Start the API with sample data
+        working-directory: api
+        run: |
+          uv sync --locked
+          uv run python -m scripts.seed_spike
+          nohup uv run uvicorn app.main:app --host 127.0.0.1 --port 8003 > /tmp/api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8003/health && exit 0; sleep 1; done
+          cat /tmp/api.log; exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build and start the web app
+        working-directory: web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run build
+          nohup npm start > /tmp/web.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3100/en > /dev/null && exit 0; sleep 1; done
+          cat /tmp/web.log; exit 1
+
+      - name: Playwright
+        working-directory: web
+        run: npm run e2e
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 7
+
+      - name: Server logs
+        if: failure()
+        run: |
+          tail -n 100 /tmp/api.log || true
+          tail -n 100 /tmp/web.log || true

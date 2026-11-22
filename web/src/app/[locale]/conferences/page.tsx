@@ -1,6 +1,6 @@
 import { SearchX } from "lucide-react";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { BrowseFilters } from "@/components/conference/browse-filters";
@@ -10,6 +10,8 @@ import { ConferenceCardSkeleton } from "@/components/conference/conference-card"
 import { graphql } from "@/graphql/generated";
 import { hasFilters, parseBrowseParams, toFilter } from "@/lib/browse-params";
 import { query } from "@/lib/graphql/server";
+import type { Locale } from "@/i18n/routing";
+import { alternates } from "@/lib/seo";
 
 const Cities = graphql(`
   query BrowseCities {
@@ -19,7 +21,8 @@ const Cities = graphql(`
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
-  return { title: t("conferences_title"), description: t("conferences_subtitle") };
+  const locale = (await getLocale()) as Locale;
+  return { title: t("conferences_title"), description: t("conferences_subtitle"), alternates: alternates(locale, "/conferences") };
 }
 
 export default async function ConferencesPage({ searchParams }: PageProps<"/[locale]/conferences">) {

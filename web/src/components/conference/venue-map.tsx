@@ -20,7 +20,7 @@ export default function VenueMap({ latitude, longitude }: { latitude: number; lo
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[latitude, longitude]} icon={pin} />
+      <Marker position={[latitude, longitude]} icon={pin} interactive={false} keyboard={false} />
     </MapContainer>
   );
 }

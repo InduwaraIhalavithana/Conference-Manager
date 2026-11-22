@@ -225,6 +225,21 @@ type ConfirmationSent {
   resendAfterSeconds: Int!
 }
 
+input ContactInput {
+  name: String!
+  email: String!
+  message: String!
+  topic: ContactTopic! = GENERAL
+}
+
+enum ContactTopic {
+  GENERAL
+  ATTENDING
+  ORGANIZING
+  TECHNICAL
+  PARTNERSHIP
+}
+
 type Counters {
   registered: Int!
   confirmed: Int!
@@ -302,6 +317,9 @@ input LocalizedTextInput {
 }
 
 type Mutation {
+  """The public contact form (5 messages per 10 minutes per address)."""
+  sendContactMessage(input: ContactInput!): DoneResult!
+
   """Register for a conference (no account needed). Emails a 6-digit code."""
   registerForConference(slug: String!, input: AttendeeInput!): RegisterResult!
 

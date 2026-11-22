@@ -31,3 +31,28 @@ async def test_platform_numbers_and_topics(api: Api, other_api: Api) -> None:
         c["category"] == "HEALTH" and c["count"] >= 1 for c in data["upcomingCategories"]
     )
     assert any(c["city"] == "Kurunegala" for c in data["upcomingCities"])
+
+
+CONTACT = (
+    """mutation($i: ContactInput!) { sendContactMessage(input: $i) { __typename ... on UserError { code field } } }"""
+)
+
+
+async def test_contact_form_is_stored_for_the_admin_and_rate_limited(api: Api) -> None:
+    from app.models import ContactMessage, Notification
+
+    good = {
+        "name": " Ravi ",
+        "email": "Ravi@Example.com",
+        "topic": "ORGANIZING",
+        "message": "How do I add a second organizer?",
+    }
+    assert (await api.gql(CONTACT, {"i": good}))["data"]["sendContactMessage"]["__typename"] == "Done"
+    saved = await ContactMessage.find_one({"email": "ravi@example.com"})
+    assert saved is not None and saved.name == "Ravi" and saved.subject == "organizing" and saved.status == "open"
+    assert await Notification.find_one({"kind": "contact_message", "params.name": "Ravi"}) is not None
+
+    short = (await api.gql(CONTACT, {"i": {**good, "message": "hi"}}))["data"]["sendContactMessage"]
+    assert short == {"__typename": "UserError", "code": "VALIDATION", "field": "message"}
+    codes = [(await api.gql(CONTACT, {"i": good}))["data"]["sendContactMessage"].get("code") for _ in range(5)]
+    assert codes[-1] == "RATE_LIMITED"

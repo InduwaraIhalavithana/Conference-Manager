@@ -1,12 +1,13 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, Circle, CircleHelp, Clock, Hourglass, ScanLine, Settings, Ticket, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, Plus, Circle, CircleHelp, Clock, Hourglass, ScanLine, Settings, Ticket, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "urql";
 
 import { NotificationRow } from "@/components/site/account-menu";
 import { NotificationsQuery } from "@/components/organizer/queries";
 import { useOrganizer } from "@/components/organizer/organizer-shell";
+import { Button } from "@/components/ui/button";
 import { graphql } from "@/graphql/generated";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -63,7 +64,7 @@ export function DashboardHome() {
     { label: t("stat_waitlisted"), value: totals.waitlisted, icon: Hourglass, tone: "from-amber-500 to-orange-600" },
   ];
   const checklist = [
-    { label: t("check_first_conf"), done: all.length > 0 },
+    { label: t("check_first_conf"), done: all.length > 0, href: "/dashboard/conferences/new" },
     { label: t("check_agenda"), done: all.some((c) => c.sessions.length > 0) },
     { label: t("check_photo"), done: Boolean(me.avatarUrl), href: "/dashboard/settings" },
     { label: t("check_first_attendee"), done: totals.registered > 0 },
@@ -71,7 +72,8 @@ export function DashboardHome() {
   const quick = [
     { href: "/dashboard/settings", label: t("nav_settings"), sub: t("qa_settings_sub"), icon: Settings },
     { href: "/contact", label: t("nav_help"), sub: t("qa_help_sub"), icon: CircleHelp },
-    { href: "/conferences", label: t("nav_conferences"), sub: t("browse_conferences"), icon: Ticket },
+    { href: "/dashboard/conferences", label: t("nav_my_conferences"), sub: t("qa_manage_sub"), icon: Ticket },
+    { href: "/dashboard/conferences/new", label: t("new_conference"), sub: t("qa_new_sub"), icon: Plus },
   ];
   const items = notes?.notifications.__typename === "NotificationPage" ? notes.notifications.items : [];
 
@@ -82,6 +84,11 @@ export function DashboardHome() {
           <h1 className="text-3xl font-extrabold tracking-tight">{t("welcome_back", { name: me.firstName })}</h1>
           <p className="mt-1 text-muted-foreground">{upcoming.length ? t("dash_sub_upcoming", { count: upcoming.length }) : t("dash_sub_empty")}</p>
         </div>
+        <Button asChild className="rounded-xl">
+          <Link href="/dashboard/conferences/new">
+            <Plus className="size-4" aria-hidden /> {t("new_conference")}
+          </Link>
+        </Button>
       </header>
 
       <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -126,7 +133,7 @@ export function DashboardHome() {
                 return (
                   <li key={c.id} className="py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Link href={`/c/${c.slug}`} className="font-semibold hover:text-primary">
+                      <Link href={`/dashboard/conferences/${c.id}`} className="font-semibold hover:text-primary">
                         {localized(c.title, locale)}
                       </Link>
                       <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", c.status === "DRAFT" ? "bg-muted text-muted-foreground" : "bg-success/15 text-success")}>
@@ -196,7 +203,7 @@ export function DashboardHome() {
         <h2 id="quick-h" className="mb-3 text-lg font-bold">
           {t("quick_actions")}
         </h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {quick.map((q) => (
             <Link key={q.label} href={q.href} className="group flex items-center gap-3 rounded-2xl border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg">
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">

@@ -155,7 +155,9 @@ type Conference {
   """Shortcut for venue.city."""
   city: String
 
-  """What still blocks publishing (empty when it can be published)."""
+  """
+  What blocks publishing, as codes: STARTS_IN_PAST, NEEDS_PLACE, NEEDS_CAPACITY (empty: ready).
+  """
   publishProblems: [String!]!
   organizer: OrganizerSummary
 }

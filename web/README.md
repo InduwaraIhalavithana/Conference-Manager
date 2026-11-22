@@ -25,6 +25,9 @@ npm run build
 | `/[locale]/about`, `/contact`, `/privacy`, `/terms` | About, contact form, privacy policy, terms of use |
 | `/[locale]/login`, `/register`, `/forgot`, `/reset`, `/admin/login` | Organizer sign-in and sign-up (with the emailed code), password reset, admin sign-in |
 | `/[locale]/dashboard`, `/dashboard/settings` | Organizer dashboard and settings (profile, photo, password, other devices); signed-out visitors are sent to sign in |
+| `/[locale]/dashboard/conferences` | My conferences: status tabs, search, duplicate, delete drafts |
+| `/[locale]/dashboard/conferences/new`, `/[id]` | Conference editor: details in three languages, dates, venue with a map pin, cover, seats and waitlist; agenda (tracks, day names, sessions); speakers with photos; publish checklist, move back to draft, cancel |
+| `/[locale]/dashboard/conferences/[id]/attendees` | Attendees: status filters, search, remove (the waitlist moves up), undo check-in, reminders, CSV |
 | `/[locale]/admin` | Admin landing page (notifications); the full admin area arrives in Phase 5d |
 | `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |
 

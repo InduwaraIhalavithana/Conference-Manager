@@ -147,6 +147,16 @@ def _counter_deltas(status: RegistrationStatus) -> dict[str, int]:
 # ── Registering ──────────────────────────────────────────────────────────────────────────────────────
 
 
+async def _tell_organizer(conference: Conference, kind: str, params: dict[str, object]) -> None:
+    """A notification for the conference's organizer, linking to its attendees page."""
+    await messages.notify(
+        [ActorRef(type="organizer", id=conference.organizer_id)],
+        kind,
+        params,
+        f"/dashboard/conferences/{conference.id}/attendees",
+    )
+
+
 async def register(ip: str, slug: str, **data: object) -> RegisterOutcome:
     await ratelimit.enforce(REGISTER, ip)
     body = validate(AttendeeInput, **data)
@@ -205,12 +215,16 @@ async def register(ip: str, slug: str, **data: object) -> RegisterOutcome:
         registration, conference, kind,
         code=code, minutes=settings.verify_code_minutes, hours=conference.confirm_hold_hours,
     )  # fmt: skip
-    await messages.notify(
-        [ActorRef(type="organizer", id=conference.organizer_id)],
+    await _tell_organizer(
+        conference,
         "new_registration" if registration.status == "held" else "new_waitlister",
         {"name": registration.name, "title": conference.title.en},
-        f"/dashboard/conferences/{conference_id}/attendees",
     )
+    if registration.status == "held" and conference.capacity:
+        fresh = await conference_repo.by_id(conference_id)
+        # Only the sign-up that took the last seat sees the counter exactly at capacity.
+        if fresh is not None and fresh.counters.registered == conference.capacity:
+            await _tell_organizer(conference, "conference_full", {"title": conference.title.en})
     if registration.status == "waitlisted":
         return Waitlisted(registration=registration, position=await repo.waitlist_position(registration))
     return Registered(registration=registration)
@@ -328,6 +342,11 @@ async def cancel(ip: str, ticket_code: str) -> Registration:
         raise DomainError(ErrorCode.INVALID_STATE, "You have already checked in")
     if not await _leave(registration, "cancelled", "attendee"):
         raise DomainError(ErrorCode.CONFLICT, "This registration just changed: reload and try again")
+    conference = await conference_repo.by_id(registration.conference_id)
+    if conference is not None:
+        await _tell_organizer(
+            conference, "attendee_cancelled", {"name": registration.name, "title": conference.title.en}
+        )
     if registration.has_seat:
         await promote_waitlist(registration.conference_id)
     updated = await repo.by_id(registration.id or "")
@@ -362,6 +381,9 @@ async def promote_waitlist(conference_id: PydanticObjectId) -> list[Registration
         if conference is not None:
             for registration in promoted:
                 await _send(registration, conference, "promoted")
+                await _tell_organizer(
+                    conference, "waitlist_promoted", {"name": registration.name, "title": conference.title.en}
+                )
         log.info("waitlist promoted", conference_id=str(conference_id), count=len(promoted))
     return promoted
 

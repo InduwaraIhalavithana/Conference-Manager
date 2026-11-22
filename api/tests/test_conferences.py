@@ -83,7 +83,7 @@ async def test_create_makes_a_private_draft_with_its_days(api: Api, other_api: A
     assert conf["status"] == "DRAFT"
     assert conf["slug"].startswith("galle-literary-days-")
     assert len(conf["days"]) == 2
-    assert conf["publishProblems"] == ["set how many people can attend"]
+    assert conf["publishProblems"] == ["NEEDS_CAPACITY"]
 
     mine = (await api.gql(MINE))["data"]["myConferences"]["items"]
     assert {"slug": conf["slug"], "status": "DRAFT"} in mine

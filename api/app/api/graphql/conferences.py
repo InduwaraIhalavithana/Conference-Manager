@@ -222,7 +222,9 @@ class Conference:
     def city(self) -> str | None:
         return self.venue.city
 
-    @strawberry.field(description="What still blocks publishing (empty when it can be published).")
+    @strawberry.field(
+        description="What blocks publishing, as codes: STARTS_IN_PAST, NEEDS_PLACE, NEEDS_CAPACITY (empty: ready)."
+    )
     def publish_problems(self) -> list[str]:
         return service.publish_problems(self._doc)
 

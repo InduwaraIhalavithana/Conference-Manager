@@ -13,7 +13,7 @@ from arq.worker import func
 from app.core.logging import configure_logging, get_logger
 from app.core.settings import get_settings
 from app.db import mongo, queue, redis
-from app.services import email, jobs
+from app.services import email, jobs, system
 
 settings = get_settings()
 configure_logging(settings)
@@ -48,32 +48,39 @@ async def send_email(ctx: dict[str, Any], message: dict[str, Any]) -> bool:
             log.warning("email failed, will retry", to=message.get("to"), kind=message.get("kind"), attempt=attempt)
             raise Retry(defer=30 * attempt) from err
         log.error("email failed for good", to=message.get("to"), kind=message.get("kind"), error=str(err))
+        await system.email_failed()
         return False
 
 
+async def heartbeat(ctx: dict[str, Any]) -> None:
+    """Every minute: shows the admin's System card that the worker is running."""
+    await system.heartbeat()
+
+
 async def release_holds(ctx: dict[str, Any]) -> int:
-    return await jobs.release_holds()
+    return await system.tracked("release_holds", jobs.release_holds)
 
 
 async def send_reminders(ctx: dict[str, Any]) -> int:
-    return await jobs.send_due_reminders()
+    return await system.tracked("send_reminders", jobs.send_due_reminders)
 
 
 async def recount_counters(ctx: dict[str, Any]) -> int:
-    return await jobs.recount_counters()
+    return await system.tracked("recount_counters", jobs.recount_counters)
 
 
 async def purge_unverified(ctx: dict[str, Any]) -> int:
-    return await jobs.purge_unverified_organizers()
+    return await system.tracked("purge_unverified", jobs.purge_unverified_organizers)
 
 
 async def delete_orphan_uploads(ctx: dict[str, Any]) -> int:
-    return await jobs.delete_orphan_uploads()
+    return await system.tracked("delete_orphan_uploads", jobs.delete_orphan_uploads)
 
 
 class WorkerSettings:
     functions: ClassVar = [func(send_email, max_tries=EMAIL_TRIES)]
     cron_jobs: ClassVar = [
+        cron(heartbeat, run_at_startup=True),
         cron(release_holds, minute=set(range(0, 60, 10)), run_at_startup=True),
         cron(send_reminders, minute=5),
         cron(recount_counters, hour=2, minute=15),

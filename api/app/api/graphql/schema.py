@@ -11,6 +11,7 @@ from strawberry.extensions import (
     SchemaExtension,
 )
 
+from app.api.graphql.admin import AdminMutation, AdminQuery
 from app.api.graphql.analytics import AnalyticsQuery
 from app.api.graphql.auth import AuthMutation, AuthQuery
 from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
@@ -21,12 +22,12 @@ from app.api.graphql.stats import PublicMutation, StatsQuery
 
 
 @strawberry.type
-class Query(AnalyticsQuery, ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
+class Query(AdminQuery, AnalyticsQuery, ProfileQuery, StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
     pass
 
 
 @strawberry.type
-class Mutation(ProfileMutation, PublicMutation, RegistrationMutation, ConferenceMutation, AuthMutation):
+class Mutation(AdminMutation, ProfileMutation, PublicMutation, RegistrationMutation, ConferenceMutation, AuthMutation):
     pass
 
 

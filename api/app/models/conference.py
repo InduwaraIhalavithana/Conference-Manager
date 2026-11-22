@@ -96,6 +96,8 @@ class Conference(Document):
     status: Status = "draft"
     # Set by an admin; hidden conferences never appear publicly (e.g. a suspended organizer's events).
     hidden: bool = False
+    # Why: "admin" (hidden by hand) or "suspended" (its organizer was suspended; undone on restore).
+    hidden_reason: Literal["admin", "suspended"] | None = None
 
     title: LocalizedText
     summary: LocalizedText | None = None

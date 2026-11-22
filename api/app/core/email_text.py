@@ -8,6 +8,9 @@ from datetime import date
 
 TEXT: dict[str, dict[str, str]] = {
     "en": {
+        "contact_reply_subject": "Re: your message to ConferenceHub",
+        "contact_reply_heading": "We replied to your message",
+        "contact_reply_intro": "Thank you for writing to us. Here is our reply:",
         "greeting": "Hello {name},",
         "team_sign": "The ConferenceHub team",
         "footer": "You received this email because of activity on ConferenceHub.",
@@ -59,6 +62,9 @@ TEXT: dict[str, dict[str, str]] = {
         "removed_intro": "The organizer of {title} has cancelled your registration. If you think this is a mistake, please contact them.",
     },
     "si": {
+        "contact_reply_subject": "ConferenceHub වෙත ඔබ එවූ පණිවිඩයට පිළිතුර",
+        "contact_reply_heading": "අපි ඔබේ පණිවිඩයට පිළිතුරු දුන්නෙමු",
+        "contact_reply_intro": "අපට ලිවීම ගැන ස්තූතියි. අපගේ පිළිතුර මෙන්න:",
         "greeting": "ආයුබෝවන් {name},",
         "team_sign": "ConferenceHub කණ්ඩායම",
         "footer": "ConferenceHub හි සිදු වූ ක්‍රියාකාරකමක් නිසා මෙම ඊමේල් පණිවිඩය ඔබට ලැබුණි.",
@@ -110,6 +116,9 @@ TEXT: dict[str, dict[str, str]] = {
         "removed_intro": "{title} හි සංවිධායකයා ඔබේ ලියාපදිංචිය අවලංගු කර ඇත. මෙය වැරැද්දක් යැයි ඔබ සිතන්නේ නම්, කරුණාකර ඔවුන් අමතන්න.",
     },
     "ta": {
+        "contact_reply_subject": "ConferenceHub-க்கு நீங்கள் அனுப்பிய செய்திக்கு பதில்",
+        "contact_reply_heading": "உங்கள் செய்திக்குப் பதிலளித்துள்ளோம்",
+        "contact_reply_intro": "எங்களுக்கு எழுதியதற்கு நன்றி. எங்கள் பதில் இதோ:",
         "greeting": "வணக்கம் {name},",
         "team_sign": "ConferenceHub குழு",
         "footer": "ConferenceHub இல் நடந்த ஒரு செயல்பாட்டின் காரணமாக இந்த மின்னஞ்சல் உங்களுக்கு அனுப்பப்பட்டது.",

@@ -1,6 +1,7 @@
 import { AlertTriangle, CalendarRange, ExternalLink, Globe, MapPin, Navigation, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
 
@@ -56,12 +57,32 @@ const ConferencePageQuery = graphql(`
   }
 `);
 
+const ConferenceMetaQuery = graphql(`
+  query ConferenceMeta($slug: String!) {
+    conference(slug: $slug) {
+      title { en si ta }
+      summary { en si ta }
+    }
+  }
+`);
+
 const load = cache((slug: string) => query(ConferencePageQuery, { slug }));
+
+/**
+ * Title and summary only, cached for a minute. With Cache Components, metadata built from an
+ * uncached fetch is deferred and streams into the body, where search engines may miss it; cached,
+ * it goes in the <head>. Seat counts on the page itself stay live.
+ */
+async function loadMeta(slug: string) {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 60, expire: 3600 });
+  return query(ConferenceMetaQuery, { slug });
+}
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/c/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const locale = (await getLocale()) as Locale;
-  const { conference } = await load(slug);
+  const { conference } = await loadMeta(slug);
   if (!conference) return {};
   const title = localized(conference.title, locale);
   const description = localized(conference.summary, locale) || title;

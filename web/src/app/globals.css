@@ -48,6 +48,8 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* For the first screen: slides up but is never transparent, so it counts as painted at once (LCP). */
+  --animate-lift: lift 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
 }
 
@@ -122,6 +124,12 @@
   --cat-other: #94a3b8;
   --hero: radial-gradient(1200px 520px at 12% -10%, rgba(56, 189, 248, 0.22), transparent 60%),
     radial-gradient(900px 500px at 92% 10%, rgba(129, 140, 248, 0.22), transparent 60%);
+}
+
+@keyframes lift {
+  from {
+    transform: translateY(12px);
+  }
 }
 
 @keyframes rise {

@@ -36,7 +36,7 @@ export default async function ContactPage() {
   return (
     <>
       <section className="border-b bg-hero">
-        <div className="mx-auto max-w-7xl animate-[rise_.6s_ease-out] px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-7xl animate-lift px-4 py-14 sm:px-6">
           <p className="text-sm font-bold uppercase tracking-widest text-primary">{t("nav_contact")}</p>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">{t("contact_title")}</h1>
           <p className="mt-3 max-w-2xl text-lg text-muted-foreground">{t("contact_lead")}</p>

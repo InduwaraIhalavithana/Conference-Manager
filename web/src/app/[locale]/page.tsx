@@ -63,7 +63,7 @@ export default async function HomePage() {
     <>
       <section className="relative overflow-hidden border-b bg-hero">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:py-20">
-          <div className="animate-rise space-y-6">
+          <div className="animate-lift space-y-6">
             <Suspense fallback={<span className="inline-block h-7 w-56 animate-pulse rounded-full bg-muted" />}>
               <LiveBadge />
             </Suspense>
@@ -190,7 +190,7 @@ async function NextUp() {
   return (
     <Link
       href={`/c/${next.slug}`}
-      className="group block animate-rise overflow-hidden rounded-3xl border bg-card shadow-2xl shadow-primary/10 transition hover:border-primary/50"
+      className="group block animate-lift overflow-hidden rounded-3xl border bg-card shadow-2xl shadow-primary/10 transition hover:border-primary/50"
     >
       <div className={`relative h-36 bg-gradient-to-br ${style.cover}`}>
         {next.coverUrl && (

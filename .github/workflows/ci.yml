@@ -219,6 +219,9 @@ jobs:
       EMAIL_DELIVERY: log
       API_URL: http://127.0.0.1:8003
       SITE_URL: http://localhost:3100
+      # A throw-away organizer in the throw-away CI database (scripts/e2e_account.py); not a real account.
+      E2E_ORGANIZER_EMAIL: e2e.organizer@example.com
+      E2E_ORGANIZER_PASSWORD: ci-only-e2e-organizer-pass
 
     steps:
       - uses: actions/checkout@v4
@@ -246,6 +249,7 @@ jobs:
         run: |
           uv sync --locked
           uv run python -m scripts.seed_spike
+          uv run python -m scripts.e2e_account
           nohup uv run uvicorn app.main:app --host 127.0.0.1 --port 8003 > /tmp/api.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8003/health && exit 0; sleep 1; done
           cat /tmp/api.log; exit 1

@@ -23,6 +23,9 @@ npm run build
 | `/[locale]/c/[slug]` | A conference: agenda, speakers, venue map, registration with email code, calendar, share image |
 | `/[locale]/ticket/[code]` | An attendee's ticket: QR code, confirm the email code, cancel (never indexed) |
 | `/[locale]/about`, `/contact`, `/privacy`, `/terms` | About, contact form, privacy policy, terms of use |
+| `/[locale]/login`, `/register`, `/forgot`, `/reset`, `/admin/login` | Organizer sign-in and sign-up (with the emailed code), password reset, admin sign-in |
+| `/[locale]/dashboard`, `/dashboard/settings` | Organizer dashboard and settings (profile, photo, password, other devices); signed-out visitors are sent to sign in |
+| `/[locale]/admin` | Admin landing page (notifications); the full admin area arrives in Phase 5d |
 | `/sitemap.xml`, `/robots.txt` | For search engines; every page lists its other languages (hreflang) |
 
 ## Settings
@@ -32,5 +35,6 @@ npm run build
 | `API_URL` | `http://127.0.0.1:8003` | Where server components send GraphQL, and where `/api/*` is proxied (so cookies are first-party) |
 | `SITE_URL` | `http://localhost:3100` | Absolute links in metadata, the sitemap and share images |
 | `E2E_BASE_URL` | `http://localhost:3100` | The site Playwright tests |
+| `E2E_ORGANIZER_EMAIL`, `E2E_ORGANIZER_PASSWORD` | `e2e.organizer@example.com`, none | The test organizer Playwright signs in as; create it with `uv run python -m scripts.e2e_account` in `../api` (refuses to run in production). Without a password the organizer tests are skipped. |
 
 Security headers (CSP, frame, referrer, permissions, HSTS in production) are set in `next.config.ts`; see `../docs/security-checklist.md`.

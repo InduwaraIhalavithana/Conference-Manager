@@ -9,6 +9,7 @@ import {
   NavLinksFallback,
   ThemeToggle,
 } from "@/components/site/header-controls";
+import { AccountMenu } from "@/components/site/account-menu";
 import { Link } from "@/i18n/navigation";
 
 export function Header() {
@@ -32,6 +33,7 @@ export function Header() {
             <LanguageSwitcher />
           </Suspense>
           <ThemeToggle />
+          <AccountMenu />
           <Suspense fallback={<MobileMenuFallback />}>
             <MobileMenu />
           </Suspense>

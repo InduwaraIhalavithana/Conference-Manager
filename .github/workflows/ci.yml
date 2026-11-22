@@ -147,6 +147,9 @@ jobs:
       - name: Architecture rules (import-linter)
         run: uv run lint-imports
 
+      - name: GraphQL schema file is up to date
+        run: uv run python -m scripts.export_schema --check
+
       - name: Dependency audit (pip-audit)
         run: |
           uv export --frozen --no-hashes --no-emit-project --format requirements.txt -o /tmp/requirements.txt
@@ -174,6 +177,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generated GraphQL types are up to date
+        run: |
+          npm run codegen
+          git diff --exit-code -- src/graphql/generated
 
       - name: ESLint
         run: npm run lint

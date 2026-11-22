@@ -374,3 +374,21 @@ async def test_organizer_names_come_from_one_batched_lookup(api: Api, other_api:
         await create_published(api, title={"en": f"Loader {word} {i}"})
     page = await browse(other_api, f={"q": word})
     assert {e["node"]["organizer"]["name"] for e in page["edges"]} == {"Batch Perera"}
+
+
+async def test_past_conferences_are_listed_latest_first(api: Api, other_api: Api) -> None:
+    await sign_in_organizer(api)
+    word = f"ps{uuid.uuid4().hex[:6]}"
+    made = [await create_published(api, title={"en": f"Old {word} {i}"}) for i in range(3)]
+    for i, conf in enumerate(made):  # 30, 20 and 10 days ago
+        await Conference.get_pymongo_collection().update_one(
+            {"slug": conf["slug"]},
+            {"$set": {"starts_at": datetime.now(UTC) - timedelta(days=30 - 10 * i, hours=8),
+                      "ends_at": datetime.now(UTC) - timedelta(days=30 - 10 * i)}},
+        )  # fmt: skip
+    assert slugs(await browse(other_api, f={"q": word})) == []  # upcoming by default
+    first = await browse(other_api, f={"q": word, "timeframe": "PAST"}, first=2)
+    assert slugs(first) == [made[2]["slug"], made[1]["slug"]]
+    rest = await browse(other_api, f={"q": word, "timeframe": "PAST"}, first=2, after=first["pageInfo"]["endCursor"])
+    assert slugs(rest) == [made[0]["slug"]]
+    assert len(slugs(await browse(other_api, f={"q": word, "timeframe": "ALL"}))) == 3

@@ -15,10 +15,11 @@ from app.api.graphql.auth import AuthMutation, AuthQuery
 from app.api.graphql.conferences import ConferenceMutation, ConferenceQuery
 from app.api.graphql.extensions import CsrfProtection
 from app.api.graphql.registrations import RegistrationMutation, RegistrationQuery
+from app.api.graphql.stats import StatsQuery
 
 
 @strawberry.type
-class Query(RegistrationQuery, ConferenceQuery, AuthQuery):
+class Query(StatsQuery, RegistrationQuery, ConferenceQuery, AuthQuery):
     pass
 
 

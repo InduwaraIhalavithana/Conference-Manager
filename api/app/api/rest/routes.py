@@ -10,7 +10,7 @@ from fastapi.responses import Response as RawResponse
 
 from app.api import cookies
 from app.core.errors import DomainError, ErrorCode
-from app.services import exports, live, uploads
+from app.services import exports, live, system, uploads
 from app.services import health as health_service
 from app.services.auth import resolve_viewer
 
@@ -119,3 +119,15 @@ async def live_checkins(request: Request, conference_id: str) -> StreamingRespon
         # No buffering anywhere on the way (Next.js proxy, nginx), so each event arrives at once.
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )
+
+
+@router.get("/metrics", response_model=None)
+async def metrics(request: Request) -> RawResponse | JSONResponse:
+    """Prometheus text: dependencies up, queue length, failed emails, recent requests and server errors.
+    Only for a signed-in admin: behind the web proxy every request looks local, so the address proves nothing."""
+    viewer = await resolve_viewer(request.cookies.get(cookies.ACCESS))
+    if viewer is None:
+        return _error(DomainError(ErrorCode.NOT_AUTHENTICATED, "Sign in first"))
+    if viewer.admin is None:
+        return _error(DomainError(ErrorCode.FORBIDDEN, "Only administrators can read metrics"))
+    return RawResponse(system.prometheus(await system.status()), media_type="text/plain; version=0.0.4")

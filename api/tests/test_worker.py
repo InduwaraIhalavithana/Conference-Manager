@@ -26,7 +26,7 @@ from tests.test_uploads import image_bytes, upload
 SAMPLE_PARAMS = {
     "name": "Nimal <b>Silva</b>", "title": "Galle Lit Fest", "code": "123456", "minutes": 15, "hours": 24,
     "link": "http://localhost:3100/ticket/ABCDEFGHJKMN", "date": "2027-01-06", "venue": "Fort Hall, Galle",
-    "ticket": "ABCDEFGHJKMN", "position": 3,
+    "ticket": "ABCDEFGHJKMN", "position": 3, "subject": "Map pins", "quote": "Thanks, <i>fixed</i> now.",
 }  # fmt: skip
 
 
@@ -51,6 +51,8 @@ def test_every_email_kind_renders_in_every_language(kind: str, lang: str) -> Non
     assert "<b>Silva</b>" not in rendered.html and "&lt;b&gt;Silva&lt;/b&gt;" in rendered.html  # escaped
     if email.KINDS[kind].shows_code:
         assert "123456" in rendered.html
+    if email.KINDS[kind].shows_quote:
+        assert "Thanks, &lt;i&gt;fixed&lt;/i&gt; now." in rendered.html  # the quoted reply, escaped
 
 
 def test_sinhala_dates_are_written_in_sinhala() -> None:
@@ -107,6 +109,7 @@ async def test_worker_retries_failed_emails_then_gives_up() -> None:
 def test_worker_schedules_every_job() -> None:
     names = {c.name for c in worker.WorkerSettings.cron_jobs}
     assert names == {
+        "cron:heartbeat",
         "cron:release_holds",
         "cron:send_reminders",
         "cron:recount_counters",

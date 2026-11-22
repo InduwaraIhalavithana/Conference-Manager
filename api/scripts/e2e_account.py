@@ -1,7 +1,9 @@
-"""Create (or reset) the verified organizer the end-to-end tests sign in as.
+"""Create (or reset) the accounts the end-to-end tests sign in as: a verified organizer, and (when
+E2E_ADMIN_PASSWORD is set) a test admin.
 
-Reads E2E_ORGANIZER_EMAIL and E2E_ORGANIZER_PASSWORD from the environment; refuses to run in production and
-only accepts addresses on example domains, which are never emailed. Run with `uv run python -m scripts.e2e_account`.
+Reads E2E_ORGANIZER_EMAIL / E2E_ORGANIZER_PASSWORD and E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD from the environment;
+refuses to run in production and only accepts addresses on example domains, which are never emailed. The real
+admin account is never touched. Run with `uv run python -m scripts.e2e_account`.
 """
 
 import asyncio
@@ -12,7 +14,7 @@ from datetime import UTC, datetime
 from app.core.passwords import hash_password
 from app.core.settings import get_settings
 from app.db import mongo as db
-from app.models import Organizer
+from app.models import Admin, Organizer
 
 
 async def main() -> int:
@@ -40,6 +42,22 @@ async def main() -> int:
         organizer.organization = "End-to-end tests"
         await organizer.save()
         print(f"Test organizer ready: {email}")
+        admin_password = os.environ.get("E2E_ADMIN_PASSWORD")
+        if admin_password:
+            admin_email = os.environ.get("E2E_ADMIN_EMAIL", "e2e.admin@example.com").lower()
+            if len(admin_password) < 12 or admin_email.rsplit("@", 1)[-1] not in {
+                "example.com",
+                "example.org",
+                "example.net",
+            }:
+                print("E2E_ADMIN_PASSWORD needs 12+ characters and an example-domain E2E_ADMIN_EMAIL.", file=sys.stderr)
+                return 1
+            admin = await Admin.find_one({"email": admin_email})
+            if admin is None:
+                admin = Admin(username="e2e-admin", email=admin_email, password_hash="")
+            admin.password_hash = hash_password(admin_password)
+            await admin.save()
+            print(f"Test admin ready: {admin_email}")
     finally:
         await db.disconnect()
     return 0

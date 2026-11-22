@@ -1,8 +1,90 @@
+type ActivityEntry {
+  id: ID!
+  actorType: String!
+  actorName: String
+  action: String!
+  target: String
+  meta: JSON!
+  createdAt: DateTime!
+}
+
+type ActivityPage {
+  items: [ActivityEntry!]!
+  total: Int!
+  actions: [String!]!
+}
+
+union ActivityPageResult = ActivityPage | UserError
+
 type Admin {
   id: ID!
   username: String!
   email: String!
 }
+
+type AdminConference {
+  id: ID!
+  slug: String!
+  title: String!
+  status: String!
+  hidden: Boolean!
+  hiddenReason: String
+  startsAt: DateTime!
+  city: String
+  registered: Int!
+  capacity: Int
+  organizerName: String
+  organizerEmail: String
+}
+
+enum AdminConferenceFilter {
+  ALL
+  UPCOMING
+  PAST
+  DRAFT
+  CANCELLED
+  HIDDEN
+}
+
+type AdminConferencePage {
+  items: [AdminConference!]!
+  total: Int!
+}
+
+union AdminConferencePageResult = AdminConferencePage | UserError
+
+union AdminConferenceResult = AdminConference | UserError
+
+type AdminOrganizer {
+  organizer: Organizer!
+  suspended: Boolean!
+  conferences: Int!
+}
+
+type AdminOrganizerPage {
+  items: [AdminOrganizer!]!
+  total: Int!
+}
+
+union AdminOrganizerPageResult = AdminOrganizerPage | UserError
+
+union AdminOrganizerResult = AdminOrganizer | UserError
+
+type AdminOverview {
+  organizersActive: Int!
+  organizersSuspended: Int!
+  organizersUnverified: Int!
+  conferencesUpcoming: Int!
+  conferencesDrafts: Int!
+  conferencesCancelled: Int!
+  conferencesHidden: Int!
+  registrationsActive: Int!
+  registrationsWeek: Int!
+  contactsOpen: Int!
+  feedbackOpen: Int!
+}
+
+union AdminOverviewResult = AdminOverview | UserError
 
 type AgendaSession {
   id: ID!
@@ -276,6 +358,31 @@ input ContactInput {
   topic: ContactTopic! = GENERAL
 }
 
+type ContactMessage {
+  id: ID!
+  name: String!
+  email: String!
+  topic: String!
+  message: String!
+  status: ContactStatus!
+  createdAt: DateTime!
+  resolvedAt: DateTime
+}
+
+type ContactPage {
+  items: [ContactMessage!]!
+  total: Int!
+}
+
+union ContactPageResult = ContactPage | UserError
+
+union ContactResult = ContactMessage | UserError
+
+enum ContactStatus {
+  OPEN
+  RESOLVED
+}
+
 enum ContactTopic {
   GENERAL
   ATTENDING
@@ -347,6 +454,39 @@ enum ErrorCode {
   CAPACITY_BELOW_TAKEN
 }
 
+type FeedbackItem {
+  id: ID!
+  subject: String!
+  message: String!
+  status: FeedbackStatus!
+  reply: String
+  repliedAt: DateTime
+  createdAt: DateTime!
+  organizerName: String
+  organizerEmail: String
+}
+
+type FeedbackList {
+  items: [FeedbackItem!]!
+}
+
+union FeedbackListResult = FeedbackList | UserError
+
+type FeedbackPage {
+  items: [FeedbackItem!]!
+  total: Int!
+}
+
+union FeedbackPageResult = FeedbackPage | UserError
+
+union FeedbackResult = FeedbackItem | UserError
+
+enum FeedbackStatus {
+  OPEN
+  REPLIED
+  CLOSED
+}
+
 type GeoLocation {
   latitude: Float!
   longitude: Float!
@@ -356,6 +496,13 @@ type GeoLocation {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
 """
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+type JobRun {
+  name: String!
+  at: DateTime!
+  ok: Boolean!
+  result: String!
+}
 
 type KeyCount {
   key: String!
@@ -381,6 +528,39 @@ input LocalizedTextInput {
 }
 
 type Mutation {
+  """
+  Sign the organizer out everywhere and hide their conferences until restored.
+  """
+  suspendOrganizer(id: ID!): AdminOrganizerResult!
+
+  """
+  Let the organizer sign in again and show the conferences their suspension hid.
+  """
+  restoreOrganizer(id: ID!): AdminOrganizerResult!
+
+  """
+  Delete the organizer and everything they own; attendees of upcoming events are emailed.
+  """
+  deleteOrganizer(id: ID!): RemovedResult!
+
+  """
+  Hide a conference from the public (the organizer is told), or show it again.
+  """
+  setConferenceHidden(id: ID!, hidden: Boolean!): AdminConferenceResult!
+  setContactResolved(id: ID!, resolved: Boolean!): ContactResult!
+
+  """
+  Email a reply to whoever used the contact form, and mark the message resolved.
+  """
+  replyToContact(id: ID!, message: String!): ContactResult!
+
+  """An organizer writes to the admin team (10 an hour)."""
+  sendFeedback(subject: String!, message: String!): FeedbackResult!
+
+  """Answer an organizer's feedback; they get a notification and an email."""
+  replyToFeedback(id: ID!, reply: String!): FeedbackResult!
+  closeFeedback(id: ID!): FeedbackResult!
+
   """Update the signed-in organizer's profile."""
   updateProfile(input: ProfileInput!): ProfileResult!
 
@@ -543,6 +723,13 @@ type Organizer {
   createdAt: DateTime!
 }
 
+enum OrganizerFilter {
+  ALL
+  ACTIVE
+  SUSPENDED
+  UNVERIFIED
+}
+
 """The public face of an organizer: no email or phone."""
 type OrganizerSummary {
   name: String!
@@ -585,6 +772,20 @@ input ProfileInput {
 union ProfileResult = Organizer | UserError
 
 type Query {
+  """Platform numbers for the admin dashboard."""
+  adminOverview: AdminOverviewResult!
+  adminOrganizers(q: String = null, status: OrganizerFilter! = ALL, first: Int! = 25, offset: Int! = 0): AdminOrganizerPageResult!
+  adminConferences(q: String = null, status: AdminConferenceFilter! = ALL, first: Int! = 25, offset: Int! = 0): AdminConferencePageResult!
+  contactMessages(status: ContactStatus = null, first: Int! = 25, offset: Int! = 0): ContactPageResult!
+  adminFeedback(status: FeedbackStatus = null, first: Int! = 25, offset: Int! = 0): FeedbackPageResult!
+
+  """The signed-in organizer's own feedback and the replies."""
+  myFeedback: FeedbackListResult!
+  activityLog(actorType: String = null, action: String = null, first: Int! = 50, offset: Int! = 0): ActivityPageResult!
+
+  """Databases, the worker and its jobs, the queue, and recent errors."""
+  systemStatus: SystemStatusResult!
+
   """
   Registrations over time, arrivals, and breakdowns for one of your conferences.
   """
@@ -671,6 +872,13 @@ type RemindersSent {
   count: Int!
 }
 
+type Removed {
+  registrations: Int!
+  conferences: Int!
+}
+
+union RemovedResult = Removed | UserError
+
 input SessionInput {
   title: LocalizedTextInput!
   startsAt: DateTime!
@@ -726,6 +934,20 @@ input SpeakerInput {
 }
 
 union SpeakerResult = Speaker | UserError
+
+type SystemStatus {
+  mongo: Boolean!
+  redis: Boolean!
+  workerRunning: Boolean!
+  workerSeenAt: DateTime
+  queueLength: Int!
+  failedEmailsToday: Int!
+  requestsLastHour: Int!
+  errorsLastHour: Int!
+  jobs: [JobRun!]!
+}
+
+union SystemStatusResult = SystemStatus | UserError
 
 """What the ticket holder sees, by the code from their email."""
 type Ticket {

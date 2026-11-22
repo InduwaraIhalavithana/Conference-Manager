@@ -14,6 +14,11 @@ def queue_name(prefix: str) -> str:
     return f"{prefix}:arq:queue"
 
 
+def current_queue_name() -> str:
+    """The queue this process uses (set by connect)."""
+    return _queue_name
+
+
 def redis_settings(url: str) -> RedisSettings:
     return RedisSettings.from_dsn(url)
 

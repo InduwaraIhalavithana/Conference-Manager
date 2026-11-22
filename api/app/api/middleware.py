@@ -9,6 +9,7 @@ import structlog
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.core.logging import get_logger
+from app.services import system
 
 log = get_logger("http")
 _SAFE_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
@@ -39,6 +40,8 @@ class RequestContextMiddleware:
         try:
             await self.app(scope, receive, send_with_id)
         finally:
+            if scope["path"] != "/metrics":
+                await system.record_request(status)
             log.info(
                 "request",
                 method=scope["method"],

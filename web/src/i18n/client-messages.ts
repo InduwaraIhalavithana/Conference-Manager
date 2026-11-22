@@ -13,6 +13,10 @@ export const CLIENT_PREFIXES = [
   "publish", "pin_", "no_conferences_yet", "duplicate", "unpublish", "attendee",
   // The check-in desk and analytics (Phase 5c).
   "ci_", "an_", "analytics_", "avg_fill",
+  // The admin area and the organizer help page (Phase 5d).
+  "admin_", "role_", "activity_", "act_", "badge_", "feedback_", "filter_", "org_", "sys_", "system_", "job_", "inbox_",
+  "reply", "search_", "help_", "faq_", "suspend", "restore", "reopen", "mark_resolved", "n_conferences",
+  "hide_conference", "show_conference", "close_feedback", "send_reply", "all_actions",
 ] as const;
 
 /** Single keys used by client components. */

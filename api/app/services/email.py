@@ -51,6 +51,7 @@ class KindSpec:
     intro: str
     button: str | None = None
     shows_code: bool = False
+    shows_quote: bool = False
 
 
 KINDS: dict[str, KindSpec] = {
@@ -66,6 +67,10 @@ KINDS: dict[str, KindSpec] = {
     "reminder": KindSpec("remind_subject", "remind_heading", "remind_intro", "btn_ticket"),
     "conference_cancelled": KindSpec("cancel_subject", "cancel_heading", "cancel_intro", "btn_ticket"),
     "removed_by_organizer": KindSpec("removed_subject", "removed_heading", "removed_intro"),
+    "feedback_reply": KindSpec("fb_subject", "fb_heading", "fb_intro", shows_quote=True),
+    "contact_reply": KindSpec(
+        "contact_reply_subject", "contact_reply_heading", "contact_reply_intro", shows_quote=True
+    ),
 }
 
 
@@ -92,7 +97,7 @@ def render(message: EmailMessage) -> RenderedEmail:
         greeting=tr(lang, "greeting", name=p.get("name") or ""),
         paragraphs=[tr(lang, spec.intro, **p)],
         rows=rows,
-        quote=None,
+        quote=p.get("quote") if spec.shows_quote else None,
         code=p.get("code") if spec.shows_code else None,
         code_label=tr(lang, "code_label"),
         button_label=tr(lang, spec.button) if spec.button and p.get("link") else None,

@@ -8,6 +8,9 @@ export const CLIENT_PREFIXES = [
   // The organizer and admin areas (Phase 5) are client-rendered.
   "field_", "note_", "notifications", "pw_", "upload_", "stat_", "status_", "check_", "qa_", "dash_",
   "sign_out_", "admin_home_", "no_upcoming_",
+  // The conference editor and attendees page (Phase 5b).
+  "add_", "delete_", "edit_", "remove_", "reminders_", "conf_", "pub_problem_", "speakers_", "track", "cancel_",
+  "publish", "pin_", "no_conferences_yet", "duplicate", "unpublish", "attendee",
 ] as const;
 
 /** Single keys used by client components. */
@@ -32,6 +35,13 @@ export const CLIENT_KEYS = [
   "profile_photo", "profile_photo_help", "profile_saved", "quick_actions", "reset_done", "reset_save", "save_changes",
   "send_reset_link", "settings_sub", "show_password", "signed_in_as", "upcoming_conferences", "verify_done",
   "verify_sent_body", "welcome_back",
+  "actions", "agenda_empty_body", "capacity_and_status", "capacity_help", "checked_in", "conference_cancelled_banner",
+  "cover_help", "create_conference", "day_label", "day_label_ph", "delete", "description_placeholder", "draft_hint",
+  "edit", "export_csv", "links_help", "location_placeholder", "my_conferences_sub", "n_registered", "new_conference",
+  "no_results_filtered", "no_track", "online_url_help", "promoted_badge", "quick_pin", "ready_to_publish",
+  "registered_on", "room_placeholder", "save", "saved", "search_attendees", "search_my_conferences", "send_reminders",
+  "shown_of_total", "summary_help", "tags_help", "times_local_help", "title_placeholder", "translations_help",
+  "undo_check_in", "venue", "view_public", "waitlist_enabled",
 ] as const;
 
 const KEYS = new Set<string>(CLIENT_KEYS);

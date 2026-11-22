@@ -5,6 +5,9 @@ type Params = Record<string, unknown>;
 const KINDS: Record<string, { key: string; params: (p: Params) => Record<string, string | number> }> = {
   new_registration: { key: "note_new_registration", params: (p) => ({ attendee: String(p.name ?? ""), conference: String(p.title ?? "") }) },
   new_waitlister: { key: "note_new_waitlist", params: (p) => ({ attendee: String(p.name ?? ""), conference: String(p.title ?? "") }) },
+  attendee_cancelled: { key: "note_attendee_cancelled", params: (p) => ({ attendee: String(p.name ?? ""), conference: String(p.title ?? "") }) },
+  waitlist_promoted: { key: "note_waitlist_promoted", params: (p) => ({ attendee: String(p.name ?? ""), conference: String(p.title ?? "") }) },
+  conference_full: { key: "note_conference_full", params: (p) => ({ conference: String(p.title ?? "") }) },
   reminders_sent: { key: "note_reminders_sent", params: (p) => ({ count: Number(p.count ?? 0), conference: String(p.title ?? "") }) },
   new_organizer: { key: "note_new_organizer", params: (p) => ({ name: String(p.name ?? "") }) },
   contact_message: { key: "note_new_contact", params: (p) => ({ name: String(p.name ?? "") }) },

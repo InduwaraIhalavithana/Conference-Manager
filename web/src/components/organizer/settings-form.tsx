@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { graphql } from "@/graphql/generated";
 import type { Locale } from "@/i18n/routing";
 import { formatDate } from "@/lib/format";
-import { csrfToken } from "@/lib/graphql/client";
+import { UPLOAD_MAX_MB, uploadErrorText, uploadImage } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
 const UpdateProfile = graphql(`
@@ -45,27 +45,12 @@ const SignOutOthers = graphql(`
   }
 `);
 
-const MAX_MB = 2;
+const MAX_MB = UPLOAD_MAX_MB.avatar;
 const LANGS = [
   { code: "en", label: "English" },
   { code: "si", label: "සිංහල" },
   { code: "ta", label: "தமிழ்" },
 ] as const;
-
-type Upload = { url: string } | { error: string };
-
-async function uploadAvatar(file: File): Promise<Upload> {
-  const body = new FormData();
-  body.append("file", file);
-  const res = await fetch("/api/upload?kind=avatar", {
-    method: "POST",
-    body,
-    headers: { "X-CSRF-Token": await csrfToken() },
-    credentials: "same-origin",
-  });
-  const json = (await res.json().catch(() => ({}))) as { url?: string; code?: string };
-  return json.url ? { url: json.url } : { error: json.code ?? "server" };
-}
 
 export function SettingsForm() {
   const t = useTranslations();
@@ -100,17 +85,13 @@ function ProfileSection() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return toast.error(t("upload_bad_type"));
-    if (file.size > MAX_MB * 1024 * 1024) {
-      return toast.error(t("upload_too_big", { size: (file.size / 1024 / 1024).toFixed(1), max: MAX_MB }));
-    }
     setUploading(true);
-    const result = await uploadAvatar(file);
+    const result = await uploadImage("avatar", file);
     setUploading(false);
     if ("url" in result) {
       setAvatar(result.url);
       toast.success(t("upload_done"));
-    } else toast.error(t(`err_${result.error.toLowerCase()}`));
+    } else toast.error(uploadErrorText(t, "avatar", file, result.error));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {

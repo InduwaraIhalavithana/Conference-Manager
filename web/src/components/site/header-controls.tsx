@@ -69,7 +69,7 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t("language")} disabled={pending} className="gap-1.5">
+        <Button variant="ghost" size="sm" aria-label={`${t("language")}: ${locale.toUpperCase()}`} disabled={pending} className="gap-1.5">
           <Languages className="size-4" aria-hidden />
           <span className="uppercase">{locale}</span>
         </Button>

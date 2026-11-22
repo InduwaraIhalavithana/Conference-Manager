@@ -63,7 +63,17 @@ export function SeatsBadge({ capacity, seatsLeft }: { capacity: number | null; s
   );
 }
 
-export function ConferenceCard({ conference, index = 0 }: { conference: ConferenceCardFieldsFragment; index?: number }) {
+export function ConferenceCard({
+  conference,
+  index = 0,
+  headingLevel = 3,
+}: {
+  conference: ConferenceCardFieldsFragment;
+  index?: number;
+  /** h3 under a section heading (home); h2 straight under the page's h1 (browse). */
+  headingLevel?: 2 | 3;
+}) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   const t = useTranslations();
   const locale = useLocale() as Locale;
   const c = conference;
@@ -104,7 +114,7 @@ export function ConferenceCard({ conference, index = 0 }: { conference: Conferen
           <CategoryChip category={c.category} />
           {!cancelled && <SeatsBadge capacity={c.capacity} seatsLeft={c.seatsLeft} />}
         </div>
-        <h3 className={cn("text-lg font-bold leading-snug group-hover:text-primary", cancelled && "line-through opacity-70")}>{title}</h3>
+        <Heading className={cn("text-lg font-bold leading-snug group-hover:text-primary", cancelled && "line-through opacity-70")}>{title}</Heading>
         {c.summary && <p className="line-clamp-2 text-sm text-muted-foreground">{localized(c.summary, locale)}</p>}
         <div className="mt-auto space-y-1.5 text-sm text-muted-foreground">
           <p className="flex items-center gap-2">

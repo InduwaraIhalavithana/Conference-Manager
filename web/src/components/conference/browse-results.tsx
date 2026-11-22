@@ -57,7 +57,7 @@ export function BrowseResults({
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c, i) => (
-            <ConferenceCard key={c.id} conference={c} index={i % 12} />
+            <ConferenceCard key={c.id} conference={c} index={i % 12} headingLevel={2} />
           ))}
         </div>
       )}

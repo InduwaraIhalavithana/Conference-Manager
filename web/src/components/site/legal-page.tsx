@@ -17,7 +17,7 @@ export async function LegalPage({ prefix, sections }: { prefix: "privacy" | "ter
   return (
     <>
       <section className="border-b bg-hero">
-        <div className="mx-auto max-w-5xl animate-[rise_.6s_ease-out] px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-5xl animate-lift px-4 py-14 sm:px-6">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">{t(`${prefix}_title`)}</h1>
           <p className="mt-3 max-w-3xl text-lg text-muted-foreground">{t(`${prefix}_lead`)}</p>
           <p className="mt-4 text-sm font-medium">{t("legal_updated", { date: formatDate(LEGAL_UPDATED, locale) })}</p>

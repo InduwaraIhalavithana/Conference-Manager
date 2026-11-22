@@ -44,7 +44,7 @@ export default async function AboutPage() {
     <>
       <section className="relative overflow-hidden border-b bg-hero">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:py-20">
-          <div className="animate-[rise_.6s_ease-out]">
+          <div className="animate-lift">
             <p className="text-sm font-bold uppercase tracking-widest text-primary">{t("nav_about")}</p>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">{t("about_title")}</h1>
             <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{t("about_lead")}</p>
@@ -130,7 +130,7 @@ export default async function AboutPage() {
             </p>
             <p className="mt-4 leading-relaxed">{t("about_creator_body")}</p>
             <ul className="mt-4 flex flex-wrap gap-2" aria-label="Stack">
-              {["FastAPI", "GraphQL", "MongoDB", "Redis", "Next.js", "EN · සිං · தமி"].map((s) => (
+              {["FastAPI", "GraphQL", "MongoDB", "Redis", "Next.js", "EN · SI · TA"].map((s) => (
                 <li key={s} className="rounded-full border bg-background px-3 py-1 text-xs font-semibold">
                   {s}
                 </li>

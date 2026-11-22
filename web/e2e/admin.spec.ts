@@ -61,7 +61,10 @@ test.describe("admin area", () => {
       await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
       expect(await seriousAxeIssues(page), path).toEqual([]);
     }
-    await expect(page.getByText("All systems running")).toBeVisible();
+    // CI runs no background worker, so only the database and cache are expected to be up.
+    for (const service of ["Database", "Cache and queue"]) {
+      await expect(page.getByRole("listitem").filter({ hasText: service }).getByText("Running")).toBeVisible();
+    }
   });
 
   test("organizers cannot open the admin area", async ({ page }) => {

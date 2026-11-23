@@ -42,6 +42,8 @@ class ErrorCode(StrEnum):
     FEEDBACK_NOT_ATTENDED = "feedback_not_attended"
     FEEDBACK_NOT_YET = "feedback_not_yet"
     FEEDBACK_CLOSED = "feedback_closed"
+    QA_TICKET_REQUIRED = "qa_ticket_required"
+    QA_CLOSED = "qa_closed"
 
 
 class DomainError(Exception):

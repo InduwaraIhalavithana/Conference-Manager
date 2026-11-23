@@ -1,4 +1,4 @@
-import { CalendarDays, CircleCheck, Clock, Hourglass, Info, Mail, MapPin, Ticket as TicketIcon, UserRound, XCircle } from "lucide-react";
+import { CalendarDays, CircleCheck, Clock, Hourglass, Info, Mail, MapPin, MessagesSquare, Ticket as TicketIcon, UserRound, XCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -170,6 +170,13 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
               <div className="w-full sm:w-auto" data-tour="tk-calendar">
                 <AddToCalendar slug={c.slug} title={title} details={localized(c.summary, locale)} location={place} startsAt={c.startsAt} endsAt={c.endsAt} />
               </div>
+            )}
+            {ticket.status === "REGISTERED" && ticket.confirmed && c.status === "PUBLISHED" && c.sessions.length > 0 && (
+              <Button asChild className="rounded-xl" data-tour="tk-qa">
+                <Link href={`/ticket/${ticket.code}/qa`}>
+                  <MessagesSquare className="size-4" aria-hidden /> {t("nav_live_qa")}
+                </Link>
+              </Button>
             )}
             <Button asChild variant="outline" className="rounded-xl">
               <Link href={`/c/${c.slug}`}>

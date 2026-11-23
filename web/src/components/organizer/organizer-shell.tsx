@@ -49,6 +49,7 @@ function tourFor(pathname: string): TourName | null {
   if (section === "conferences") {
     if (!id) return "myConferences";
     if (sub === "attendees") return "attendees";
+    if (sub === "qa") return "qaModeration";
     if (!sub) return "editor";
   }
   return null;

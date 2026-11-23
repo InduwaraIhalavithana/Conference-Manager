@@ -6,6 +6,7 @@ from app.models.common import ActorRef, LocalizedText
 from app.models.conference import Conference
 from app.models.feedback import SessionRating
 from app.models.messages import ActivityLog, ContactMessage, Feedback, Notification
+from app.models.question import Question
 from app.models.registration import CheckInEvent, Registration
 
 DOCUMENT_MODELS: list[type[Document]] = [
@@ -21,6 +22,7 @@ DOCUMENT_MODELS: list[type[Document]] = [
     Registration,
     CheckInEvent,
     SessionRating,
+    Question,
 ]
 
 __all__ = [
@@ -36,6 +38,7 @@ __all__ = [
     "LocalizedText",
     "Notification",
     "Organizer",
+    "Question",
     "SessionRating",
     "PasswordReset",
     "Registration",

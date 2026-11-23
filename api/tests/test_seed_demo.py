@@ -40,6 +40,8 @@ async def test_the_demo_seed_adds_and_removes_only_demo_data(tmp_path: Path, mon
     org_ids = [o.id for o in orgs]
     confs = await Conference.find({"organizer_id": {"$in": org_ids}}).to_list()
     assert confs and all(c.sessions and c.speakers for c in confs)
+    for c in confs:  # sessions sit on the conference's days, as the app keeps them (the agenda shows them by day)
+        assert c.days and {s.day for s in c.sessions} <= {d.date for d in c.days}
     in_confs = {"$in": [c.id for c in confs]}
     regs = await Registration.find({"conference_id": in_confs}).to_list()
     assert regs and all(r.email.endswith("@attendee.demo.conferencehub.lk") for r in regs)
@@ -53,6 +55,8 @@ async def test_the_demo_seed_adds_and_removes_only_demo_data(tmp_path: Path, mon
     ratings = await SessionRating.find({"conference_id": in_confs}).to_list()
     questions = await Question.find({"conference_id": in_confs}).to_list()
     assert events and ratings and questions
+    asked = [(q.session_id, q.text) for q in questions]
+    assert len(asked) == len(set(asked))  # no session repeats a question
     linked = (
         {e.registration_id for e in events}
         | {x.registration_id for x in ratings}

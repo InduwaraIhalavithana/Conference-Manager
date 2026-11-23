@@ -237,12 +237,16 @@ def agenda(conf: Conference, lang: str, days: list[date], start: time, end: time
                      bio=LocalizedText(en=f"{fn} works on {FOCUS[conf.category]} and speaks at regional conferences."))  # fmt: skip
         sp.photo_url = portrait(name, f"sp-{conf.slug[:20]}-{sp.id}", "speakers")
         conf.speakers.append(sp)
+    # Every conference has one entry per date (as the app keeps them); two-day events also get labels and tracks.
+    conf.days = [
+        ConferenceDay(date=d, label=LocalizedText(en=f"Day {i + 1}") if len(days) > 1 else None)
+        for i, d in enumerate(days)
+    ]
     if len(days) > 1:
         conf.tracks = [
             Track(name=LocalizedText(en="Main stage"), color="#0ea5e9"),
             Track(name=LocalizedText(en="Workshops"), color="#10b981"),
         ]
-        conf.days = [ConferenceDay(date=d, label=LocalizedText(en=f"Day {i + 1}")) for i, d in enumerate(days)]
     used: set[str] = set()
     for day in days:
         minute = start.hour * 60 + start.minute
@@ -338,12 +342,12 @@ async def people_for(
         for s in talks:
             if s.starts_at > now:
                 continue
-            for _ in range(rng.randint(0, 5)):
+            for text in rng.sample(QUESTIONS, k=rng.randint(0, 5)):  # no repeated question in one session
                 author = rng.choice(askers)
                 voters = rng.sample(askers, k=min(len(askers), rng.randint(0, 12)))
                 ids = [v.id for v in voters if v.id != author.id]
                 questions.append(Question(conference_id=conf.id, session_id=s.id, registration_id=author.id,
-                                          author_name=author.name.split()[0], text=rng.choice(QUESTIONS), voter_ids=ids, votes=len(ids),
+                                          author_name=author.name.split()[0], text=text, voter_ids=ids, votes=len(ids),
                                           status="answered" if ended or rng.random() < 0.4 else "open",
                                           created_at=s.starts_at + timedelta(minutes=rng.randint(5, 40))))  # fmt: skip
     if questions:

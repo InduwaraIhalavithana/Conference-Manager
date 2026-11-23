@@ -12,7 +12,7 @@ echo  ============================================================
 echo.
 
 REM -- Tools on this computer? (uv runs the Python API, npm the website, Docker the databases)
-call :find_tool uv "%APPDATA%\Python\Python314\Scripts\uv.exe" || goto :fail
+call :find_uv || goto :fail
 call :find_tool docker "%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin\docker.exe" || goto :fail
 where npm >nul 2>&1 || (
     echo  [!] npm not found. Install Node.js 22 or newer.
@@ -26,6 +26,12 @@ if not exist "%ROOT%api\.env" (
 )
 if not exist "%ROOT%web\node_modules" (
     echo  [!] web\node_modules is missing. Run setup.bat first.
+    goto :fail
+)
+REM -- The API's Python environment must start from here too (setup.bat rebuilds it if not).
+"%ROOT%api\.venv\Scripts\python.exe" -c "pass" >nul 2>&1
+if errorlevel 1 (
+    echo  [!] The API's Python environment is missing or broken. Run setup.bat first.
     goto :fail
 )
 
@@ -90,6 +96,25 @@ exit /b 0
 echo.
 if /i not "%~1"=="/q" pause
 exit /b 1
+
+REM -- uv runs the Python API. Look on PATH, then where uv's installers put it. (A copy installed
+REM    from inside a packaged app such as the Claude desktop app does not count: Windows keeps the
+REM    files such an app writes to AppData private to it, so a double-click cannot see them.)
+:find_uv
+where uv >nul 2>&1 && exit /b 0
+call :try_uv "%USERPROFILE%\.local\bin\uv.exe" && exit /b 0
+call :try_uv "%LOCALAPPDATA%\Microsoft\WinGet\Links\uv.exe" && exit /b 0
+call :try_uv "%USERPROFILE%\.cargo\bin\uv.exe" && exit /b 0
+call :try_uv "%APPDATA%\Python\Python314\Scripts\uv.exe" && exit /b 0
+echo  [!] uv was not found. Install it once from PowerShell:
+echo        powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+echo      then close this window, run setup.bat, and try again.
+exit /b 1
+
+:try_uv
+if not exist "%~1" exit /b 1
+set "PATH=%~dp1;%PATH%"
+exit /b 0
 
 REM -- Make a tool usable: already on PATH, or add the folder of its usual install place.
 :find_tool

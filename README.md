@@ -95,7 +95,7 @@ flowchart LR
 
 Needs Docker, [uv](https://docs.astral.sh/uv/) (Python 3.13) and Node 22.
 
-**On Windows:** run `setup.bat` once (then set `SECRET_KEY` and `ADMIN_INITIAL_PASSWORD` in `api\.env`), then
+**On Windows:** install uv once from PowerShell (`powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`), run `setup.bat` once (then set `SECRET_KEY` and `ADMIN_INITIAL_PASSWORD` in `api\.env`), then
 `start-services.bat` starts everything in separate windows and `stop-services.bat` stops it
 (`stop-services.bat /keepdb` leaves MongoDB and Redis running). By hand:
 

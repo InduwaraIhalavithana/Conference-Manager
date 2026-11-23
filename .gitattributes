@@ -1,0 +1,2 @@
+# Windows scripts keep CRLF line endings: cmd.exe can mis-handle labels in LF files.
+*.bat text eol=crlf

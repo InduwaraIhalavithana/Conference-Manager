@@ -1,4 +1,5 @@
-# Weekly update PRs, opened against the default branch (master).
+# Weekly update PRs, opened against the default branch (master). Releases wait 7 days (cooldown) so a broken or
+# hijacked version is usually caught by others first.
 version: 2
 updates:
   - package-ecosystem: uv
@@ -6,6 +7,8 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     groups:
       api-minor-and-patch:
         update-types: [minor, patch]
@@ -15,11 +18,23 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     groups:
       web-minor-and-patch:
         update-types: [minor, patch]
+    # Major versions the rest of the toolchain does not support yet (checked 2026-11-23). Remove a line to try again.
+    ignore:
+      - dependency-name: typescript      # 7: typescript-eslint supports below 6.1, and the web build fails
+        update-types: [version-update:semver-major]
+      - dependency-name: eslint          # 10: the react, import and jsx-a11y plugins in eslint-config-next stop at 9
+        update-types: [version-update:semver-major]
+      - dependency-name: "@types/node"   # follows the Node version we run (22), not the newest
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7

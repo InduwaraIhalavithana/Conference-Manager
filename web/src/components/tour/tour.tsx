@@ -29,7 +29,9 @@ export const TOURS = {
   adminConferences: ["ac-filters", "ac-hide"],
   adminInbox: ["ai-tabs", "ai-status", "ai-reply"],
   conference: ["cd-register", "cd-calendar", "cd-agenda", "cd-map"],
-  ticket: ["tk-qr", "tk-calendar", "tk-agenda", "tk-feedback", "tk-cancel"],
+  ticket: ["tk-qr", "tk-calendar", "tk-qa", "tk-agenda", "tk-feedback", "tk-cancel"],
+  qa: ["qa-session", "qa-ask", "qa-list"],
+  qaModeration: ["qm-session", "qm-list"],
 } as const;
 
 export type TourName = keyof typeof TOURS;

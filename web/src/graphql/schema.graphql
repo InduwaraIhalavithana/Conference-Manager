@@ -468,6 +468,8 @@ enum ErrorCode {
   FEEDBACK_NOT_ATTENDED
   FEEDBACK_NOT_YET
   FEEDBACK_CLOSED
+  QA_TICKET_REQUIRED
+  QA_CLOSED
 }
 
 """
@@ -542,6 +544,24 @@ enum Lang {
   TA
 }
 
+"""
+A question as ticket holders see it: first name only, and whether it is theirs.
+"""
+type LiveQuestion {
+  id: ID!
+  sessionId: ID!
+  text: String!
+  authorName: String!
+  votes: Int!
+  status: QuestionStatus!
+  createdAt: DateTime!
+  answeredAt: DateTime
+  votedByMe: Boolean!
+  mine: Boolean!
+}
+
+union LiveQuestionResult = LiveQuestion | UserError
+
 type LocalizedText {
   en: String!
   si: String
@@ -553,6 +573,20 @@ input LocalizedTextInput {
   si: String = null
   ta: String = null
 }
+
+"""A question as the organizer sees it, hidden ones included."""
+type ModeratedQuestion {
+  id: ID!
+  sessionId: ID!
+  text: String!
+  authorName: String!
+  votes: Int!
+  status: QuestionStatus!
+  createdAt: DateTime!
+  answeredAt: DateTime
+}
+
+union ModeratedQuestionResult = ModeratedQuestion | UserError
 
 type Mutation {
   """
@@ -595,6 +629,17 @@ type Mutation {
   Rate a session (or the conference, with no sessionId) 1-5 stars with an optional comment. Checked-in attendees only, after it has ended and until feedbackClosesAt; giving it again replaces it.
   """
   rateSession(ticketCode: String!, score: Int!, sessionId: ID = null, comment: String = null): RatingResult!
+
+  """
+  Ask a question in a session (3-300 characters). Confirmed ticket holders only.
+  """
+  askQuestion(ticketCode: String!, sessionId: ID!, text: String!): LiveQuestionResult!
+
+  """Upvote someone else's question, or take the vote back."""
+  voteQuestion(ticketCode: String!, questionId: ID!, voted: Boolean!): LiveQuestionResult!
+
+  """Mark a question answered, hide it, or open it again (the organizer)."""
+  setQuestionStatus(questionId: ID!, status: QuestionStatus!): ModeratedQuestionResult!
 
   """Update the signed-in organizer's profile."""
   updateProfile(input: ProfileInput!): ProfileResult!
@@ -816,6 +861,32 @@ input ProfileInput {
 
 union ProfileResult = Organizer | UserError
 
+"""One session's live Q&A for a ticket holder."""
+type QaBoard {
+  """False once Q&A has closed (then the board is read-only)."""
+  open: Boolean!
+  conferenceId: ID!
+  conferenceTitle: LocalizedText!
+  slug: String!
+  timezone: String!
+  sessionId: ID
+  sessions: [QaSession!]!
+  questions: [LiveQuestion!]!
+}
+
+union QaBoardResult = QaBoard | UserError
+
+type QaSession {
+  id: ID!
+  title: LocalizedText!
+  startsAt: DateTime!
+  endsAt: DateTime!
+  room: String
+
+  """Visible questions in this session."""
+  questions: Int!
+}
+
 type Query {
   """Platform numbers for the admin dashboard."""
   adminOverview: AdminOverviewResult!
@@ -843,6 +914,14 @@ type Query {
 
   """Ratings and comments for one of the signed-in organizer's conferences."""
   conferenceFeedback(conferenceId: ID!): ConferenceFeedbackResult!
+
+  """
+  Live Q&A for a ticket holder: one session's questions (the current or next session when none is given), most votes first.
+  """
+  liveQuestions(ticketCode: String!, sessionId: ID = null): QaBoardResult!
+
+  """All questions in one session of the signed-in organizer's conference."""
+  sessionQuestions(conferenceId: ID!, sessionId: ID!): SessionQuestionsResult!
 
   """The signed-in person's notifications, newest first."""
   notifications(first: Int! = 30, after: String = null): NotificationPageResult!
@@ -886,6 +965,12 @@ type Query {
 
   """The signed-in organizer or admin, or null."""
   me: Viewer
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  HIDDEN
 }
 
 union RatingResult = MyRating | UserError
@@ -960,6 +1045,13 @@ enum SessionKind {
   PANEL
   BREAK
 }
+
+type SessionQuestions {
+  sessions: [QaSession!]!
+  questions: [ModeratedQuestion!]!
+}
+
+union SessionQuestionsResult = SessionQuestions | UserError
 
 union SessionResult = AgendaSession | UserError
 

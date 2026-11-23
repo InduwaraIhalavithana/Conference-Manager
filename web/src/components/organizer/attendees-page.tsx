@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BellRing, Download, Loader2, MoreHorizontal, ScanLine, Search, Trash2, Undo2, UserCheck } from "lucide-react";
+import { ArrowLeft, BellRing, Download, Loader2, MessagesSquare, MoreHorizontal, ScanLine, Search, Trash2, Undo2, UserCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -115,6 +115,13 @@ export function AttendeesPage({ id }: { id: string }) {
               <Button asChild variant="outline" className="rounded-xl">
                 <Link href={`/dashboard/conferences/${id}/check-in`}>
                   <ScanLine className="size-4" aria-hidden /> {t("ci_open_desk")}
+                </Link>
+              </Button>
+            )}
+            {conf?.status === "PUBLISHED" && (
+              <Button asChild variant="outline" className="rounded-xl">
+                <Link href={`/dashboard/conferences/${id}/qa`}>
+                  <MessagesSquare className="size-4" aria-hidden /> {t("nav_live_qa")}
                 </Link>
               </Button>
             )}

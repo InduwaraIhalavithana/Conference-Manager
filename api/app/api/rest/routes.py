@@ -10,7 +10,7 @@ from fastapi.responses import Response as RawResponse
 
 from app.api import cookies
 from app.core.errors import DomainError, ErrorCode
-from app.services import exports, live, system, uploads
+from app.services import exports, live, questions, system, uploads
 from app.services import health as health_service
 from app.services.auth import resolve_viewer
 
@@ -131,3 +131,28 @@ async def metrics(request: Request) -> RawResponse | JSONResponse:
     if viewer.admin is None:
         return _error(DomainError(ErrorCode.FORBIDDEN, "Only administrators can read metrics"))
     return RawResponse(system.prometheus(await system.status()), media_type="text/plain; version=0.0.4")
+
+
+@router.get("/conferences/{conference_id}/qa-live", response_model=None)
+async def live_questions(request: Request, conference_id: str) -> StreamingResponse | JSONResponse:
+    """Server-sent events for live Q&A pages: {"type": "questions", "sessionId": ...} whenever a session's
+    questions change, and a ping every 20 seconds. Public, because it carries no content: pages then refetch the
+    questions through GraphQL with the ticket code (or the organizer's session) in the request body."""
+    try:
+        await questions.require_published(conference_id)
+    except DomainError as err:
+        return _error(err)
+
+    async def stream() -> AsyncIterator[str]:
+        yield "retry: 3000\n\n"
+        yield f"data: {json.dumps({'type': 'ready'})}\n\n"
+        async for event in questions.signals(conference_id):
+            if await request.is_disconnected():
+                break
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+    )

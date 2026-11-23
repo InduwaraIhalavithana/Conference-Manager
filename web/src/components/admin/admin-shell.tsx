@@ -58,7 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const tour = TOURS[pathname] ?? null;
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[230px_1fr]">
+    <div className="mx-auto grid max-w-page gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[230px_1fr]">
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="mb-4 hidden items-center gap-3 rounded-2xl bg-gradient-to-br from-slate-800 to-indigo-950 p-3 text-white lg:flex">
           <ShieldCheck className="size-8 shrink-0" aria-hidden />

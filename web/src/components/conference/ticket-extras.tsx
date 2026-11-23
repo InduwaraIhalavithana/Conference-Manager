@@ -89,7 +89,7 @@ export function TicketExtras({
   return (
     <div className="mt-6 grid gap-6 print:hidden lg:grid-cols-2">
       {sessions.length > 0 && (
-        <MyAgenda ticketCode={ticketCode} timezone={timezone} conferenceTitle={conferenceTitle} location={location} sessions={sessions} bookmarked={bookmarked} onChange={setBookmarked} />
+        <MyAgenda ticketCode={ticketCode} timezone={timezone} conferenceTitle={conferenceTitle} location={location} sessions={sessions} bookmarked={bookmarked} onChange={setBookmarked} className={attended ? undefined : "lg:col-span-2"} />
       )}
       {attended && (
         <Feedback
@@ -116,6 +116,7 @@ function MyAgenda({
   sessions,
   bookmarked,
   onChange,
+  className,
 }: {
   ticketCode: string;
   timezone: string;
@@ -124,6 +125,7 @@ function MyAgenda({
   sessions: ExtraSession[];
   bookmarked: string[];
   onChange: (ids: string[]) => void;
+  className?: string;
 }) {
   const t = useTranslations();
   const locale = useLocale() as Locale;
@@ -140,7 +142,7 @@ function MyAgenda({
 
   const dayOf = (iso: string) => formatDate(iso, locale, "long", timezone);
   return (
-    <section aria-labelledby="agenda-h" className="rounded-3xl border bg-card" data-tour="tk-agenda">
+    <section aria-labelledby="agenda-h" className={cn("rounded-3xl border bg-card", className)} data-tour="tk-agenda">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
         <h2 id="agenda-h" className="flex items-center gap-2 text-lg font-bold">
           <BookmarkCheck className="size-5 text-primary" aria-hidden /> {t("my_agenda")}

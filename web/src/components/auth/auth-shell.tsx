@@ -33,7 +33,7 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto grid max-w-6xl px-4 py-10 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:py-16">
+    <div className="mx-auto grid max-w-page px-4 py-10 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:py-16">
       <aside
         className={cn(
           "relative hidden overflow-hidden rounded-l-3xl p-10 text-white lg:block",
@@ -56,7 +56,7 @@ export function AuthShell({
           </Suspense>
         </div>
       </aside>
-      <section className="rounded-3xl border bg-card p-6 shadow-xl shadow-primary/5 sm:p-10 lg:rounded-l-none">
+      <section className="rounded-3xl border bg-card p-6 shadow-xl shadow-primary/5 sm:p-10 lg:rounded-l-none xl:px-16 2xl:px-24">
         <span
           className={cn(
             "inline-flex size-12 items-center justify-center rounded-2xl text-white shadow-lg",

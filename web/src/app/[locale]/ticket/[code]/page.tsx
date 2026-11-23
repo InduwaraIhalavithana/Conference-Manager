@@ -65,7 +65,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function TicketPage({ params }: PageProps<"/[locale]/ticket/[code]">) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:py-14">
+    <div className="mx-auto max-w-page px-4 py-10 sm:px-6 lg:py-14">
       <Suspense fallback={<div className="h-[32rem] animate-pulse rounded-3xl bg-muted" />}>
         <TicketView params={params} />
       </Suspense>

@@ -82,7 +82,7 @@ export function ConferenceList() {
       </div>
 
       {fetching && !data ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="h-44 animate-pulse rounded-2xl bg-muted" />
           ))}
@@ -101,7 +101,7 @@ export function ConferenceList() {
       ) : shown.length === 0 ? (
         <p className="rounded-2xl border p-8 text-center text-muted-foreground">{t("no_results_filtered")}</p>
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2">
+        <ul className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {shown.map((c) => (
             <ConferenceRow key={c.id} conference={c} locale={locale} onChanged={() => refetch({ requestPolicy: "network-only" })} />
           ))}

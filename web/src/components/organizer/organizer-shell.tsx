@@ -82,7 +82,7 @@ export function OrganizerShell({ children }: { children: ReactNode }) {
 
   return (
     <OrganizerContext value={me}>
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr]">
+      <div className="mx-auto grid max-w-page gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="mb-4 hidden items-center gap-3 rounded-2xl border bg-card p-3 lg:flex">
             <Avatar name={`${me.firstName} ${me.lastName}`} url={me.avatarUrl} className="size-10 text-sm" />

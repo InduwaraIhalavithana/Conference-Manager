@@ -8,7 +8,8 @@ Async FastAPI + Strawberry GraphQL + MongoDB (Beanie) + Redis, on Python 3.13 wi
 docker compose -f ../docker-compose.dev.yml up -d     # MongoDB (replica set) + Redis
 cp .env.example .env                                  # then set SECRET_KEY and ADMIN_INITIAL_PASSWORD
 uv sync
-uv run python -m scripts.seed_spike                   # sample conferences
+uv run python -m scripts.seed_spike                   # a dozen sample conferences (what CI tests against)
+uv run python -m scripts.seed_demo --yes --password "<choose>"   # or the full demo data set (see below)
 uv run uvicorn app.main:app --port 8003 --reload      # GraphiQL at http://localhost:8003/graphql
 ```
 
@@ -101,7 +102,17 @@ uv run arq app.worker.WorkerSettings
 | Delete organizers who never verified their email (after 7 days) | nightly |
 | Delete uploaded images nothing uses (after a day) | nightly |
 
-Sample data: `uv run python -m scripts.seed_spike` adds two published conferences with agendas and one draft; `--remove` deletes them.
+Sample data:
+
+- `uv run python -m scripts.seed_spike` adds a dozen sample conferences owned by one sample organizer. CI tests
+  against it; `--remove` deletes it.
+- `uv run python -m scripts.seed_demo --yes --password "<choose>"` adds the full demo data set: about 24
+  organizers (one suspended) and 55 conferences from five months ago to six months ahead (some today, some in
+  Sinhala or Tamil, some over two days with tracks), with generated covers and photos, agendas, about 6,500
+  registrations and waitlists, check-ins with arrival times, ratings, live Q&A, organizer feedback and contact
+  messages. Demo organizers sign in with their `@demo.conferencehub.lk` address and the password you gave; it is
+  never stored except as a hash. Every demo address is on the never-email list. `--yes --remove` deletes all of it
+  (never the sample organizer above); a production database also needs `--production`.
 
 See [`../docs/security-checklist.md`](../docs/security-checklist.md) for the OWASP Top 10 mapping and [`../docs/adr`](../docs/adr) for the decision records.
 

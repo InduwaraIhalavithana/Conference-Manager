@@ -5,7 +5,7 @@ owned by a sample organizer who cannot sign in (random password, demo domain tha
     uv run python -m scripts.seed_spike            # insert or refresh
     uv run python -m scripts.seed_spike --remove   # delete them again
 
-Phase 8 replaces this with the full demo seed.
+CI's end-to-end tests run against this set. For a full demo data set use scripts.seed_demo.
 """
 
 import argparse

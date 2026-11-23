@@ -19,6 +19,7 @@ import { Suspense, cache } from "react";
 
 import { ConferenceCard, ConferenceCardSkeleton } from "@/components/conference/conference-card";
 import { Countdown } from "@/components/conference/countdown";
+import { CountUp } from "@/components/site/count-up";
 import { Section, SectionHeading } from "@/components/site/section";
 import { Button } from "@/components/ui/button";
 import { graphql } from "@/graphql/generated";
@@ -42,7 +43,8 @@ const HomeData = graphql(`
     }
     upcomingCategories { category count }
     upcomingCities(first: 10) { city count }
-    conferences(first: 9) {
+    happeningNow(first: 8) { ...ConferenceCardFields }
+    conferences(first: 20) {
       edges { node { ...ConferenceCardFields } }
     }
   }
@@ -50,6 +52,9 @@ const HomeData = graphql(`
 
 // One request for the whole page, shared by every section below (React's per-request memoization).
 const homeData = cache(() => query(HomeData));
+
+/** Not started yet: a running conference is shown under "Happening now", not as "next up". */
+const notStarted = cache(async () => (await homeData()).conferences.edges.map((e) => e.node).filter((c) => !c.live));
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await getLocale()) as Locale;
@@ -69,7 +74,7 @@ export default async function HomePage() {
             </Suspense>
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               {t("home_title_1")}{" "}
-              <span className="bg-gradient-to-r from-brand to-brand-2 bg-clip-text text-transparent">{t("home_title_2")}</span>
+              <span className="text-shine">{t("home_title_2")}</span>
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground">{t("home_subtitle")}</p>
             <form action={`/${locale}/conferences`} method="get" role="search" className="flex max-w-xl gap-2 rounded-2xl border bg-card p-2 shadow-lg">
@@ -106,6 +111,14 @@ export default async function HomePage() {
           </Suspense>
         </div>
       </section>
+
+      <Suspense fallback={null}>
+        <CityRibbon />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <HappeningNow />
+      </Suspense>
 
       <Section className="py-10">
         <Suspense fallback={<StatsSkeleton />}>
@@ -173,11 +186,57 @@ async function LiveBadge() {
   );
 }
 
+/** A slow ribbon of the cities with events coming up: decoration, the same list is under "Where events happen". */
+async function CityRibbon() {
+  const { upcomingCities } = await homeData();
+  if (upcomingCities.length < 3) return null;
+  const cities = [...upcomingCities, ...upcomingCities];
+  return (
+    <div aria-hidden className="overflow-hidden border-b bg-band py-3 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+      <div className="flex w-max animate-marquee gap-10">
+        {[...cities, ...cities].map((c, i) => (
+          <span key={`${c.city}-${i}`} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <MapPin className="size-3.5 text-primary" />
+            {c.city}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Only there while something is running: the first thing a visitor should know. */
+async function HappeningNow() {
+  const t = await getTranslations();
+  const { happeningNow } = await homeData();
+  if (happeningNow.length === 0) return null;
+  return (
+    <section aria-labelledby="now-h" className="relative overflow-hidden border-b bg-band">
+      <div className="mx-auto max-w-page px-4 py-10 sm:px-6">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <span className="relative flex size-3" aria-hidden>
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-70" />
+            <span className="relative inline-flex size-3 rounded-full bg-red-600" />
+          </span>
+          <h2 id="now-h" className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            {t("home_now_title")}
+          </h2>
+          <span className="text-muted-foreground">{t("home_now_sub", { count: happeningNow.length })}</span>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {happeningNow.map((c, i) => (
+            <ConferenceCard key={c.id} conference={c} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 async function NextUp() {
   const t = await getTranslations();
   const locale = (await getLocale()) as Locale;
-  const { conferences } = await homeData();
-  const next = conferences.edges[0]?.node;
+  const [next] = await notStarted();
   if (!next) {
     return (
       <div className="flex min-h-72 flex-col items-center justify-center gap-4 rounded-3xl border bg-card p-8 text-center shadow-xl">
@@ -231,19 +290,20 @@ const STAT_TILES = [
 
 async function Stats() {
   const t = await getTranslations();
-  const locale = (await getLocale()) as Locale;
   const { platformStats } = await homeData();
   return (
     <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
       {STAT_TILES.map(({ key, label, icon: Icon, tone }, i) => (
         <div
           key={key}
-          className="animate-rise rounded-2xl border bg-card p-5 shadow-sm"
+          className="group flex animate-rise flex-col rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
           style={{ animationDelay: `${i * 60}ms` }}
         >
-          <Icon className={`size-6 ${tone}`} aria-hidden />
-          <dd className="mt-3 text-3xl font-extrabold tabular-nums">{formatNumber(platformStats[key], locale)}</dd>
-          <dt className="text-sm text-muted-foreground">{t(label)}</dt>
+          <Icon className={`size-6 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110 ${tone}`} aria-hidden />
+          <dt className="order-last text-sm text-muted-foreground">{t(label)}</dt>
+          <dd className="mt-3 text-3xl font-extrabold tabular-nums">
+            <CountUp value={platformStats[key]} />
+          </dd>
         </div>
       ))}
     </dl>
@@ -262,8 +322,7 @@ function StatsSkeleton() {
 
 async function Upcoming() {
   const t = await getTranslations();
-  const { conferences } = await homeData();
-  const list = conferences.edges.slice(1).map((e) => e.node);
+  const list = (await notStarted()).slice(1, 9);
   if (list.length === 0) {
     return <p className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">{t("home_no_upcoming")}</p>;
   }

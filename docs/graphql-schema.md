@@ -127,6 +127,14 @@ Returns [`ContactPageResult!`](#contactpageresult).
 | `first` | `Int!` | `25` |
 | `offset` | `Int!` | `0` |
 
+### `happeningNow`
+
+Returns [`[Conference!]!`](#conference). Public conferences running right now, the ones that started first at the top.
+
+| Argument | Type | Default |
+|---|---|---|
+| `first` | `Int!` | `8` |
+
 ### `liveQuestions`
 
 Returns [`QaBoardResult!`](#qaboardresult). Live Q&A for a ticket holder: one session's questions (the current or next session when none is given), most votes first.
@@ -852,6 +860,7 @@ An attendee as the conference's organizer sees them.
 | `distanceKm` | `Float` |  |
 | `seatsLeft` | `Int` | Seats not yet taken; null when there is no limit. |
 | `ended` | `Boolean!` | True once the conference's end time has passed (registration is then closed). |
+| `live` | `Boolean!` | True while the conference is running: started, not ended, not cancelled. |
 | `city` | `String` | Shortcut for venue.city. |
 | `publishProblems` | `[String!]!` | What blocks publishing, as codes: STARTS_IN_PAST, NEEDS_PLACE, NEEDS_CAPACITY (empty: ready). |
 | `organizer` | [`OrganizerSummary`](#organizersummary) |  |

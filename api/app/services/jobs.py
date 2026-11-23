@@ -13,6 +13,8 @@ log = get_logger("jobs")
 
 UNVERIFIED_DAYS = 7
 ORPHAN_UPLOAD_HOURS = 24
+SOON_WINDOW = timedelta(hours=1)
+STARTED_GRACE = timedelta(minutes=15)
 
 
 async def release_holds(now: datetime | None = None) -> int:
@@ -33,6 +35,20 @@ async def send_due_reminders(now: datetime | None = None) -> int:
             sent += await registrations.send_reminders(conference)
     if sent:
         log.info("sent reminders", count=sent)
+    return sent
+
+
+async def send_start_alerts(now: datetime | None = None) -> int:
+    """Runs every 5 minutes: "starts in about an hour", then "it has started". A conference that started more
+    than STARTED_GRACE ago gets no "started" email, so a worker that was down does not send stale news."""
+    now = now or datetime.now(UTC)
+    sent = 0
+    for conference in await conference_repo.starting_in(now, now + SOON_WINDOW):
+        sent += await registrations.send_start_alert(conference, "starting_soon")
+    for conference in await conference_repo.starting_in(now - STARTED_GRACE, now):
+        sent += await registrations.send_start_alert(conference, "started")
+    if sent:
+        log.info("sent start alerts", count=sent)
     return sent
 
 

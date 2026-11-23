@@ -241,6 +241,11 @@ type Conference {
   """
   ended: Boolean!
 
+  """
+  True while the conference is running: started, not ended, not cancelled.
+  """
+  live: Boolean!
+
   """Shortcut for venue.city."""
   city: String
 
@@ -950,6 +955,11 @@ type Query {
   Published (and cancelled) conferences: soonest first, or nearest first with `near`. Without a date range, only conferences that have not ended.
   """
   conferences(filter: ConferenceFilter = null, first: Int! = 20, after: String = null): ConferenceConnection!
+
+  """
+  Public conferences running right now, the ones that started first at the top.
+  """
+  happeningNow(first: Int! = 8): [Conference!]!
 
   """One public conference by its web address."""
   conference(slug: String!): Conference

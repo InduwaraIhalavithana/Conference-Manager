@@ -47,6 +47,9 @@ class Registration(Document):
     checked_in_at: datetime | None = None
     checked_in_by: PydanticObjectId | None = None
     reminder_sent_at: datetime | None = None
+    # The "starts in an hour" and "has started" emails, at most once each.
+    soon_sent_at: datetime | None = None
+    started_sent_at: datetime | None = None
     # Sessions the attendee saved on their ticket page, and when the after-the-event feedback email went out.
     bookmarked_session_ids: list[str] = Field(default_factory=list)
     feedback_requested_at: datetime | None = None

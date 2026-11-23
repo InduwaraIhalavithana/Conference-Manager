@@ -218,6 +218,11 @@ class Conference:
     def ended(self) -> bool:
         return self.ends_at < datetime.now(UTC)
 
+    @strawberry.field(description="True while the conference is running: started, not ended, not cancelled.")
+    def live(self) -> bool:
+        now = datetime.now(UTC)
+        return self._doc.status == "published" and self.starts_at <= now < self.ends_at
+
     @strawberry.field(description="Shortcut for venue.city.")
     def city(self) -> str | None:
         return self.venue.city
@@ -436,6 +441,10 @@ class ConferenceQuery:
             ],
             page_info=PageInfo(has_next_page=page.has_next, end_cursor=page.end_cursor),
         )
+
+    @strawberry.field(description="Public conferences running right now, the ones that started first at the top.")
+    async def happening_now(self, first: int = 8) -> list[Conference]:
+        return [Conference.from_doc(doc) for doc in await service.happening_now(first)]
 
     @strawberry.field(description="One public conference by its web address.")
     async def conference(self, slug: str) -> Conference | None:

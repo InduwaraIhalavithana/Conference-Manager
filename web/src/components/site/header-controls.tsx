@@ -2,7 +2,7 @@
 
 import { Check, Languages, Menu, Moon, Sun } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { type MouseEvent, useEffect, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { restoreAfterLanguageChange, saveForLanguageChange } from "@/lib/language-carry";
 import { setTheme, useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +67,16 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
 
+  // Same page in the new language: filters, the place on the page and anything typed all stay.
+  function choose(code: Locale) {
+    if (code === locale) return;
+    const { pathname: current, search, hash } = window.location;
+    saveForLanguageChange(current.replace(/^\/(en|si|ta)(?=\/|$)/, `/${code}`));
+    startTransition(() => router.replace(`${pathname}${search}${hash}`, { locale: code, scroll: false }));
+  }
+
+  useEffect(restoreAfterLanguageChange, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -79,7 +90,7 @@ export function LanguageSwitcher() {
           <DropdownMenuItem
             key={code}
             lang={code}
-            onSelect={() => startTransition(() => router.replace(pathname, { locale: code }))}
+            onSelect={() => choose(code)}
           >
             <span className="flex-1">{t(`language_name_${code}`)}</span>
             {code === locale && <Check className="size-4" aria-hidden />}
@@ -93,12 +104,33 @@ export function LanguageSwitcher() {
 export function ThemeToggle() {
   const t = useTranslations();
   const theme = useTheme();
+
+  // The new theme spreads out from the button as a circle, where the browser can do it.
+  function toggle(event: MouseEvent<HTMLButtonElement>) {
+    const next = theme === "dark" ? "light" : "dark";
+    if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTheme(next);
+      return;
+    }
+    const box = event.currentTarget.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const change = document.startViewTransition(() => setTheme(next));
+    void change.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 520, easing: "cubic-bezier(0.22, 1, 0.36, 1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    });
+  }
+
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={t("toggle_theme")}
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggle}
     >
       <Sun className="hidden size-4 dark:block" aria-hidden />
       <Moon className="size-4 dark:hidden" aria-hidden />

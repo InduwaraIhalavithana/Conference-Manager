@@ -663,6 +663,10 @@ async def public_by_slug(slug: str) -> Conference | None:
     return conference
 
 
+async def happening_now(limit: int = 8) -> list[Conference]:
+    return await repo.happening_at(datetime.now(UTC), max(1, min(limit, 24)))
+
+
 async def organizers_by_ids(ids: list[PydanticObjectId]) -> list[Organizer | None]:
     """For the GraphQL DataLoader: one query for every organizer on a page, in the order asked for."""
     found = {o.id: o for o in await accounts.organizers_by_ids(ids)}

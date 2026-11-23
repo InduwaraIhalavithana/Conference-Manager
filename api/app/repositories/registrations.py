@@ -132,6 +132,11 @@ async def confirmed_without_reminder(conference_id: PydanticObjectId) -> list[Re
     ).to_list()
 
 
+async def confirmed_without(conference_id: PydanticObjectId, sent_field: str) -> list[Registration]:
+    """Confirmed seats that have not had this email yet (`sent_field` is the registration's timestamp)."""
+    return await Registration.find({"conference_id": conference_id, "status": "registered", sent_field: None}).to_list()
+
+
 async def active_for_conference(conference_id: PydanticObjectId) -> list[Registration]:
     return await Registration.find({"conference_id": conference_id, "active": True}).to_list()
 

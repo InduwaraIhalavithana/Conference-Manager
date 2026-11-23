@@ -11,6 +11,7 @@ conditional increment, so a conference can never be overbooked.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from beanie import PydanticObjectId
@@ -427,6 +428,21 @@ async def send_reminders(conference: Conference) -> int:
             {"count": sent, "title": conference.title.en},
             f"/dashboard/conferences/{conference.id}/attendees",
         )
+    return sent
+
+
+async def send_start_alert(conference: Conference, kind: Literal["starting_soon", "started"]) -> int:
+    """The "starts in an hour" or "has started" email to every confirmed attendee, at most once each."""
+    assert conference.id is not None
+    sent_field = "soon_sent_at" if kind == "starting_soon" else "started_sent_at"
+    sent = 0
+    for registration in await repo.confirmed_without(conference.id, sent_field):
+        assert registration.id is not None
+        if await repo.set_fields(
+            registration.id, {sent_field: utcnow()}, expect={sent_field: None, "status": "registered"}
+        ):
+            await _send(registration, conference, kind)
+            sent += 1
     return sent
 
 

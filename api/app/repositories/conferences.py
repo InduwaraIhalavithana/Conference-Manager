@@ -143,6 +143,23 @@ async def ended_between(start: datetime, end: datetime) -> list[Conference]:
     return await Conference.find({"status": "published", "ends_at": {"$gte": start, "$lt": end}}).to_list()
 
 
+async def starting_in(after: datetime, until: datetime) -> list[Conference]:
+    """Published conferences whose start time is in (after, until]."""
+    return await Conference.find({"status": "published", "starts_at": {"$gt": after, "$lte": until}}).to_list()
+
+
+async def happening_at(now: datetime, limit: int) -> list[Conference]:
+    """Public conferences running at this moment, the ones that started first at the top."""
+    return (
+        await Conference.find(
+            {"status": "published", "hidden": {"$ne": True}, "starts_at": {"$lte": now}, "ends_at": {"$gt": now}}
+        )
+        .sort("starts_at")
+        .limit(limit)
+        .to_list()
+    )
+
+
 async def running_or_recent(since: datetime) -> list[Conference]:
     return await Conference.find({"status": {"$in": ["published", "cancelled"]}, "ends_at": {"$gte": since}}).to_list()
 

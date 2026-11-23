@@ -26,6 +26,7 @@ and whether they are allowed.
 
 ### For attendees (no account needed)
 - **Browse and search** conferences by topic, city and date, or find them on a map; upcoming and past events.
+- **Happening now:** conferences running at this moment appear at the top of the home page with a live badge.
 - **Register in seconds** with a name and email, then confirm with a **6-digit code** sent by email. The seat is held
   for 24 hours while waiting for the code.
 - **Waitlist:** when a conference is full, join the waitlist; when someone cancels, the next person moves up
@@ -59,7 +60,7 @@ and whether they are allowed.
 
 ### Behind the scenes (automatic)
 - Unconfirmed seat holds are released after 24 hours, so seats are never stuck.
-- Reminder emails the day before an event, and feedback emails the day after.
+- Reminder emails the day before, about an hour before and when a conference starts, and feedback emails the day after.
 - A nightly seat recount, and cleanup of unverified sign-ups and unused images.
 - Failed emails are retried automatically.
 - Seat limits are exact even when hundreds of people register at the same second.

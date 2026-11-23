@@ -15,6 +15,9 @@ export default defineConfig({
     trace: "retain-on-failure",
     locale: "en-GB",
     timezoneId: "Asia/Colombo",
+    // The app shortens its fade-ins to 1 ms under reduced motion, so the axe checks never see a card half-faded
+    // (a tile mid-fade reads as low contrast and failed a tour check once in CI).
+    reducedMotion: "reduce",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], channel: process.env.CI ? undefined : "chrome" } },

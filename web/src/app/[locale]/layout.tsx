@@ -12,7 +12,7 @@ import { Header } from "@/components/site/header";
 import { clientMessages } from "@/i18n/client-messages";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
-import { THEME_SCRIPT } from "@/lib/theme";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 // Not preloaded: each face has a unicode-range, so the browser fetches it only on pages that show

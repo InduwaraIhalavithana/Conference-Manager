@@ -2,11 +2,10 @@
 
 import { useSyncExternalStore } from "react";
 
-// Light or dark, remembered in localStorage. The page starts dark (class on <html>); THEME_SCRIPT runs in
-// <head> before the first paint to switch to light when that was chosen, so the page never flashes.
-export const THEME_KEY = "cm_theme";
+import { THEME_KEY } from "./theme-script";
 
-export const THEME_SCRIPT = `try{if(localStorage.getItem("${THEME_KEY}")==="light")document.documentElement.classList.remove("dark")}catch(e){}`;
+// Light or dark, remembered in localStorage. The page starts dark (class on <html>); THEME_SCRIPT (in
+// theme-script.ts) runs in <head> before the first paint to switch to light, so the page never flashes.
 
 export type Theme = "light" | "dark";
 

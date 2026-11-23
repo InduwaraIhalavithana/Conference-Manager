@@ -75,6 +75,7 @@ flowchart LR
 - **Live updates** (check-in desk, live Q&A) go through Redis pub/sub as server-sent events.
 - **Background work** (emails in three languages, reminders, releasing unconfirmed holds, the day-after feedback
   email, nightly self-checks) runs in an ARQ worker.
+- Every feature and tool explained in plain words: [docs/FEATURES_AND_TECH.md](docs/FEATURES_AND_TECH.md).
 - Decisions and their reasons: [docs/adr](docs/adr). The API reference: [docs/graphql-schema.md](docs/graphql-schema.md),
   generated from the code. Security: [docs/security-checklist.md](docs/security-checklist.md) maps the OWASP Top 10
   to this app. What changed when: [CHANGELOG.md](CHANGELOG.md).
@@ -86,12 +87,17 @@ flowchart LR
 | [`docs/`](docs) | Decision records, the GraphQL reference, the security checklist and screenshots |
 | [`branding/`](branding) | Logo files |
 | `docker-compose.dev.yml` | MongoDB (replica set) and Redis for local development |
+| `setup.bat`, `start-services.bat`, `stop-services.bat`, [`scripts/`](scripts) | One-click setup, start and stop on Windows |
 
 ---
 
 ## Run it locally
 
 Needs Docker, [uv](https://docs.astral.sh/uv/) (Python 3.13) and Node 22.
+
+**On Windows:** run `setup.bat` once (then set `SECRET_KEY` and `ADMIN_INITIAL_PASSWORD` in `api\.env`), then
+`start-services.bat` starts everything in separate windows and `stop-services.bat` stops it
+(`stop-services.bat /keepdb` leaves MongoDB and Redis running). By hand:
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d          # MongoDB + Redis

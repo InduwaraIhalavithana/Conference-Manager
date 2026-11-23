@@ -1,7 +1,7 @@
 # ConferenceHub v3 web app
 
 Next.js 16 (App Router, server components, `cacheComponents`) + TypeScript + Tailwind CSS v4 + shadcn/ui, with
-next-intl for English, Sinhala and Tamil (`/en`, `/si`, `/ta`). Work in progress on the `v3` branch; v2 lives in `../frontend`.
+next-intl for English, Sinhala and Tamil (`/en`, `/si`, `/ta`). See the [project README](../README.md) for the whole picture.
 
 ```bash
 npm install

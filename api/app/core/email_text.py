@@ -1,6 +1,6 @@
 """Email wording in English, Sinhala and Tamil. Keys must match across languages (a test checks this).
 
-Ported from v2 (backend/app/core/email_text.py); new in v3: link_*, cancel_*, removed_* and an hours
+Ported from v2 (backend/app/core/email_text.py at the v2-final tag); new in v3: link_*, cancel_*, removed_* and an hours
 parameter in reset_intro.
 """
 

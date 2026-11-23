@@ -7,8 +7,8 @@ Export first (read-only on v2), one JSON array per table, into a git-ignored fol
 
 Then:
 
-    uv run python -m scripts.migrate_v2 ../backups/v2-export-2026-11-23 --uploads ../backend/uploads          # dry run
-    uv run python -m scripts.migrate_v2 ../backups/v2-export-2026-11-23 --uploads ../backend/uploads --yes    # write
+    uv run python -m scripts.migrate_v2 ../backups/v2-export-2026-11-23 --uploads ../backups/v2-local-files-2026-11-23/uploads          # dry run
+    uv run python -m scripts.migrate_v2 ../backups/v2-export-2026-11-23 --uploads ../backups/v2-local-files-2026-11-23/uploads --yes    # write
 
 What moves (Phase 8 decisions in the plan):
 - Organizers, with their v2 password hashes (PBKDF2; replaced by Argon2 at the next sign-in) and profile photo

@@ -30,18 +30,18 @@ export default async function ConferencesPage({ searchParams }: PageProps<"/[loc
   return (
     <>
       <section className="border-b bg-hero">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-page px-4 py-10 sm:px-6">
           <h1 className="text-4xl font-extrabold tracking-tight">{t("conferences_title")}</h1>
           <p className="mt-2 max-w-2xl text-lg text-muted-foreground">{t("conferences_subtitle")}</p>
         </div>
       </section>
-      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-page space-y-8 px-4 py-8 sm:px-6">
         <Suspense fallback={<div className="h-44 animate-pulse rounded-2xl border bg-card" />}>
           <Filters />
         </Suspense>
         <Suspense
           fallback={
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
                 <ConferenceCardSkeleton key={i} />
               ))}

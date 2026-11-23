@@ -55,7 +55,7 @@ export function BrowseResults({
       {view === "map" ? (
         <ConferenceMap conferences={items} />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {items.map((c, i) => (
             <ConferenceCard key={c.id} conference={c} index={i % 12} headingLevel={2} />
           ))}

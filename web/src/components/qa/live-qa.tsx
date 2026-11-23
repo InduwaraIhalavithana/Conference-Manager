@@ -68,24 +68,27 @@ export function LiveQa({ ticketCode }: { ticketCode: string }) {
       {board.sessions.length === 0 ? (
         <p className="rounded-2xl border bg-card p-6 text-center text-muted-foreground">{t("qa_no_sessions")}</p>
       ) : (
-        <>
-          <div className="space-y-1.5" data-tour="qa-session">
-            <label htmlFor={selectId} className="block text-sm font-medium">
-              {t("qa_session")}
-            </label>
-            <select id={selectId} value={current ?? ""} onChange={(e) => setSessionId(e.target.value)} className={SELECT}>
-              {board.sessions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {formatTime(s.startsAt, locale, board.timezone)} · {localized(s.title, locale)} ({s.questions})
-                </option>
-              ))}
-            </select>
+        // Wide screens: choose and ask on the left (stays in view), the questions on the right.
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+          <div className="space-y-4 lg:sticky lg:top-24">
+            <div className="space-y-1.5" data-tour="qa-session">
+              <label htmlFor={selectId} className="block text-sm font-medium">
+                {t("qa_session")}
+              </label>
+              <select id={selectId} value={current ?? ""} onChange={(e) => setSessionId(e.target.value)} className={SELECT}>
+                {board.sessions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {formatTime(s.startsAt, locale, board.timezone)} · {localized(s.title, locale)} ({s.questions})
+                  </option>
+                ))}
+              </select>
+            </div>
+            {board.open ? (
+              current && <AskForm ticketCode={ticketCode} sessionId={current} onAsked={() => refetch({ requestPolicy: "network-only" })} />
+            ) : (
+              <p className="rounded-2xl bg-muted p-4 text-sm">{t("qa_closed_note")}</p>
+            )}
           </div>
-          {board.open ? (
-            current && <AskForm ticketCode={ticketCode} sessionId={current} onAsked={() => refetch({ requestPolicy: "network-only" })} />
-          ) : (
-            <p className="rounded-2xl bg-muted p-4 text-sm">{t("qa_closed_note")}</p>
-          )}
           <section aria-labelledby="qa-list-h" data-tour="qa-list">
             <h2 id="qa-list-h" className="mb-3 text-lg font-bold">
               {session ? localized(session.title, locale) : t("qa_questions")}{" "}
@@ -101,7 +104,7 @@ export function LiveQa({ ticketCode }: { ticketCode: string }) {
               </ul>
             )}
           </section>
-        </>
+        </div>
       )}
     </div>
   );

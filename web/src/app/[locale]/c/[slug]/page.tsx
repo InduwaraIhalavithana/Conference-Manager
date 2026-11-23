@@ -121,7 +121,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/20" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-28 sm:px-6 lg:pt-40">
+        <div className="relative mx-auto max-w-page px-4 pb-10 pt-28 sm:px-6 lg:pt-40">
           <div className="flex flex-wrap items-center gap-2">
             <CategoryChip category={c.category} className="bg-background/80" />
             {cancelled && <span className="rounded-full bg-destructive px-3 py-0.5 text-xs font-bold text-white">{t("badge_cancelled")}</span>}
@@ -164,13 +164,13 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
 
       {cancelled && (
         <div role="status" className="border-b bg-destructive/10">
-          <p className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 font-semibold text-destructive sm:px-6">
+          <p className="mx-auto flex max-w-page items-center gap-2 px-4 py-3 font-semibold text-destructive sm:px-6">
             <AlertTriangle className="size-5" aria-hidden /> {t("conference_cancelled_banner")}
           </p>
         </div>
       )}
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_380px]">
+      <div className="mx-auto grid max-w-page gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_380px]">
         <div className="min-w-0 space-y-12">
           {c.description && (
             <section aria-labelledby="about">
@@ -193,7 +193,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
               <h2 id="speakers" className="mb-4 text-2xl font-extrabold">
                 {t("speakers")}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
                 {c.speakers.map((s) => (
                   <div key={s.id} id={`speaker-${s.id}`} className="flex scroll-mt-24 gap-4 rounded-2xl border bg-card p-4">
                     <Avatar name={s.name} photoUrl={s.photoUrl} size="size-16" />
@@ -283,7 +283,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
 
 function ConferenceSkeleton() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-28 sm:px-6">
+    <div className="mx-auto max-w-page space-y-6 px-4 py-28 sm:px-6">
       <div className="h-6 w-32 animate-pulse rounded-full bg-muted" />
       <div className="h-12 w-2/3 animate-pulse rounded-xl bg-muted" />
       <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />

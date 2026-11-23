@@ -42,7 +42,7 @@ const HomeData = graphql(`
     }
     upcomingCategories { category count }
     upcomingCities(first: 10) { city count }
-    conferences(first: 7) {
+    conferences(first: 9) {
       edges { node { ...ConferenceCardFields } }
     }
   }
@@ -62,7 +62,7 @@ export default async function HomePage() {
   return (
     <>
       <section className="relative overflow-hidden border-b bg-hero">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:py-20">
+        <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:py-20">
           <div className="animate-lift space-y-6">
             <Suspense fallback={<span className="inline-block h-7 w-56 animate-pulse rounded-full bg-muted" />}>
               <LiveBadge />
@@ -127,7 +127,7 @@ export default async function HomePage() {
         />
         <Suspense
           fallback={
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 3 }, (_, i) => (
                 <ConferenceCardSkeleton key={i} />
               ))}
@@ -268,10 +268,17 @@ async function Upcoming() {
     return <p className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">{t("home_no_upcoming")}</p>;
   }
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {list.map((c, i) => (
-        <ConferenceCard key={c.id} conference={c} index={i} />
-      ))}
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      {/* Six cards in three columns; the seventh and eighth only fill the fourth column on wide screens. */}
+      {list.map((c, i) =>
+        i < 6 ? (
+          <ConferenceCard key={c.id} conference={c} index={i} />
+        ) : (
+          <div key={c.id} className="hidden 2xl:block">
+            <ConferenceCard conference={c} index={i} />
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -282,7 +289,7 @@ async function Topics() {
   const { upcomingCategories } = await homeData();
   const counts = new Map(upcomingCategories.map((c) => [c.category, c.count]));
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-4">
       {CATEGORY_ORDER.map((category) => {
         const style = CATEGORIES[category];
         const Icon = style.icon;

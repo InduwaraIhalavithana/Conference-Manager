@@ -43,7 +43,7 @@ export default async function AboutPage() {
   return (
     <>
       <section className="relative overflow-hidden border-b bg-hero">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:py-20">
+        <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:py-20">
           <div className="animate-lift">
             <p className="text-sm font-bold uppercase tracking-widest text-primary">{t("nav_about")}</p>
             <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">{t("about_title")}</h1>

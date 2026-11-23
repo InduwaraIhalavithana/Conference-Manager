@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function Section({ children, className, band = false }: { children: ReactNode; className?: string; band?: boolean }) {
   return (
     <section className={cn(band && "border-y bg-band")}>
-      <div className={cn("mx-auto max-w-7xl px-4 py-14 sm:px-6", className)}>{children}</div>
+      <div className={cn("mx-auto max-w-page px-4 py-14 sm:px-6", className)}>{children}</div>
     </section>
   );
 }

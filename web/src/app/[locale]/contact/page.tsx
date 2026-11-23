@@ -36,13 +36,13 @@ export default async function ContactPage() {
   return (
     <>
       <section className="border-b bg-hero">
-        <div className="mx-auto max-w-7xl animate-lift px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-page animate-lift px-4 py-14 sm:px-6">
           <p className="text-sm font-bold uppercase tracking-widest text-primary">{t("nav_contact")}</p>
           <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">{t("contact_title")}</h1>
           <p className="mt-3 max-w-2xl text-lg text-muted-foreground">{t("contact_lead")}</p>
         </div>
       </section>
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_400px]">
+      <div className="mx-auto grid max-w-page gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_400px]">
         <div className="rounded-3xl border bg-card p-6 shadow-xl shadow-primary/5 sm:p-8">
           <ContactForm />
         </div>

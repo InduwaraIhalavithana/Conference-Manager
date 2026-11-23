@@ -8,7 +8,7 @@ export function Footer() {
   const t = useTranslations();
   return (
     <footer className="mt-16 border-t bg-band">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-page gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1.5fr]">
         <div className="space-y-3">
           <p className="flex items-center gap-2.5 text-lg font-bold">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -64,7 +64,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:px-6">
+        <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:px-6">
           <span>
             © <CurrentYear /> ConferenceHub. {t("footer_rights")}
           </span>

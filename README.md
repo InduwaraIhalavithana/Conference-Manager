@@ -75,14 +75,15 @@ flowchart LR
 - **Live updates** (check-in desk, live Q&A) go through Redis pub/sub as server-sent events.
 - **Background work** (emails in three languages, reminders, releasing unconfirmed holds, the day-after feedback
   email, nightly self-checks) runs in an ARQ worker.
-- Decisions and their reasons: [docs/adr](docs/adr). Security: [docs/security-checklist.md](docs/security-checklist.md)
-  maps the OWASP Top 10 to this app.
+- Decisions and their reasons: [docs/adr](docs/adr). The API reference: [docs/graphql-schema.md](docs/graphql-schema.md),
+  generated from the code. Security: [docs/security-checklist.md](docs/security-checklist.md) maps the OWASP Top 10
+  to this app. What changed when: [CHANGELOG.md](CHANGELOG.md).
 
 | Folder | What is in it |
 |---|---|
 | [`api/`](api) | FastAPI + Strawberry GraphQL + Beanie (MongoDB) + ARQ worker, with its own [README](api/README.md) |
 | [`web/`](web) | Next.js 16 + TypeScript + Tailwind + shadcn/ui + next-intl, with its own [README](web/README.md) |
-| [`docs/`](docs) | Decision records, the security checklist and screenshots |
+| [`docs/`](docs) | Decision records, the GraphQL reference, the security checklist and screenshots |
 | [`branding/`](branding) | Logo files |
 | `docker-compose.dev.yml` | MongoDB (replica set) and Redis for local development |
 

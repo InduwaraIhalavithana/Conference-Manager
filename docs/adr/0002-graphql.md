@@ -23,3 +23,14 @@ Use GraphQL with Strawberry (code-first, Python type hints), mounted inside Fast
 - Every resolver must batch its database reads (DataLoaders) to avoid N+1 queries.
 - Query depth and complexity limits, and no introspection in production, are needed to stop expensive queries.
 - HTTP caching is weaker than with REST GETs; public pages rely on Next.js caching instead.
+
+## Update (2026-11-23)
+
+Two things turned out differently:
+
+- **Live updates use server-sent events, not GraphQL subscriptions.** The check-in desk and live Q&A each open a
+  plain `EventSource` on a REST route fed by Redis pub/sub. It needs no WebSocket support in the proxy, reconnects
+  by itself, and (for Q&A) carries only "something changed" signals, so the page refetches through GraphQL.
+- **Mostly the data model avoids N+1 queries,** not DataLoaders: a conference keeps its days, tracks, speakers and
+  sessions inside one document, so a conference page is one read. One DataLoader remains, batching the organizer
+  lookups for lists of conferences.

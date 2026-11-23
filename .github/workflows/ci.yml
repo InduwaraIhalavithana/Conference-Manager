@@ -27,7 +27,7 @@ jobs:
         working-directory: api
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # A single-node replica set, so MongoDB transactions work like in production.
       - name: Start MongoDB 7
@@ -83,7 +83,7 @@ jobs:
         working-directory: web
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -144,7 +144,7 @@ jobs:
       RATE_LIMIT_SCALE: "10"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Start MongoDB 7 (single-node replica set)
         run: |

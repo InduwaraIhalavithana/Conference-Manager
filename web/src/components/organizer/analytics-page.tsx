@@ -7,6 +7,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContai
 import { useQuery } from "urql";
 
 import { AnalyticsOverviewQuery, ConferenceAnalyticsQuery } from "@/components/organizer/conference-queries";
+import { FeedbackPanel } from "@/components/organizer/feedback-panel";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatDate, formatDay, formatNumber, formatTime } from "@/lib/format";
@@ -227,6 +228,7 @@ function ConferenceView({ id }: { id: string }) {
           </ResponsiveContainer>
         </ChartCard>
       </div>
+      <FeedbackPanel id={id} />
     </div>
   );
 }

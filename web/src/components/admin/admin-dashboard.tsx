@@ -214,7 +214,7 @@ export function SystemCard({ compact = false }: { compact?: boolean }) {
                 {t("sys_jobs")}
               </h3>
               <ul className="divide-y rounded-xl border text-sm">
-                {["release_holds", "send_reminders", "recount_counters", "purge_unverified", "delete_orphan_uploads"].map((name) => {
+                {["release_holds", "send_reminders", "send_feedback_requests", "recount_counters", "purge_unverified", "delete_orphan_uploads"].map((name) => {
                   const run = s.jobs.find((j) => j.name === name);
                   return (
                     <li key={name} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">

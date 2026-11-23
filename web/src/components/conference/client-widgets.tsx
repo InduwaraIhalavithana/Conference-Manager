@@ -45,24 +45,31 @@ export function VenueMapLazy({ latitude, longitude }: { latitude: number; longit
   return <div ref={ref}>{visible ? <VenueMap latitude={latitude} longitude={longitude} /> : <div className="h-72 bg-muted" />}</div>;
 }
 
-function googleDate(iso: string): string {
+export function googleDate(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
 export function AddToCalendar({
   slug,
+  icsHref,
   title,
   details,
   location,
   startsAt,
   endsAt,
+  label,
+  className,
 }: {
-  slug: string;
+  /** The conference's .ics file; or pass `icsHref` (for example one session's file made in the browser). */
+  slug?: string;
+  icsHref?: string;
   title: string;
   details: string;
   location: string;
   startsAt: string;
   endsAt: string;
+  label?: string;
+  className?: string;
 }) {
   const t = useTranslations();
   const google = new URL("https://calendar.google.com/calendar/render");
@@ -77,7 +84,7 @@ export function AddToCalendar({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full rounded-xl">
+        <Button variant="outline" className={className ?? "w-full rounded-xl"} aria-label={label}>
           <CalendarPlus className="size-4" aria-hidden /> {t("add_to_calendar")}
         </Button>
       </DropdownMenuTrigger>
@@ -88,7 +95,7 @@ export function AddToCalendar({
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <a href={`/api/conferences/${slug}/calendar.ics`} download>
+          <a href={icsHref ?? `/api/conferences/${slug}/calendar.ics`} download={icsHref ? "session.ics" : true}>
             {t("calendar_ics")}
           </a>
         </DropdownMenuItem>

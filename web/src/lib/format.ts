@@ -126,8 +126,8 @@ export function formatRange(startIso: string, endIso: string, locale: Locale, ti
   return `${render(a, locale, a.year === b.year ? "month-day" : "short")} – ${render(b, locale, "short")}`;
 }
 
-export function formatNumber(n: number, locale: Locale): string {
-  return new Intl.NumberFormat(INTL_LOCALE[locale]).format(n);
+export function formatNumber(n: number, locale: Locale, options?: Intl.NumberFormatOptions): string {
+  return new Intl.NumberFormat(INTL_LOCALE[locale], options).format(n);
 }
 
 /** The text of a {en, si, ta} field in the reader's language, falling back to English. */

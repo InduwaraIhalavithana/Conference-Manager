@@ -39,6 +39,9 @@ class ErrorCode(StrEnum):
     CHECKIN_UNCONFIRMED = "checkin_unconfirmed"
     CHECKIN_WAITLISTED = "checkin_waitlisted"
     CAPACITY_BELOW_TAKEN = "capacity_below_taken"
+    FEEDBACK_NOT_ATTENDED = "feedback_not_attended"
+    FEEDBACK_NOT_YET = "feedback_not_yet"
+    FEEDBACK_CLOSED = "feedback_closed"
 
 
 class DomainError(Exception):

@@ -21,7 +21,7 @@ npm run build
 | `/[locale]` | Home: next conference, live numbers, upcoming, topics, cities |
 | `/[locale]/conferences` | Browse: search, topic, city, dates, past, near me, list or map; filters live in the URL |
 | `/[locale]/c/[slug]` | A conference: agenda, speakers, venue map, registration with email code, calendar, share image |
-| `/[locale]/ticket/[code]` | An attendee's ticket: QR code, confirm the email code, cancel (never indexed) |
+| `/[locale]/ticket/[code]` | An attendee's ticket: QR code, confirm the email code, cancel; My agenda (save sessions, add each to a calendar); after check-in, rate each session once it ends and the conference overall, for 14 days (never indexed) |
 | `/[locale]/about`, `/contact`, `/privacy`, `/terms` | About, contact form, privacy policy, terms of use |
 | `/[locale]/login`, `/register`, `/forgot`, `/reset`, `/admin/login` | Organizer sign-in and sign-up (with the emailed code), password reset, admin sign-in |
 | `/[locale]/dashboard`, `/dashboard/settings` | Organizer dashboard and settings (profile, photo, password, other devices); signed-out visitors are sent to sign in |
@@ -29,7 +29,7 @@ npm run build
 | `/[locale]/dashboard/conferences/new`, `/[id]` | Conference editor: details in three languages, dates, venue with a map pin, cover, seats and waitlist; agenda (tracks, day names, sessions); speakers with photos; publish checklist, move back to draft, cancel |
 | `/[locale]/dashboard/check-in` | Check-in: choose one of your published, upcoming conferences and open its desk (also in the sidebar) |
 | `/[locale]/dashboard/conferences/[id]/check-in` | Check-in desk: camera QR scanning (BarcodeDetector, or jsQR in browsers without it) or a typed code; live numbers and arrivals from every desk (server-sent events); scans made offline wait in IndexedDB with their time and sync when the connection returns; installable (`manifest.webmanifest`, `public/sw.js`) |
-| `/[locale]/dashboard/analytics` | Analytics: sign-ups over 30 days and each conference's fill, or one conference's sign-ups by day, 15-minute arrivals, status and languages (Recharts) |
+| `/[locale]/dashboard/analytics` | Analytics: sign-ups over 30 days and each conference's fill, or one conference's sign-ups by day, 15-minute arrivals, status and languages (Recharts), and attendee feedback: average stars per session and overall, with the comments (anonymous) |
 | `/[locale]/dashboard/conferences/[id]/attendees` | Attendees: status filters, search, remove (the waitlist moves up), undo check-in, reminders, CSV |
 | `/[locale]/dashboard/help` | Help: searchable questions and answers, feedback to the admin team, and the admin team's replies |
 | `/[locale]/admin` | Admin dashboard: platform numbers linking to each section, system status, notifications |

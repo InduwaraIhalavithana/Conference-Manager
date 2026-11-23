@@ -286,6 +286,19 @@ type ConferenceEdge {
   node: Conference!
 }
 
+type ConferenceFeedback {
+  """Tickets that gave at least one rating."""
+  respondents: Int!
+
+  """People checked in (who could give feedback)."""
+  attended: Int!
+  scores: [ScoreSummary!]!
+  comments: [FeedbackComment!]!
+  closesAt: DateTime!
+}
+
+union ConferenceFeedbackResult = ConferenceFeedback | UserError
+
 type ConferenceFill {
   id: ID!
   title: String!
@@ -452,6 +465,20 @@ enum ErrorCode {
   CHECKIN_UNCONFIRMED
   CHECKIN_WAITLISTED
   CAPACITY_BELOW_TAKEN
+  FEEDBACK_NOT_ATTENDED
+  FEEDBACK_NOT_YET
+  FEEDBACK_CLOSED
+}
+
+"""
+A rating that came with a comment. Anonymous: the organizer never sees who wrote it.
+"""
+type FeedbackComment {
+  sessionId: ID
+  sessionTitle: LocalizedText
+  score: Int!
+  comment: String!
+  updatedAt: DateTime!
 }
 
 type FeedbackItem {
@@ -560,6 +587,14 @@ type Mutation {
   """Answer an organizer's feedback; they get a notification and an email."""
   replyToFeedback(id: ID!, reply: String!): FeedbackResult!
   closeFeedback(id: ID!): FeedbackResult!
+
+  """Save or unsave a session on the ticket holder's own agenda."""
+  setBookmark(ticketCode: String!, sessionId: ID!, bookmarked: Boolean!): TicketResult!
+
+  """
+  Rate a session (or the conference, with no sessionId) 1-5 stars with an optional comment. Checked-in attendees only, after it has ended and until feedbackClosesAt; giving it again replaces it.
+  """
+  rateSession(ticketCode: String!, score: Int!, sessionId: ID = null, comment: String = null): RatingResult!
 
   """Update the signed-in organizer's profile."""
   updateProfile(input: ProfileInput!): ProfileResult!
@@ -682,6 +717,16 @@ type Mutation {
   changePassword(currentPassword: String!, newPassword: String!): DoneResult!
 }
 
+"""
+One of the ticket holder's ratings: a session, or the conference when sessionId is null.
+"""
+type MyRating {
+  sessionId: ID
+  score: Int!
+  comment: String
+  updatedAt: DateTime!
+}
+
 input NearInput {
   latitude: Float!
   longitude: Float!
@@ -796,6 +841,9 @@ type Query {
   """
   analyticsOverview(days: Int! = 30): AnalyticsOverviewResult!
 
+  """Ratings and comments for one of the signed-in organizer's conferences."""
+  conferenceFeedback(conferenceId: ID!): ConferenceFeedbackResult!
+
   """The signed-in person's notifications, newest first."""
   notifications(first: Int! = 30, after: String = null): NotificationPageResult!
 
@@ -840,6 +888,8 @@ type Query {
   me: Viewer
 }
 
+union RatingResult = MyRating | UserError
+
 input RegisterInput {
   firstName: String!
   lastName: String!
@@ -878,6 +928,18 @@ type Removed {
 }
 
 union RemovedResult = Removed | UserError
+
+"""
+Average stars (1-5) and number of ratings: a session, or the conference when null.
+"""
+type ScoreSummary {
+  sessionId: ID
+
+  """Null for the conference as a whole."""
+  sessionTitle: LocalizedText
+  average: Float!
+  count: Int!
+}
 
 input SessionInput {
   title: LocalizedTextInput!
@@ -962,6 +1024,11 @@ type Ticket {
   checkedInAt: DateTime
   createdAt: DateTime!
   conference: Conference!
+  bookmarkedSessionIds: [ID!]!
+  ratings: [MyRating!]!
+
+  """Ratings can be given (by checked-in attendees) until this time."""
+  feedbackClosesAt: DateTime!
 }
 
 union TicketResult = Ticket | UserError

@@ -128,6 +128,11 @@ async def _send(registration: Registration, conference: Conference, kind: str, *
     )
 
 
+async def send_to_attendee(registration: Registration, conference: Conference, kind: str, **params: object) -> None:
+    """Email an attendee about their conference (ticket link, title, date and venue are filled in)."""
+    await _send(registration, conference, kind, **params)
+
+
 async def _by_ticket(code: str) -> Registration:
     registration = await repo.by_ticket(code)
     if registration is None:

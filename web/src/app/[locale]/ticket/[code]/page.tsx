@@ -7,6 +7,7 @@ import { Suspense } from "react";
 
 import { AddToCalendar } from "@/components/conference/client-widgets";
 import { PrintButton, TicketActions } from "@/components/conference/ticket-actions";
+import { TicketExtras } from "@/components/conference/ticket-extras";
 import { HelpButton } from "@/components/tour/tour";
 import { Button } from "@/components/ui/button";
 import { graphql } from "@/graphql/generated";
@@ -28,6 +29,9 @@ const TicketPageQuery = graphql(`
       waitlistPosition
       checkedInAt
       createdAt
+      bookmarkedSessionIds
+      feedbackClosesAt
+      ratings { sessionId score comment }
       conference {
         slug
         status
@@ -40,6 +44,14 @@ const TicketPageQuery = graphql(`
         endsAt
         ended
         venue { name address city }
+        sessions {
+          id
+          title { en si ta }
+          startsAt
+          endsAt
+          room
+          speakers { name }
+        }
       }
     }
   }
@@ -92,7 +104,12 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
           ? { icon: CircleCheck, text: t("ticket_checked_in"), tone: "bg-success text-white" }
           : { icon: TicketIcon, text: t("ticket_confirmed"), tone: "bg-primary text-primary-foreground" };
 
+  const sessions = [...c.sessions]
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .map((s) => ({ id: s.id, title: localized(s.title, locale), startsAt: s.startsAt, endsAt: s.endsAt, room: s.room ?? null, speakers: s.speakers.map((p) => p.name) }));
+
   return (
+    <>
     <article className="overflow-hidden rounded-3xl border bg-card shadow-2xl shadow-primary/10 print:shadow-none">
       <header className="relative">
         <div className={`absolute inset-0 bg-gradient-to-br ${CATEGORIES[c.category].cover}`} aria-hidden>
@@ -174,6 +191,22 @@ async function TicketView({ params }: { params: PageProps<"/[locale]/ticket/[cod
         </section>
       </div>
     </article>
+    {!gone && (
+      <TicketExtras
+        ticketCode={ticket.code}
+        timezone={c.timezone}
+        conferenceTitle={title}
+        location={place}
+        sessions={sessions}
+        bookmarked={ticket.bookmarkedSessionIds}
+        ratings={ticket.ratings.map((r) => ({ sessionId: r.sessionId ?? null, score: r.score, comment: r.comment ?? null }))}
+        attended={Boolean(ticket.checkedInAt)}
+        conferenceEndsAt={c.endsAt}
+        closesAt={ticket.feedbackClosesAt}
+        now={new Date().toISOString()}
+      />
+    )}
+    </>
   );
 }
 

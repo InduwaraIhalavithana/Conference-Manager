@@ -104,3 +104,22 @@ uv run arq app.worker.WorkerSettings
 Sample data: `uv run python -m scripts.seed_spike` adds two published conferences with agendas and one draft; `--remove` deletes them.
 
 See [`../docs/security-checklist.md`](../docs/security-checklist.md) for the OWASP Top 10 mapping and [`../docs/adr`](../docs/adr) for the decision records.
+
+## Moving the v2 data (Phase 8)
+
+`scripts/migrate_v2.py` moves v2's organizers (with their password hashes and photos), the admin's password hash,
+and the notifications and activity that belong to them, from a JSON export of the v2 PostgreSQL tables. It is a dry
+run unless `--yes` is given, never moves the same organizer twice, and refuses a production database without
+`--production`. The export holds password hashes, so keep it in the git-ignored `backups/` folder.
+
+```
+# read-only on v2: one JSON array per table
+psql "$V2_URL" -At -c "select coalesce(json_agg(row_to_json(t)), '[]'::json) from organizers t" > ../backups/v2-export/organizers.json
+# (the same for admins, notifications, activity_logs, feedback, contact_messages)
+
+uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backend/uploads         # dry run
+uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backend/uploads --yes   # write
+```
+
+Moved organizers sign in with their v2 password; it is upgraded to Argon2 at that sign-in. Rows about test or
+deleted accounts stay behind in the v2 backup.

@@ -1,7 +1,7 @@
 # Changelog
 
-v3 is a rewrite of ConferenceHub on new technology, built on the `v3` branch phase by phase; each phase was one or
-more reviewed pull requests with its own tests. v2 is on `master` and at the `v2-final` tag until v3 goes live.
+v3 is a rewrite of ConferenceHub on new technology, built on a `v3` branch phase by phase (each phase one or more
+reviewed pull requests with its own tests) and merged into `master` on 2026-11-23. v2 is kept at the `v2-final` tag.
 
 ## v3 (in progress)
 

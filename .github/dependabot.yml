@@ -1,9 +1,8 @@
-# Weekly update PRs for the v3 code. They target the v3 branch until v3 is merged into master.
+# Weekly update PRs, opened against the default branch (master).
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /api
-    target-branch: v3
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -13,7 +12,6 @@ updates:
 
   - package-ecosystem: npm
     directory: /web
-    target-branch: v3
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -23,6 +21,5 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
-    target-branch: v3
     schedule:
       interval: monthly

@@ -127,8 +127,8 @@ Lighthouse (performance, accessibility, best practices and SEO each at least 90 
 
 ## Versions
 
-This is **v3**, a rewrite on the `v3` branch. v2 (FastAPI + SQLAlchemy + PostgreSQL + React/Vite) is kept on `master`
-and tagged [`v2-final`](../../tree/v2-final) until v3 goes live.
+This is **v3**, a rewrite built phase by phase and merged into `master` on 2026-11-23 (see the [changelog](CHANGELOG.md)).
+v2 (FastAPI + SQLAlchemy + PostgreSQL + React/Vite) is kept at the [`v2-final`](../../tree/v2-final) tag.
 
 ## Creator
 

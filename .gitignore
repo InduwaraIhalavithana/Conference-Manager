@@ -1,49 +1,31 @@
-# Node
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-backend/.env
-backend/.venv/
-*.egg-info/
-dist/
-build/
-
-# Database
-*.db
-*.sqlite3
-
-# Logs
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Local backups and uploaded files
-backups/
-backend/uploads/
-
-# Docker Compose settings (POSTGRES_PASSWORD)
-/.env
-
-# Local tool settings
-.claude/
-
-# v3 (api/ and web/; web/ has its own .gitignore too)
+# API (api/): virtual environment, secrets, caches and uploaded images
 api/.venv/
 api/.env
 api/.mypy_cache/
 api/.ruff_cache/
 api/.pytest_cache/
 api/uploads/
+
+# Web (web/ has its own .gitignore for node_modules, .next and test output)
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local backups and data exports (they can hold password hashes): never committed
+backups/
+
+# Secrets anywhere
+.env
+!.env.example
+
+# Logs, OS and editor files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tool settings
+.claude/

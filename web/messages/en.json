@@ -284,7 +284,7 @@
   "current_password": "Current password",
   "dark_mode": "Dark mode",
   "dash_sub_empty": "Create your first conference to start taking registrations.",
-  "dash_sub_upcoming": "You have {count} upcoming conferences. Here is how they are doing.",
+  "dash_sub_upcoming": "{count, plural, one {You have # upcoming conference. Here is how it is doing.} other {You have # upcoming conferences. Here is how they are doing.}}",
   "day_label": "Day name",
   "day_label_ph": "e.g. Workshops day",
   "day_n": "Day {n}",

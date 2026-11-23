@@ -1,6 +1,6 @@
 # ConferenceHub v3 API
 
-Async FastAPI + Strawberry GraphQL + MongoDB (Beanie) + Redis, on Python 3.13 with uv. Work in progress on the `v3` branch; v2 lives in `../backend`.
+Async FastAPI + Strawberry GraphQL + MongoDB (Beanie) + Redis, on Python 3.13 with uv. See the [project README](../README.md) for the whole picture.
 
 ## Run it
 
@@ -128,8 +128,8 @@ run unless `--yes` is given, never moves the same organizer twice, and refuses a
 psql "$V2_URL" -At -c "select coalesce(json_agg(row_to_json(t)), '[]'::json) from organizers t" > ../backups/v2-export/organizers.json
 # (the same for admins, notifications, activity_logs, feedback, contact_messages)
 
-uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backend/uploads         # dry run
-uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backend/uploads --yes   # write
+uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backups/v2-local-files-2026-11-23/uploads         # dry run
+uv run python -m scripts.migrate_v2 ../backups/v2-export --uploads ../backups/v2-local-files-2026-11-23/uploads --yes   # write
 ```
 
 Moved organizers sign in with their v2 password; it is upgraded to Argon2 at that sign-in. Rows about test or

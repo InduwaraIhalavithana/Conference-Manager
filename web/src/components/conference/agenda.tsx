@@ -28,7 +28,7 @@ export type AgendaData = {
 };
 
 const KIND_STYLE: Record<AgendaData["sessions"][number]["kind"], string> = {
-  KEYNOTE: "bg-brand-2/15 text-brand-2 border-brand-2/30",
+  KEYNOTE: "bg-cat-arts/15 text-cat-arts border-cat-arts/30",
   TALK: "bg-primary/12 text-primary border-primary/30",
   WORKSHOP: "bg-success/12 text-success border-success/30",
   PANEL: "bg-warning/15 text-warning border-warning/30",

@@ -112,6 +112,7 @@ def test_worker_schedules_every_job() -> None:
         "cron:heartbeat",
         "cron:release_holds",
         "cron:send_reminders",
+        "cron:send_start_alerts",
         "cron:send_feedback_requests",
         "cron:recount_counters",
         "cron:purge_unverified",
@@ -151,6 +152,46 @@ async def test_day_before_reminders_go_out_once(api: Api, other_api: Api) -> Non
     now = "mutation($c: ID!) { sendRemindersNow(conferenceId: $c) { ... on RemindersSent { count } ... on UserError { code } } }"
     assert (await api.gql(now, {"c": later["id"]}))["data"]["sendRemindersNow"] == {"count": 1}
     assert (await other_api.gql(now, {"c": later["id"]}))["data"]["sendRemindersNow"]["code"] == "NOT_AUTHENTICATED"
+
+
+async def test_start_alerts_go_out_once_each(api: Api, other_api: Api) -> None:
+    await sign_in_organizer(api)
+    conf = await published(api, startsAt=day(3, 9), endsAt=day(3, 17))
+    seated = unique_email("soon")
+    await confirmed(other_api, conf["slug"], seated)
+    unconfirmed = unique_email("soon")
+    await register(other_api, conf["slug"], unconfirmed)
+    doc = await conference_repo.by_id(conf["id"])
+    assert doc is not None
+
+    assert await jobs.send_start_alerts(doc.starts_at - timedelta(hours=2)) >= 0
+    with pytest.raises(LookupError):
+        OUTBOX.last_to(seated, "starting_soon")  # too early
+
+    await jobs.send_start_alerts(doc.starts_at - timedelta(minutes=58))
+    assert OUTBOX.last_to(seated, "starting_soon").params["ticket"]
+    with pytest.raises(LookupError):
+        OUTBOX.last_to(unconfirmed, "starting_soon")
+    before = len([m for m in OUTBOX.outbox if m.to == seated])
+    await jobs.send_start_alerts(doc.starts_at - timedelta(minutes=53))
+    assert len([m for m in OUTBOX.outbox if m.to == seated]) == before  # nobody twice
+
+    await jobs.send_start_alerts(doc.starts_at + timedelta(minutes=2))
+    assert OUTBOX.last_to(seated, "started").params["title"]
+    await jobs.send_start_alerts(doc.starts_at + timedelta(minutes=7))
+    assert len([m for m in OUTBOX.outbox if m.to == seated and m.kind == "started"]) == 1
+
+
+async def test_no_started_email_long_after_the_start(api: Api, other_api: Api) -> None:
+    await sign_in_organizer(api)
+    conf = await published(api, startsAt=day(4, 9), endsAt=day(4, 17))
+    seated = unique_email("late")
+    await confirmed(other_api, conf["slug"], seated)
+    doc = await conference_repo.by_id(conf["id"])
+    assert doc is not None
+    await jobs.send_start_alerts(doc.starts_at + timedelta(minutes=40))
+    with pytest.raises(LookupError):
+        OUTBOX.last_to(seated, "started")
 
 
 async def test_recount_fixes_drift(api: Api, other_api: Api) -> None:

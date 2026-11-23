@@ -377,7 +377,7 @@ export function AdminActivity() {
         ) : page.items.length === 0 ? (
           <p className="p-10 text-center text-muted-foreground">{t("activity_empty")}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label={t("nav_activity")}>
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>

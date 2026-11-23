@@ -9,10 +9,10 @@ import "../globals.css";
 import { Providers } from "@/components/providers";
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
+import { ThemeScript } from "@/components/site/theme-script";
 import { clientMessages } from "@/i18n/client-messages";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
-import { THEME_SCRIPT } from "@/lib/theme-script";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 // Not preloaded: each face has a unicode-range, so the browser fetches it only on pages that show
@@ -49,11 +49,12 @@ export default async function LocaleLayout({ children }: LayoutProps<"/[locale]"
     <html
       lang={locale}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${sinhala.variable} ${tamil.variable} dark`}
     >
       <head>
         {/* Runs before the first paint so a saved light theme never flashes dark. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <ThemeScript />
       </head>
       <body className="flex min-h-dvh flex-col">
         <NextIntlClientProvider messages={clientMessages((await getMessages()) as Record<string, string>)}>

@@ -156,7 +156,7 @@ export function AttendeesPage({ id }: { id: string }) {
       {counters && (
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-tour="at-stats">
           {[
-            { label: t("stat_seats_taken"), value: counters.registered, tone: "text-sky-500" },
+            { label: t("stat_seats_taken"), value: counters.registered, tone: "text-primary" },
             { label: t("stat_confirmed"), value: counters.confirmed, tone: "text-success" },
             { label: t("stat_waitlisted"), value: counters.waitlisted, tone: "text-warning" },
             { label: t("stat_checked_in"), value: counters.checkedIn, tone: "text-violet-500" },
@@ -205,7 +205,7 @@ export function AttendeesPage({ id }: { id: string }) {
         ) : rows.length === 0 ? (
           <p className="p-10 text-center text-muted-foreground">{q ? t("no_results_filtered") : t("attendees_empty")}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label={t("attendees")}>
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>

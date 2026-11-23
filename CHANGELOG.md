@@ -5,6 +5,12 @@ reviewed pull requests with its own tests) and merged into `master` on 2026-11-2
 
 ## v3 (in progress)
 
+### Site polish (2026-11-23)
+- "Happening now" on the home page; emails about an hour before a conference and when it starts.
+- Changing language keeps the theme, filters, place on the page and typed text.
+- A warm coastal light theme, page and scroll motion, and clearer Sinhala and Tamil wording.
+- Organizer and admin pages no longer scroll sideways on phones.
+
 ### Phase 8: data move and docs (2026-11-23)
 - **#83** Script that moves the v2 data into v3: organizers keep their passwords (upgraded to Argon2 at the next
   sign-in) and photos, the admin keeps the v2 password; test accounts' rows stay behind. Dry run first; refuses a

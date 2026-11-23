@@ -25,6 +25,18 @@ export function setTheme(theme: Theme): void {
   listeners.forEach((notify) => notify());
 }
 
+/** Put the saved choice back on <html> (the root layout is rebuilt when the language changes). */
+export function syncTheme(): void {
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(THEME_KEY);
+  } catch {
+    // Blocked storage: stay on the default.
+  }
+  document.documentElement.classList.toggle("dark", saved !== "light");
+  listeners.forEach((notify) => notify());
+}
+
 export function useTheme(): Theme {
   return useSyncExternalStore(
     (notify) => {

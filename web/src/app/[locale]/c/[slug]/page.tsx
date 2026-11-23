@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Suspense, cache } from "react";
 
 import { Agenda, Avatar } from "@/components/conference/agenda";
-import { CategoryChip } from "@/components/conference/conference-card";
+import { CategoryChip, LiveBadge } from "@/components/conference/conference-card";
 import { AddToCalendar, CopyLink, VenueMapLazy } from "@/components/conference/client-widgets";
 import { RegisterPanel } from "@/components/conference/register-panel";
 import { HelpButton } from "@/components/tour/tour";
@@ -35,6 +35,7 @@ const ConferencePageQuery = graphql(`
       startsAt
       endsAt
       ended
+      live
       capacity
       seatsLeft
       waitlistEnabled
@@ -124,6 +125,7 @@ async function ConferenceView({ params }: { params: PageProps<"/[locale]/c/[slug
         <div className="relative mx-auto max-w-page px-4 pb-10 pt-28 sm:px-6 lg:pt-40">
           <div className="flex flex-wrap items-center gap-2">
             <CategoryChip category={c.category} className="bg-background/80" />
+            {c.live && <LiveBadge />}
             {cancelled && <span className="rounded-full bg-destructive px-3 py-0.5 text-xs font-bold text-white">{t("badge_cancelled")}</span>}
             {c.tags.map((tag) => (
               <span key={tag} className="rounded-full bg-background/70 px-2.5 py-0.5 text-xs font-medium">

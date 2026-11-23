@@ -23,6 +23,7 @@ export const ConferenceCardFields = graphql(`
     timezone
     startsAt
     endsAt
+    live
     capacity
     seatsLeft
     distanceKm
@@ -38,6 +39,20 @@ export function CategoryChip({ category, className }: { category: ConferenceCard
     <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold", style.chip, className)}>
       <Icon className="size-3.5" aria-hidden />
       {t(style.label)}
+    </span>
+  );
+}
+
+/** A pulsing "happening now" pill. */
+export function LiveBadge({ className }: { className?: string }) {
+  const t = useTranslations();
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-red-700 px-2.5 py-1 text-xs font-bold text-white shadow-lg shadow-red-700/30", className)}>
+      <span className="relative flex size-2" aria-hidden>
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+        <span className="relative inline-flex size-2 rounded-full bg-white" />
+      </span>
+      {t("badge_live")}
     </span>
   );
 }
@@ -84,7 +99,7 @@ export function ConferenceCard({
   return (
     <Link
       href={`/c/${c.slug}`}
-      className="group flex animate-rise flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 focus-visible:ring-2 focus-visible:ring-ring"
+      className="card-sheen group flex animate-rise flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 focus-visible:ring-2 focus-visible:ring-ring"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >
       <div className={cn("relative aspect-[16/8] overflow-hidden bg-gradient-to-br", CATEGORIES[c.category].cover)}>
@@ -103,6 +118,7 @@ export function ConferenceCard({
           <span className="text-[0.65rem] font-bold uppercase tracking-wide text-primary">{badge.month}</span>
           <span className="text-xl font-extrabold leading-none">{badge.day}</span>
         </div>
+        {c.live && <LiveBadge className="absolute right-3 top-3" />}
         {cancelled && (
           <span className="absolute right-3 top-3 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-white">
             {t("badge_cancelled")}

@@ -69,6 +69,10 @@ async def send_feedback_requests(ctx: dict[str, Any]) -> int:
     return await system.tracked("send_feedback_requests", jobs.send_feedback_requests)
 
 
+async def send_start_alerts(ctx: dict[str, Any]) -> int:
+    return await system.tracked("send_start_alerts", jobs.send_start_alerts)
+
+
 async def recount_counters(ctx: dict[str, Any]) -> int:
     return await system.tracked("recount_counters", jobs.recount_counters)
 
@@ -87,6 +91,7 @@ class WorkerSettings:
         cron(heartbeat, run_at_startup=True),
         cron(release_holds, minute=set(range(0, 60, 10)), run_at_startup=True),
         cron(send_reminders, minute=5),
+        cron(send_start_alerts, minute=set(range(0, 60, 5))),
         cron(recount_counters, hour=2, minute=15),
         cron(send_feedback_requests, hour=4, minute=0),  # 09:30 in Sri Lanka
         cron(purge_unverified, hour=3, minute=0),

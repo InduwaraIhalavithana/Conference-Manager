@@ -85,7 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -174,7 +174,7 @@ jobs:
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:8003/health && exit 0; sleep 1; done
           cat /tmp/api.log; exit 1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
